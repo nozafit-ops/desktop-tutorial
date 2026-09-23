@@ -7,374 +7,269 @@
 <title>ロンドン・チェイス</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Old+Mincho:wght@700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Zen+Old+Mincho:wght@700;900&display=swap">
 <style>
-  /* 霧のロンドン：卓上に広げたボードゲーム盤（単一テーマ） */
+  /* ボードゲームアプリ風の単一テーマ：夜のテーブルに広げた古地図 */
   :root {
     color-scheme: dark;
-    --ground: #16110C;
-    --panel: #221A12;
-    --panel-2: #2C2218;
-    --ink: #F2E8D5;
-    --muted: #B4A58B;
-    --rule: #43352A;
-    --accent: #E3B341;
-    /* 盤面（羊皮紙） */
-    --land: #E9DDC0;
-    --street: #CDBB93;
-    --road: #F3EAD2;
-    --road-edge: #BFAA7E;
-    --water: #9CBFC4;
-    --water-ink: #3F6B74;
-    --park: #B6C48A;
-    --park-ink: #5C6E33;
-    --map-ink: #3E2F20;
-    --lm: #D8C7A0;
-    --train: #E0A91C;
-    --subway: #C3342B;
-    --bus: #1F8A57;
+    --ground: #120E0A;
+    --hud: rgba(22, 17, 12, 0.86);
+    --hud-solid: #1C1610;
+    --hud-2: #2A2118;
+    --ink: #F4EAD6;
+    --muted: #B9A98E;
+    --rule: rgba(227, 179, 65, 0.28);
+    --gold: #E3B341;
+    --gold-deep: #A87A18;
+    --map-ink: #3B2C1E;
+    --paper: #FBF5E4;
+    --taxi: #F2B51D;
+    --bus: #16935B;
+    --tube: #D2362C;
     --ferry: #2F7FB0;
     --black: #0B0906;
-    --xdisc: #1D1A16;
-    --xrim: #B3261E;
-    --station: #FBF5E4;
+    --xrim: #C0271F;
     --good: #5FBF7A;
+    --r: 14px;
   }
-
   [hidden] { display: none !important; }
   html, body { height: 100%; }
   body {
     margin: 0;
     background: var(--ground);
     color: var(--ink);
-    font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
     font-size: 14px;
-    line-height: 1.6;
-  }
-  .app {
-    max-width: 1440px;
-    margin: 0 auto;
-    padding-inline: 16px;
-    padding-block: 12px 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  /* ---------- header ---------- */
-  header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px 16px;
-  }
-  .brand { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .brand-chars { display: flex; }
-  .brand-chars svg { width: 40px; height: 40px; }
-  .brand-chars svg + svg { margin-left: -12px; }
-  h1 {
-    font-family: "Zen Old Mincho", "Hiragino Mincho ProN", serif;
-    font-weight: 900;
-    font-size: clamp(22px, 3.2vw, 32px);
-    letter-spacing: 0.04em;
-    margin: 0;
-    line-height: 1.1;
-  }
-  h1 em { font-style: normal; color: var(--accent); }
-  .brand small { color: var(--muted); font-size: 12px; letter-spacing: 0.1em; }
-  .status-bar { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
-  .flap {
-    font-family: "DotGothic16", ui-monospace, monospace;
-    background: #05070C;
-    color: var(--accent);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    padding: 6px 12px;
-    display: flex;
-    gap: 12px;
-    align-items: baseline;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.06em;
-  }
-  .flap b { font-weight: 400; font-size: 22px; }
-  .flap span { font-size: 12px; opacity: 0.85; }
-  .net {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12px; color: var(--muted);
-    border: 1px solid var(--rule); border-radius: 6px; padding: 4px 10px;
-  }
-  .net i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
-  .net.on i { background: var(--good); box-shadow: 0 0 8px var(--good); }
-
-  /* ---------- legend ---------- */
-  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--muted); align-items: center; }
-  .legend > span { display: inline-flex; align-items: center; gap: 6px; }
-  .legend svg.sw { width: 38px; height: 12px; }
-  .legend svg.face { width: 22px; height: 22px; }
-
-  /* ---------- map ---------- */
-  .mapwrap {
-    position: relative;
-    background: var(--land);
-    border: 1px solid var(--rule);
-    border-radius: 12px;
+    line-height: 1.5;
     overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
   }
-  .mapscroll { overflow-x: auto; }
-  svg#map { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
-  @media (max-width: 760px) {
-    svg#map { width: 760px; max-width: none; }
-  }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+  button:disabled { cursor: not-allowed; opacity: 0.4; }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-  /* ---------- panels ---------- */
-  .panels {
-    display: grid;
-    grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.35fr) minmax(280px, 1fr);
-    gap: 12px;
-    align-items: start;
+  #app { position: relative; height: 100%; overflow: hidden; }
+
+  /* ---------------- 盤面 ---------------- */
+  #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; background: #2A2016; cursor: grab; }
+  #map.dragging { cursor: grabbing; }
+  .edge { fill: none; stroke-linecap: round; }
+  .edge.taxi { stroke: var(--taxi); stroke-width: 6; }
+  .edge.taxi.casing { stroke: #7A5A0E; stroke-width: 9; opacity: 0.55; }
+  .edge.bus { stroke: var(--bus); stroke-width: 10; }
+  .edge.bus.casing { stroke: #0B4F31; stroke-width: 13; opacity: 0.5; }
+  .edge.tube { stroke: var(--tube); stroke-width: 13; }
+  .edge.tube.casing { stroke: #6E1510; stroke-width: 16; opacity: 0.55; }
+  .edge.tube.dash { stroke: #FFE9E3; stroke-width: 3.5; stroke-dasharray: 12 12; stroke-linecap: butt; }
+  .boat-lane { fill: none; stroke: var(--ferry); stroke-width: 4; stroke-dasharray: 16 10; opacity: 0.9; }
+  .pier { fill: none; stroke: var(--ferry); stroke-width: 4; stroke-dasharray: 5 5; }
+  .stn-base { fill: var(--paper); }
+  .stn-rim { fill: none; stroke: var(--map-ink); stroke-width: 3; }
+  .wedge.taxi { fill: var(--taxi); }
+  .wedge.bus { fill: var(--bus); }
+  .wedge.tube { fill: var(--tube); }
+  .stn-num { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 15px; fill: var(--map-ink); text-anchor: middle; pointer-events: none; }
+  .stn-label {
+    font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 17px; fill: var(--map-ink);
+    paint-order: stroke; stroke: var(--paper); stroke-width: 6px; stroke-linejoin: round;
+    text-anchor: middle; pointer-events: none;
   }
-  @media (max-width: 1080px) { .panels { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
-  .card {
-    background: var(--panel);
+  #map.z0 .stn-label { display: none; }
+  #map.z1 .stn-label:not(.hot) { display: none; }
+  #map.z0 .stn-label.hot { display: inline; font-size: 24px; stroke-width: 8px; }
+  .dest { fill: rgba(255, 244, 200, 0.35); stroke: #FFF6D8; stroke-width: 5; }
+  .dest-outer { fill: none; stroke: var(--map-ink); stroke-width: 3; }
+  .dest.pulse, .dest-outer.pulse { animation: pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .sel { fill: none; stroke: var(--xrim); stroke-width: 6; }
+  .poss { fill: var(--xrim); opacity: 0.28; }
+  .lastseen { fill: none; stroke: var(--xrim); stroke-width: 4; stroke-dasharray: 8 6; }
+  .lastseen-label { font-weight: 900; font-size: 20px; fill: var(--xrim); paint-order: stroke; stroke: var(--paper); stroke-width: 6px; text-anchor: middle; }
+  .trail { fill: none; stroke: var(--xrim); stroke-width: 6; stroke-dasharray: 14 9; opacity: 0.9; }
+  .tok { transition: transform 0.55s cubic-bezier(.3,.7,.2,1); pointer-events: none; }
+  .tok .ring { fill: none; stroke: #FFF6D8; stroke-width: 5; }
+  .tok .ring2 { fill: none; stroke: var(--map-ink); stroke-width: 2; }
+  .tok .num { fill: var(--map-ink); stroke: var(--paper); stroke-width: 2; }
+  .tok .num-t { fill: var(--paper); font-size: 14px; font-weight: 900; text-anchor: middle; dominant-baseline: central; }
+  @media (prefers-reduced-motion: reduce) { .tok { transition: none; } .dest.pulse, .dest-outer.pulse { animation: none; } }
+
+  /* ---------------- HUD ---------------- */
+  .hud { position: absolute; z-index: 5; }
+  .panel {
+    background: var(--hud);
     border: 1px solid var(--rule);
-    border-radius: 10px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-width: 0;
+    border-radius: var(--r);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
   }
-  .label {
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    color: var(--muted);
-    font-weight: 700;
+  .top { top: 10px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: stretch; pointer-events: none; }
+  .top > * { pointer-events: auto; }
+  .iconbtn {
+    width: 46px; min-height: 46px; display: grid; place-items: center; border-radius: 12px;
   }
-  .turn-title { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .turn-help { color: var(--muted); font-size: 13px; margin: 0; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  button { font: inherit; color: inherit; cursor: pointer; }
-  button:disabled { cursor: not-allowed; opacity: 0.45; }
-  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .chip {
-    border: 1px solid var(--rule);
-    background: var(--panel-2);
-    border-radius: 999px;
-    padding: 4px 10px;
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+  .iconbtn svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .xcard { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; min-width: 0; }
+  .xcard .who { display: flex; flex-direction: column; min-width: 0; }
+  .xcard b { font-size: 15px; line-height: 1.2; }
+  .xcard small { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .xcard .chipsx { display: flex; gap: 4px; margin-top: 2px; }
+  .portrait { width: 46px; height: 46px; border-radius: 50%; flex: none; display: block; overflow: hidden; }
+  .portrait.sm { width: 36px; height: 36px; }
+  .portrait.lg { width: 84px; height: 84px; }
+  .portrait img { width: 100%; height: 100%; object-fit: cover; }
+  .dets { display: flex; gap: 6px; padding: 6px; overflow-x: auto; scrollbar-width: none; margin-left: auto; }
+  .dets::-webkit-scrollbar { display: none; }
+  .det {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 4px 3px; border-radius: 10px;
+    border: 2px solid transparent; min-width: 58px;
   }
-  .chip:hover:not(:disabled) { border-color: var(--ink); }
-  .dots { display: inline-flex; gap: 3px; }
-  .dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
-  .dot.train { background: var(--train); }
-  .dot.subway { background: var(--subway); }
-  .dot.bus { background: var(--bus); border-radius: 50%; }
-  .dot.ferry { background: var(--ferry); border-radius: 50% 0; }
-  .dot.black { background: var(--black); outline: 1px solid var(--ink); }
-  .btn {
-    border: 1px solid var(--accent);
-    background: var(--accent);
-    color: #111;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: 700;
-  }
-  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); font-weight: 400; }
-  .btn.ghost:hover:not(:disabled) { border-color: var(--ink); }
-  .btn.small { padding: 5px 10px; font-size: 13px; }
-  .toggle[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-
-  .who { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 13px; white-space: nowrap; }
-  .who svg { width: 26px; height: 26px; flex: none; }
-
-  /* ---------- tickets ---------- */
-  .tk {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 34px; height: 22px; padding: 0 6px; border-radius: 4px;
-    font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
-    color: #111;
-  }
-  .tk.train { background: var(--train); }
-  .tk.subway { background: var(--subway); color: #fff; }
+  .det.active { border-color: var(--gold); background: rgba(227,179,65,0.12); }
+  .det .tks { display: flex; gap: 2px; }
+  .tk { font-size: 10px; font-weight: 900; min-width: 16px; height: 16px; border-radius: 4px; display: grid; place-items: center; padding: 0 3px; color: #1A140C; font-variant-numeric: tabular-nums; }
+  .tk.taxi { background: var(--taxi); }
   .tk.bus { background: var(--bus); color: #fff; }
-  .tk.black { background: var(--black); color: #fff; border: 1px solid #C9D1E3; }
-  .tk.double { background: #fff; color: #111; }
+  .tk.tube { background: var(--tube); color: #fff; }
+  .tk.black { background: var(--black); color: #fff; border: 1px solid #8A7A60; }
+  .tk.double { background: var(--paper); color: #1A140C; }
   .tk.zero { opacity: 0.3; }
 
-  /* 怪盗Xの移動記録 */
-  .log-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; }
+  .side { right: 10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; padding: 6px; }
+  .side .iconbtn:active, .top .iconbtn:active { background: rgba(255,255,255,0.08); }
+  .side .iconbtn[aria-pressed="true"] { background: var(--gold); }
+  .side .iconbtn[aria-pressed="true"] svg { stroke: #1A140C; }
+
+  .bottom { left: 10px; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .bottom > * { pointer-events: auto; }
+  .prompt { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; min-height: 60px; }
+  .prompt .txt { flex: 1; min-width: 0; }
+  .prompt .t1 { font-weight: 900; font-size: 16px; line-height: 1.3; }
+  .prompt .t2 { color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--hud-2); color: var(--muted); white-space: nowrap; }
+  .pill.gold { background: var(--gold); color: #1A140C; }
+  .btn {
+    min-height: 44px; padding: 0 16px; border-radius: 12px; font-weight: 900; font-size: 15px;
+    background: var(--gold); color: #1A140C; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn.ghost { background: var(--hud-2); color: var(--ink); border: 1px solid var(--rule); }
+  .btn.wide { width: 100%; }
+
+  .xlog { display: flex; gap: 4px; padding: 6px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; }
+  .xlog::-webkit-scrollbar { display: none; }
   .slot {
-    position: relative;
-    border: 1px solid var(--rule);
-    background: var(--panel-2);
-    border-radius: 5px;
-    height: 50px;
+    position: relative; flex: none; width: 44px; height: 50px; border-radius: 8px;
+    background: var(--hud-2); border: 1px solid rgba(255,255,255,0.06);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-family: "DotGothic16", ui-monospace, monospace;
-    font-size: 12px;
+    font-weight: 900; font-size: 13px;
+  }
+  .slot .n { position: absolute; top: 2px; left: 5px; font-size: 9px; color: var(--muted); font-weight: 700; }
+  .slot.reveal { border: 2px solid var(--xrim); }
+  .slot.reveal::after { content: ""; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--xrim); }
+  .slot.now { box-shadow: 0 0 0 2px var(--gold); }
+  .slot.taxi { background: var(--taxi); color: #1A140C; }
+  .slot.bus { background: var(--bus); }
+  .slot.tube { background: var(--tube); }
+  .slot.black { background: var(--black); }
+  .slot.taxi .n { color: rgba(0,0,0,0.55); }
+  .slot.bus .n, .slot.tube .n, .slot.black .n { color: rgba(255,255,255,0.7); }
+  .slot .st { font-size: 10px; line-height: 1; margin-top: 2px; }
+  .slot .dbl { position: absolute; bottom: 2px; right: 3px; font-size: 8px; }
+
+  /* 切符を選ぶシート */
+  .sheet-wrap { position: absolute; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0.35); }
+  .sheet {
+    width: min(560px, calc(100% - 20px)); margin-bottom: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+    background: var(--hud-solid); border: 1px solid var(--rule); border-radius: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    animation: up 0.2s ease-out;
+  }
+  @keyframes up { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sheet h3 { margin: 0; font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+  .sheet h3 .no { background: var(--paper); color: var(--map-ink); border-radius: 999px; padding: 1px 10px; font-size: 14px; }
+  .tickets { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  .ticket {
+    position: relative; min-height: 92px; border-radius: 12px; padding: 10px 12px; text-align: left;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.25), 0 4px 0 rgba(0,0,0,0.35);
     overflow: hidden;
   }
-  .slot .n { position: absolute; top: 1px; left: 4px; font-size: 9px; color: var(--muted); }
-  .slot.reveal { border-color: var(--xrim); }
-  .slot.reveal .n { color: var(--xrim); }
-  .slot.now { box-shadow: 0 0 0 2px var(--accent); }
-  .slot.train { background: var(--train); color: #111; }
-  .slot.subway { background: var(--subway); color: #fff; }
-  .slot.bus { background: var(--bus); color: #fff; }
-  .slot.black { background: var(--black); color: #fff; }
-  .slot.train .n, .slot.subway .n, .slot.bus .n, .slot.black .n { color: inherit; opacity: 0.75; }
-  .slot .st { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 10px; font-weight: 700; line-height: 1.1; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px; }
-  .slot .dbl { position: absolute; top: 1px; right: 3px; font-size: 9px; }
+  .ticket::before { content: ""; position: absolute; left: -8px; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: var(--hud-solid); transform: translateY(-50%); }
+  .ticket::after { content: ""; position: absolute; right: -8px; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: var(--hud-solid); transform: translateY(-50%); }
+  .ticket .en { font-family: "IM Fell English SC", Georgia, serif; font-size: 20px; letter-spacing: 0.06em; line-height: 1; }
+  .ticket .ja { font-size: 12px; font-weight: 700; opacity: 0.85; }
+  .ticket .cnt { position: absolute; right: 12px; bottom: 8px; font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .ticket.taxi { background: var(--taxi); color: #1A140C; }
+  .ticket.bus { background: var(--bus); color: #fff; }
+  .ticket.tube { background: var(--tube); color: #fff; }
+  .ticket.black { background: var(--black); color: #fff; box-shadow: inset 0 0 0 2px #8A7A60, 0 4px 0 rgba(0,0,0,0.35); }
+  .ticket:active:not(:disabled) { transform: translateY(2px); }
+  .opt-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--hud-2); border-radius: 12px; padding: 8px 12px; }
+  .switch { width: 52px; height: 32px; border-radius: 999px; background: #4A3D2E; position: relative; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: left 0.15s; }
+  .switch[aria-checked="true"] { background: var(--gold); }
+  .switch[aria-checked="true"]::after { left: 23px; }
 
-  .dets { display: flex; flex-direction: column; gap: 6px; }
-  .det-row { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; }
-  .det-row .nm { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .det-row .nm small { font-weight: 400; color: var(--muted); }
-  .det-row .tks { display: flex; gap: 4px; }
-  .det-row.active .nm { color: var(--accent); }
-  .xrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+  /* 全面スクリーン（タイトル・受け渡し・結果） */
+  .screen { position: absolute; inset: 0; z-index: 30; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 20px 16px; }
+  .screen.title { background: radial-gradient(120% 90% at 50% 20%, #2B3A55 0%, #141B29 55%, #0A0D14 100%); }
+  .screen.cover { background: rgba(10, 8, 6, 0.96); }
+  .screen.dim { background: rgba(10, 8, 6, 0.72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  .skyline { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 42%; pointer-events: none; }
+  .fog { position: absolute; inset: 0; background: radial-gradient(60% 30% at 30% 80%, rgba(200,210,230,0.12), transparent), radial-gradient(50% 25% at 75% 70%, rgba(200,210,230,0.1), transparent); pointer-events: none; }
+  .card {
+    position: relative; width: min(520px, 100%); padding: 22px 20px; display: flex; flex-direction: column; gap: 14px;
+    background: rgba(20, 16, 12, 0.88); border: 1px solid var(--rule); border-radius: 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .logo { text-align: center; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+  .logo .en { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: 0.35em; color: var(--gold); font-size: 13px; }
+  .logo h1 { margin: 0; font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: clamp(30px, 8vw, 44px); letter-spacing: 0.06em; line-height: 1.15; }
+  .logo p { margin: 0; color: var(--muted); font-size: 13px; }
+  .faces { display: flex; justify-content: center; }
+  .faces .portrait { width: 56px; height: 56px; border: 3px solid var(--hud-solid); }
+  .faces .portrait + .portrait { margin-left: -12px; }
+  .menu { display: flex; flex-direction: column; gap: 10px; }
+  .menu .btn { min-height: 54px; font-size: 16px; justify-content: flex-start; padding: 0 14px; }
+  .menu .btn .portrait { width: 36px; height: 36px; }
+  .menu .btn span.s { font-weight: 400; font-size: 12px; opacity: 0.8; margin-left: auto; }
+  .seg { display: flex; background: var(--hud-2); border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button { flex: 1; min-height: 38px; border-radius: 9px; font-weight: 700; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--gold); color: #1A140C; }
+  .field { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .field label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .field .seg { flex: 1; max-width: 260px; }
+  .rules { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+  .rules b { color: var(--gold); }
+  .card h2 { margin: 0; font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 26px; text-align: center; text-wrap: balance; }
+  .card p.c { margin: 0; text-align: center; color: var(--muted); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row .btn { flex: 1; }
 
-  /* ---------- log / chat ---------- */
-  .tabs { display: flex; gap: 4px; }
-  .tab { border: 1px solid var(--rule); background: transparent; border-radius: 6px; padding: 3px 10px; font-size: 12px; color: var(--muted); }
-  .tab[aria-selected="true"] { background: var(--panel-2); color: var(--ink); border-color: var(--ink); }
-  .feed { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
-  .feed li { display: flex; gap: 8px; }
-  .feed .r { font-family: "DotGothic16", ui-monospace, monospace; color: var(--muted); min-width: 30px; font-variant-numeric: tabular-nums; }
-  .feed li.hot { font-weight: 700; color: var(--accent); }
-  .feed li.chat .who-n { font-weight: 700; }
-  .chat-form { display: flex; gap: 6px; }
-  .chat-form input {
-    flex: 1; min-width: 0;
-    background: var(--panel-2); color: var(--ink);
-    border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; font: inherit;
+  .toast {
+    position: absolute; left: 50%; top: 84px; transform: translateX(-50%); z-index: 25;
+    padding: 8px 14px; border-radius: 999px; background: var(--hud-solid); border: 1px solid var(--rule);
+    font-weight: 700; font-size: 13px; white-space: nowrap; pointer-events: none; animation: fade 2.4s forwards;
   }
+  @keyframes fade { 0% { opacity: 0; transform: translate(-50%, -6px); } 10%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+  .drawer { position: absolute; z-index: 22; left: 10px; bottom: 10px; width: min(380px, calc(100% - 20px)); max-height: 60%; display: flex; flex-direction: column; padding: 12px; gap: 8px; }
+  .drawer ul { list-style: none; margin: 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; user-select: text; -webkit-user-select: text; }
+  .drawer li { display: flex; gap: 8px; }
+  .drawer li .r { color: var(--muted); min-width: 34px; font-variant-numeric: tabular-nums; }
+  .drawer li.hot { color: var(--gold); font-weight: 700; }
 
-  /* ---------- map SVG ---------- */
-  .bg-land { fill: var(--land); }
-  .bg-street { fill: none; stroke: var(--street); stroke-width: 1.4; stroke-linecap: round; }
-  .bg-road { fill: none; stroke: var(--road); stroke-width: 6; stroke-linecap: round; }
-  .bg-road-edge { fill: none; stroke: var(--road-edge); stroke-width: 9; stroke-linecap: round; }
-  .bg-water { fill: var(--water); }
-  .bg-river { fill: none; stroke: var(--water); stroke-linecap: round; stroke-linejoin: round; }
-  .bg-river-edge { fill: none; stroke: var(--water-ink); stroke-linecap: round; stroke-linejoin: round; opacity: 0.55; }
-  .bg-park { fill: var(--park); stroke: var(--park-ink); stroke-width: 1.2; stroke-opacity: 0.6; }
-  .bg-ward { font-family: "IM Fell English SC", Georgia, serif; font-size: 30px; letter-spacing: 0.3em; fill: var(--map-ink); opacity: 0.16; pointer-events: none; }
-  .bg-place { font-family: "Zen Old Mincho", serif; font-size: 13px; fill: var(--park-ink); font-weight: 700; letter-spacing: 0.12em; pointer-events: none; }
-  .bg-place.water { fill: var(--water-ink); font-style: italic; font-size: 16px; letter-spacing: 0.4em; }
-  .bg-ink { fill: var(--map-ink); }
-  .bg-inkline { stroke: var(--map-ink); fill: none; }
-  .lm { fill: var(--lm); stroke: var(--map-ink); stroke-width: 1.3; stroke-linejoin: round; opacity: 0.9; }
-  .lm-line { fill: none; stroke: var(--map-ink); stroke-width: 1.3; opacity: 0.9; }
-  .lm-label { font-family: "IM Fell English SC", Georgia, serif; font-size: 11px; fill: var(--map-ink); opacity: 0.75; text-anchor: middle; pointer-events: none; }
-  .cartouche { fill: var(--station); stroke: var(--map-ink); stroke-width: 1.5; }
-  .cartouche-title { font-family: "IM Fell English SC", Georgia, serif; font-size: 34px; fill: var(--map-ink); letter-spacing: 0.18em; text-anchor: middle; }
-  .cartouche-sub { font-family: "IM Fell English SC", Georgia, serif; font-size: 12px; fill: var(--map-ink); text-anchor: middle; opacity: 0.8; }
-
-  .edge { fill: none; stroke-linecap: round; }
-  .edge.train.base { stroke: var(--train); stroke-width: 8; stroke-linecap: butt; }
-  .edge.train.tie  { stroke: var(--land); stroke-width: 3.5; stroke-dasharray: 12 12; stroke-linecap: butt; }
-  .edge.subway.base { stroke: var(--subway); stroke-width: 10; }
-  .edge.subway.tie  { stroke: var(--land); stroke-width: 3.5; }
-  .edge.bus.base { stroke: var(--bus); stroke-width: 7; stroke-dasharray: 0 13; }
-  .edge.ferry.base { stroke: var(--ferry); stroke-width: 4; stroke-dasharray: 16 8 3 8; }
-
-  .stn { fill: var(--station); }
-  .stn-rim { fill: none; stroke: var(--map-ink); stroke-width: 2.5; }
-  .stn-pier { fill: none; stroke: var(--ferry); stroke-width: 3; stroke-dasharray: 4 3; }
-  .wedge.train { fill: var(--train); }
-  .wedge.subway { fill: var(--subway); }
-  .wedge.bus { fill: var(--bus); }
-  .stn-num { font-family: "IM Fell English SC", Georgia, serif; font-size: 12px; font-weight: 700; fill: var(--map-ink); text-anchor: middle; pointer-events: none; }
-  .stn-hit { fill: transparent; }
-  .stn-hit.can { cursor: pointer; }
-  .stn-label {
-    font-family: "Zen Old Mincho", "Hiragino Mincho ProN", serif;
-    font-size: 17px; font-weight: 900; fill: var(--map-ink);
-    paint-order: stroke; stroke: var(--land); stroke-width: 6px; stroke-linejoin: round;
-    pointer-events: none;
-  }
-  .dest { fill: none; stroke: var(--map-ink); stroke-width: 4; pointer-events: none; }
-  .dest.pulse { animation: pulse 1.2s ease-in-out infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .poss { fill: var(--xrim); opacity: 0.25; pointer-events: none; }
-  .lastseen { fill: none; stroke: var(--xrim); stroke-width: 3; stroke-dasharray: 6 5; pointer-events: none; }
-  .lastseen-label { font-size: 15px; font-weight: 700; fill: var(--xrim); paint-order: stroke; stroke: var(--land); stroke-width: 5px; pointer-events: none; }
-  .tok { pointer-events: none; }
-  .tok .disc { stroke: var(--station); stroke-width: 3; }
-  .tok .disc.x { fill: var(--xdisc); stroke: var(--xrim); }
-  .tok .ring { fill: none; stroke: var(--map-ink); stroke-width: 4; }
-  .tok .num { fill: var(--map-ink); }
-  .tok .num-t { fill: var(--station); font-size: 12px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
-  .trail { fill: none; stroke: var(--xrim); stroke-width: 4; stroke-dasharray: 10 7; opacity: 0.9; pointer-events: none; }
-
-  /* ---------- overlay ---------- */
-  .overlay {
-    position: absolute;
-    inset: 0;
-    background: color-mix(in srgb, var(--ground) 70%, transparent);
-    display: grid;
-    place-items: center;
-    padding: 16px;
-    backdrop-filter: blur(3px);
-    overflow-y: auto;
-  }
-  .sheet {
-    background: var(--panel);
-    border: 1px solid var(--rule);
-    border-radius: 14px;
-    padding: 20px 22px;
-    max-width: 640px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-  }
-  .sheet h2 { font-family: "Zen Old Mincho", "Hiragino Mincho ProN", serif; font-weight: 900; font-size: 24px; margin: 0; text-wrap: balance; line-height: 1.25; }
-  .sheet p { margin: 0; color: var(--muted); font-size: 13px; }
-  .sheet ul { margin: 0; padding-left: 1.2em; font-size: 13px; display: flex; flex-direction: column; gap: 3px; }
-  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .mode {
-    border: 1px solid var(--rule);
-    background: var(--panel-2);
-    border-radius: 12px;
-    padding: 14px;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .mode h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
-  .mode p { font-size: 12px; }
-  .rooms { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
-  .room-row {
-    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
-    background: var(--panel-2); border: 1px solid var(--rule); border-radius: 10px; padding: 8px 10px;
-  }
-  .code { font-family: "DotGothic16", ui-monospace, monospace; font-size: 18px; color: var(--accent); letter-spacing: 0.12em; }
-  .seats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
-  .seat {
-    border: 1px solid var(--rule); background: var(--panel-2); border-radius: 10px; padding: 10px;
-    display: grid; grid-template-columns: 40px 1fr; gap: 2px 10px; align-items: center;
-  }
-  .seat svg { width: 40px; height: 40px; grid-row: span 2; }
-  .seat .role-n { font-size: 12px; color: var(--muted); }
-  .seat .pl { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .seat .acts { grid-column: 1 / -1; display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-  .seat.mine { border-color: var(--accent); }
-  .note { font-size: 12px; color: var(--muted); border-left: 3px solid var(--rule); padding-left: 8px; }
-  .result-chars { display: flex; gap: 4px; }
-  .result-chars svg { width: 56px; height: 56px; }
-  @media (max-width: 600px) {
-    .modes { grid-template-columns: 1fr; }
-    .overlay { position: fixed; z-index: 10; }
-    .log-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .dest.pulse { animation: none; }
+  @media (max-width: 640px) {
+    .top { flex-wrap: wrap; }
+    .top .xcard { flex: 1; }
+    .dets { order: 3; width: 100%; margin-left: 0; justify-content: space-between; padding: 4px; }
+    .det { min-width: 0; flex: 1; padding: 3px 2px; }
+    .tk { min-width: 14px; font-size: 9px; padding: 0 2px; }
+    .side { top: auto; bottom: 150px; transform: none; padding: 4px; gap: 2px; }
+    .side .iconbtn { width: 40px; min-height: 40px; }
+    .menu .btn span.s { display: none; }
+    .portrait { width: 40px; height: 40px; }
+    .portrait.sm { width: 30px; height: 30px; }
+    .prompt { min-height: 54px; }
+    .slot { width: 38px; height: 44px; }
   }
 </style>
 <!-- ARTIFACT-HEAD-END -->
@@ -383,14 +278,14 @@
 <!-- ARTIFACT-BODY-START -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <clipPath id="clip-chr"><circle r="17.5"></circle></clipPath>
-    <!-- 怪盗X -->
+    <clipPath id="clip-chr"><circle r="19"></circle></clipPath>
     <symbol id="chr-x" viewBox="-20 -20 40 40">
+      <circle r="20" fill="#241C16"></circle>
       <g clip-path="url(#clip-chr)">
         <path d="M-15,20 Q-15,7 0,7 Q15,7 15,20 Z" fill="#161A24"></path>
         <path d="M-12,9 L-6,7 L0,15 L6,7 L12,9 L10,20 L-10,20 Z" fill="#2A3040"></path>
         <path d="M-3.2,8 L0,14 L3.2,8 Z" fill="#FFFFFF"></path>
-        <path d="M-3.4,10.2 L0,11.6 L3.4,10.2 L3.4,13.4 L0,12 L-3.4,13.4 Z" fill="#E5484D"></path>
+        <path d="M-3.4,10.2 L0,11.6 L3.4,10.2 L3.4,13.4 L0,12 L-3.4,13.4 Z" fill="#C0271F"></path>
         <circle cy="-0.5" r="8.4" fill="#F1C7A0"></circle>
         <rect x="-9.4" y="-2.8" width="18.8" height="5" rx="2.5" fill="#0B0D13"></rect>
         <circle cx="-3.8" cy="-0.3" r="1.5" fill="#FFFFFF"></circle>
@@ -398,110 +293,74 @@
         <path d="M-3.5,4.2 Q1,6.6 4,3.8" stroke="#6B3A2A" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
         <ellipse cx="0" cy="-6.6" rx="12.5" ry="2.6" fill="#0B0D13"></ellipse>
         <rect x="-7.6" y="-19.5" width="15.2" height="13" rx="1.5" fill="#0B0D13"></rect>
-        <rect x="-7.6" y="-10.4" width="15.2" height="3" fill="#E5484D"></rect>
-        <text x="0" y="-12.3" font-size="7.5" font-weight="700" text-anchor="middle" fill="#F2C230">X</text>
+        <rect x="-7.6" y="-10.4" width="15.2" height="3" fill="#C0271F"></rect>
+        <text x="0" y="-12.3" font-size="7.5" font-weight="700" text-anchor="middle" fill="#E3B341">X</text>
       </g>
     </symbol>
-    <!-- 刑事 -->
     <symbol id="chr-d" viewBox="-20 -20 40 40">
       <g clip-path="url(#clip-chr)">
-        <path d="M-15,20 Q-15,9 0,9 Q15,9 15,20 Z" fill="#2B3448"></path>
+        <path d="M-15,20 Q-15,9 0,9 Q15,9 15,20 Z" fill="#3A3226"></path>
         <path d="M-4.5,9 L0,14 L4.5,9 Z" fill="#FFFFFF"></path>
-        <path d="M-1.3,11.5 h2.6 l0.9,5.5 l-2.2,2 l-2.2,-2 z" fill="#0F1733"></path>
-        <circle cx="7.5" cy="14" r="1.9" fill="#F2C230"></circle>
+        <path d="M-1.3,11.5 h2.6 l0.9,5.5 l-2.2,2 l-2.2,-2 z" fill="#1B1611"></path>
         <circle cy="0.5" r="8.6" fill="#F4C9A0"></circle>
-        <path d="M-10,-5 L-8.5,-14 Q0,-18.5 8.5,-14 L10,-5 Z" fill="#1F2F5F"></path>
-        <rect x="-10.5" y="-7.2" width="21" height="3" fill="#0F1733"></rect>
-        <path d="M-10.2,-4.4 Q0,-1.2 10.2,-4.4 L10.2,-3.2 Q0,0.6 -10.2,-3.2 Z" fill="#0F1733"></path>
-        <circle cx="0" cy="-11" r="2.4" fill="#F2C230"></circle>
-        <circle cx="-3.3" cy="1.6" r="1.3" fill="#1B2230"></circle>
-        <circle cx="3.3" cy="1.6" r="1.3" fill="#1B2230"></circle>
-        <path d="M-5.2,-1.4 h3.2 M2,-1.4 h3.2" stroke="#1B2230" stroke-width="1.1" stroke-linecap="round"></path>
-        <path d="M-2.6,5 Q0,7 2.6,5" stroke="#6B3A2A" stroke-width="1.3" fill="none" stroke-linecap="round"></path>
+        <ellipse cx="0" cy="-5.4" rx="12" ry="2.4" fill="#1B1611"></ellipse>
+        <path d="M-8,-5.6 Q-8.4,-17 0,-17 Q8.4,-17 8,-5.6 Z" fill="#1B1611"></path>
+        <rect x="-8.2" y="-8.4" width="16.4" height="2.4" fill="#5A4A36"></rect>
+        <circle cx="-3.3" cy="1.4" r="1.3" fill="#1B2230"></circle>
+        <circle cx="3.3" cy="1.4" r="1.3" fill="#1B2230"></circle>
+        <path d="M-5.2,-1.6 h3.2 M2,-1.6 h3.2" stroke="#1B2230" stroke-width="1.1" stroke-linecap="round"></path>
+        <path d="M-4.2,4.4 Q-2,3.4 0,4.2 Q2,3.4 4.2,4.4" stroke="#6B4A2A" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
       </g>
     </symbol>
-    <filter id="paper" x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="4"></feTurbulence>
-      <feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0.16 0"></feColorMatrix>
-    </filter>
-    <filter id="blotch" x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="2" seed="11"></feTurbulence>
-      <feColorMatrix type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.33  0 0 0 0 0.15  0 0 0 0.35 -0.08"></feColorMatrix>
-    </filter>
-    <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
-      <stop offset="60%" stop-color="#6B4A22" stop-opacity="0"></stop>
-      <stop offset="100%" stop-color="#6B4A22" stop-opacity="0.38"></stop>
-    </radialGradient>
   </defs>
 </svg>
 
-<div class="app">
-  <header>
-    <div class="brand">
-      <div class="brand-chars" id="brandChars"></div>
-      <h1>ロンドン・<em>チェイス</em></h1>
-      <small>怪盗Xを追え ― 霧のロンドン追跡ゲーム</small>
-    </div>
-    <div class="status-bar">
-      <span class="net" id="net"><i></i><span id="netText">オフライン</span></span>
-      <div class="flap" aria-live="polite">
-        <span>MOVE</span><b id="roundNo">--/18</b>
-        <span id="nextReveal">次の出現 --</span>
-      </div>
-    </div>
-  </header>
+<div id="app">
+  <svg id="map" aria-label="ロンドンの盤面。ドラッグで移動、ピンチやホイールで拡大できます">
+    <g id="world">
+      <image id="bgimg" x="0" y="0" width="3000" height="1900" preserveAspectRatio="none"></image>
+      <g id="gBoat"></g>
+      <g id="gEdges"></g>
+      <g id="gPoss"></g>
+      <g id="gTrail"></g>
+      <g id="gDest"></g>
+      <g id="gStations"></g>
+      <g id="gMarks"></g>
+      <g id="gTokens"></g>
+      <g id="gLabels"></g>
+    </g>
+  </svg>
 
-  <div class="legend" id="legend"></div>
-
-  <div class="mapwrap">
-    <div class="mapscroll">
-      <svg id="map" viewBox="0 0 1400 750" role="img" aria-label="ロンドンのボードゲーム風マップ">
-        <g id="gBg"></g>
-        <g id="gEdges"></g>
-        <g id="gPoss"></g>
-        <g id="gTrail"></g>
-        <g id="gStations"></g>
-        <g id="gDest"></g>
-        <g id="gLabels"></g>
-        <g id="gTokens"></g>
-        <g id="gHits"></g>
-      </svg>
-    </div>
-    <div class="overlay" id="overlay"></div>
+  <div class="hud top">
+    <button class="panel iconbtn" data-act="menu" aria-label="メニュー">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+    </button>
+    <button class="panel xcard" id="xcard" data-act="focusX"></button>
+    <div class="panel dets" id="dets"></div>
   </div>
 
-  <div class="panels">
-    <section class="card" id="turnCard" aria-live="polite">
-      <div class="label">いまの手番</div>
-      <p class="turn-help">モードを選ぶとゲームが始まります。</p>
-    </section>
-
-    <section class="card">
-      <div class="label">怪盗Xの移動記録</div>
-      <div class="log-grid" id="xlog"></div>
-      <div class="xrow" id="xinfo"></div>
-      <div class="label">刑事の切符</div>
-      <div class="dets" id="dets"></div>
-    </section>
-
-    <section class="card">
-      <div class="row" style="justify-content: space-between;">
-        <div class="tabs" role="tablist">
-          <button class="tab" role="tab" id="tabLog" aria-selected="true" data-act="tab" data-tab="log">ログ</button>
-          <button class="tab" role="tab" id="tabChat" aria-selected="false" data-act="tab" data-tab="chat" hidden>チャット</button>
-        </div>
-        <div class="row">
-          <button class="btn ghost small toggle" id="hintBtn" aria-pressed="true" hidden>推理ヒント</button>
-          <button class="btn ghost small" id="menuBtn">メニュー</button>
-        </div>
-      </div>
-      <ul class="feed" id="feed"></ul>
-      <form class="chat-form" id="chatForm" hidden>
-        <input id="chatInput" maxlength="120" placeholder="メッセージを送る" autocomplete="off">
-        <button class="btn small" type="submit">送信</button>
-      </form>
-    </section>
+  <div class="hud side panel">
+    <button class="iconbtn" data-act="zoomIn" aria-label="拡大"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button>
+    <button class="iconbtn" data-act="zoomOut" aria-label="縮小"><svg viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button>
+    <button class="iconbtn" data-act="fit" aria-label="全体を表示"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+    <button class="iconbtn" data-act="focusTurn" aria-label="手番のコマへ移動"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></button>
+    <button class="iconbtn" id="hintBtn" data-act="hint" aria-pressed="true" aria-label="推理ヒント（怪盗Xがいるかもしれない駅）"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg></button>
+    <button class="iconbtn" data-act="log" aria-label="ログ"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"></path></svg></button>
   </div>
+
+  <div class="hud bottom">
+    <div class="panel prompt" id="prompt"></div>
+    <div class="panel xlog" id="xlog" aria-label="怪盗Xの移動記録"></div>
+  </div>
+
+  <div class="panel drawer" id="drawer" hidden>
+    <div class="row" style="justify-content:space-between;align-items:center"><b>ログ</b><button class="btn ghost" data-act="log" style="min-height:36px;flex:none">閉じる</button></div>
+    <ul id="feed"></ul>
+  </div>
+
+  <div class="sheet-wrap" id="sheet" hidden></div>
+  <div class="screen" id="screen" hidden></div>
+  <div id="toastHost"></div>
 </div>
 
 <script>
@@ -509,122 +368,207 @@
   "use strict";
 
   // ======================================================================
-  // CORE-START  ルールとCPU（DOMに依存しない）
+  // CORE-START  盤面データ・ルール・CPU（DOMに依存しない）
   // ======================================================================
-  const MX = x => 60 + (x - 50) * 1.45;
-  const MY = y => 30 + y * 0.9;
-  const RAW_STATIONS = [
-    ["キルバーン", 220, 110, 0, -28, "middle"],
-    ["ハムステッド", 400, 75, 0, -28, "middle"],
-    ["ハイゲート", 600, 50, 0, -28, "middle"],
-    ["ハイベリー", 740, 125, 24, 7, "start"],
-    ["ハックニー", 890, 110, 0, -28, "middle"],
-    ["エンジェル", 740, 230, 24, 7, "start"],
-    ["バービカン", 700, 310, 24, 7, "start"],
-    ["キングス・クロス", 590, 270, 0, -28, "middle"],
-    ["カムデン", 500, 190, 0, -28, "middle"],
-    ["メイダ・ヴェール", 180, 230, -24, 7, "end"],
-    ["シェパーズ・ブッシュ", 50, 360, -16, 38, "start"],
-    ["パディントン", 170, 370, -24, -14, "end"],
-    ["オックスフォード・サーカス", 380, 370, 0, 38, "middle"],
-    ["ホルボーン", 610, 370, -24, 7, "end"],
-    ["リバプール・ストリート", 770, 380, 0, -28, "middle"],
-    ["ストラトフォード", 930, 280, 16, 38, "end"],
-    ["バンク", 700, 440, 24, 7, "start"],
-    ["グリーン・パーク", 390, 470, -24, 7, "end"],
-    ["チャリング・クロス", 500, 470, 0, 38, "middle"],
-    ["セント・ポール", 670, 530, 24, 7, "start"],
-    ["ホワイトチャペル", 850, 480, 24, 7, "start"],
-    ["ケンジントン", 190, 480, -24, 7, "end"],
-    ["ナイツブリッジ", 280, 540, 0, 38, "middle"],
-    ["アールズ・コート", 180, 590, 0, 38, "middle"],
-    ["ハマースミス", 50, 610, -16, 38, "start"],
-    ["ヴィクトリア", 380, 590, 0, 38, "middle"],
-    ["ウェストミンスター", 590, 590, -18, 36, "end"],
-    ["タワー・ヒル", 790, 590, 0, 38, "middle"],
-    ["ランベス", 480, 650, 0, 38, "middle"],
-    ["ウォータールー", 610, 690, 24, 7, "start"],
-    ["カナリー・ワーフ", 920, 660, 0, 38, "middle"],
-    ["バタシー", 250, 700, 0, 38, "middle"],
-    ["クラパム", 400, 740, 0, 38, "middle"],
+  const W = 3000, H = 1900;
+  const STATIONS = [
+    ["ハムステッド", 912.5, 382.2],
+    ["ハイゲート", 1210.5, 110.0],
+    ["アーチウェイ", 1299.2, 252.8],
+    ["フィンズベリー・パーク", 1561.2, 268.1],
+    ["ストーク・ニューイントン", 1855.5, 273.8],
+    ["ケンティッシュ・タウン", 1246.6, 434.3],
+    ["カムデン・タウン", 1215.9, 586.1],
+    ["ベルサイズ・パーク", 1025.7, 451.8],
+    ["スイス・コテージ", 923.7, 556.0],
+    ["キルバーン", 679.9, 527.9],
+    ["セント・ジョンズ・ウッド", 918.1, 674.2],
+    ["メイダ・ヴェール", 814.9, 754.7],
+    ["ホロウェイ", 1505.9, 409.1],
+    ["ハイベリー", 1596.6, 497.4],
+    ["ダルストン", 1860.6, 517.1],
+    ["ハックニー", 2027.8, 548.2],
+    ["ハックニー・ウィック", 2269.6, 592.7],
+    ["ストラトフォード", 2428.7, 629.9],
+    ["ハガーストン", 1864.6, 617.8],
+    ["エンジェル", 1593.0, 684.5],
+    ["キングス・クロス", 1405.7, 696.2],
+    ["ユーストン", 1297.9, 735.6],
+    ["リージェンツ・パーク", 1156.1, 818.7],
+    ["ベイカー・ストリート", 1052.9, 841.4],
+    ["パディントン", 883.1, 969.8],
+    ["ラドブローク・グローブ", 604.7, 953.8],
+    ["ホワイト・シティ", 503.7, 1032.0],
+    ["ノッティング・ヒル", 710.2, 1068.3],
+    ["シェパーズ・ブッシュ", 542.8, 1139.3],
+    ["ハマースミス", 508.9, 1309.4],
+    ["ケンジントン", 744.7, 1199.3],
+    ["アールズ・コート", 743.7, 1333.6],
+    ["サウス・ケンジントン", 903.3, 1313.7],
+    ["ナイツブリッジ", 1010.3, 1201.6],
+    ["マーブル・アーチ", 1028.4, 992.2],
+    ["ボンド・ストリート", 1114.6, 976.2],
+    ["オックスフォード・サーカス", 1195.4, 951.4],
+    ["トッテナム・コート・ロード", 1317.0, 917.3],
+    ["ホルボーン", 1455.2, 901.2],
+    ["ラッセル・スクエア", 1399.8, 810.6],
+    ["ファリンドン", 1615.1, 866.8],
+    ["バービカン", 1688.5, 872.4],
+    ["オールド・ストリート", 1778.9, 788.7],
+    ["ショーディッチ", 1889.3, 844.7],
+    ["リバプール・ストリート", 1834.1, 927.1],
+    ["バンク", 1782.5, 998.6],
+    ["セント・ポール", 1702.0, 971.4],
+    ["ブラックフライアーズ", 1643.4, 1017.9],
+    ["テンプル", 1536.0, 1024.3],
+    ["コヴェント・ガーデン", 1402.7, 978.3],
+    ["レスター・スクエア", 1346.9, 1011.2],
+    ["ピカデリー・サーカス", 1267.1, 1050.2],
+    ["グリーン・パーク", 1175.3, 1115.3],
+    ["ハイド・パーク・コーナー", 1082.3, 1185.2],
+    ["ヴィクトリア", 1169.2, 1299.4],
+    ["セント・ジェームズ・パーク", 1287.1, 1261.6],
+    ["ウェストミンスター", 1387.5, 1239.2],
+    ["チャリング・クロス", 1400.5, 1089.7],
+    ["ピムリコ", 1298.9, 1404.1],
+    ["スローン・スクエア", 1060.0, 1354.5],
+    ["チェルシー", 906.7, 1429.0],
+    ["フラム・ブロードウェイ", 743.4, 1501.1],
+    ["パトニー・ブリッジ", 647.6, 1657.6],
+    ["ワンズワース", 826.4, 1771.5],
+    ["バタシー", 1214.4, 1556.6],
+    ["クラパム・ジャンクション", 973.4, 1742.6],
+    ["クラパム・コモン", 1266.4, 1790.0],
+    ["ストックウェル", 1413.6, 1658.1],
+    ["ヴォクソール", 1389.6, 1470.5],
+    ["ケニントン", 1604.0, 1427.2],
+    ["ブリクストン", 1492.3, 1779.5],
+    ["ランベス・ノース", 1555.1, 1261.6],
+    ["ウォータールー", 1543.2, 1190.1],
+    ["サザーク", 1628.4, 1164.3],
+    ["ロンドン・ブリッジ", 1803.2, 1137.6],
+    ["バラ", 1729.6, 1211.3],
+    ["エレファント&キャッスル", 1665.1, 1330.4],
+    ["バーモンジー", 1989.5, 1247.7],
+    ["ロザーハイズ", 2102.5, 1233.2],
+    ["タワー・ヒル", 1887.3, 1060.2],
+    ["オールドゲート・イースト", 1921.8, 973.9],
+    ["ホワイトチャペル", 2008.7, 911.4],
+    ["ベスナル・グリーン", 2052.6, 802.5],
+    ["マイル・エンド", 2222.4, 841.5],
+    ["ボウ", 2341.5, 823.0],
+    ["シャドウェル", 2046.0, 1032.6],
+    ["ワッピング", 2046.4, 1120.6],
+    ["ライムハウス", 2180.3, 1026.0],
+    ["カナリー・ワーフ", 2326.1, 1126.9],
+    ["アイランド・ガーデンズ", 2390.8, 1374.4],
+    ["グリニッジ", 2348.2, 1506.5],
+    ["デプトフォード", 2264.6, 1505.1],
+    ["ニュー・クロス", 2212.8, 1542.1],
+    ["ペッカム", 1909.8, 1656.3],
+    ["キャンバーウェル", 1704.4, 1621.6],
+    ["ノース・グリニッジ", 2496.3, 1192.9],
   ];
-  const STATIONS = RAW_STATIONS.map(([n, x, y, dx, dy, a]) => [n, MX(x), MY(y), dx, dy, a]);
-
-  const LINES = [
-    ["train", "タクシー", ["バンク","バービカン","エンジェル","ハイベリー","ハイゲート","ハムステッド","キルバーン","メイダ・ヴェール","パディントン","ケンジントン","アールズ・コート","バタシー","クラパム","ウォータールー","ウェストミンスター","バンク"]],
-    ["train", "タクシー", ["シェパーズ・ブッシュ","パディントン","オックスフォード・サーカス","キングス・クロス","バービカン"]],
-    ["train", "タクシー", ["エンジェル","ストラトフォード"]],
-    ["train", "タクシー", ["ハマースミス","アールズ・コート"]],
-    ["train", "タクシー", ["ハマースミス","パディントン"]],
-    ["train", "タクシー", ["ウェストミンスター","カナリー・ワーフ"]],
-    ["subway", "ピカデリー線", ["アールズ・コート","ナイツブリッジ","グリーン・パーク","ウェストミンスター","セント・ポール","リバプール・ストリート","バービカン","ハイベリー","ハックニー"]],
-    ["subway", "セントラル線", ["シェパーズ・ブッシュ","パディントン","オックスフォード・サーカス","グリーン・パーク","チャリング・クロス","セント・ポール","バンク","ホルボーン","キングス・クロス","カムデン","キルバーン"]],
-    ["subway", "メトロポリタン線", ["シェパーズ・ブッシュ","メイダ・ヴェール","カムデン"]],
-    ["subway", "メトロポリタン線", ["ホルボーン","リバプール・ストリート","ホワイトチャペル"]],
-    ["subway", "ディストリクト線", ["パディントン","ヴィクトリア","ランベス","ウォータールー","タワー・ヒル"]],
-    ["subway", "DLR", ["セント・ポール","タワー・ヒル","カナリー・ワーフ"]],
-    ["subway", "エリザベス線", ["リバプール・ストリート","ストラトフォード"]],
-    ["subway", "ジュビリー線", ["ヴィクトリア","チャリング・クロス"]],
-    ["subway", "ノーザン線", ["バタシー","ランベス"]],
-    ["bus", "バス 9番", ["アールズ・コート","ヴィクトリア","ウェストミンスター"]],
-    ["bus", "バス 14番", ["ケンジントン","ナイツブリッジ","ヴィクトリア"]],
-    ["bus", "バス 72番", ["シェパーズ・ブッシュ","ハマースミス","バタシー"]],
-    ["bus", "バス 24番", ["ハムステッド","カムデン","ハイベリー"]],
-    ["bus", "バス 38番", ["ハイゲート","ハックニー","ストラトフォード","ホワイトチャペル","タワー・ヒル"]],
-    ["bus", "バス D3番", ["ホワイトチャペル","カナリー・ワーフ"]],
-    ["bus", "バス 73番", ["キングス・クロス","エンジェル"]],
-    ["bus", "バス 88番", ["クラパム","ランベス"]],
-    ["bus", "バス 11番", ["チャリング・クロス","ウェストミンスター"]],
-    ["bus", "バス 390番", ["オックスフォード・サーカス","カムデン"]],
-    ["bus", "バス 25番", ["バンク","リバプール・ストリート"]],
-    ["bus", "バス 55番", ["ホルボーン","バービカン"]],
-    ["bus", "バス 19番", ["グリーン・パーク","ヴィクトリア"]],
-    // テムズ川のボートは怪盗Xが黒チケットでのみ使える
-    ["ferry", "テムズ川ボート", ["ハマースミス","バタシー","ランベス","ウェストミンスター","タワー・ヒル","カナリー・ワーフ"]],
-  ];
-
-  const TYPE = {
-    train:  { name: "タクシー", short: "タ" },
-    subway: { name: "地下鉄", short: "地" },
-    bus:    { name: "バス",   short: "バ" },
-    ferry:  { name: "テムズ川ボート", short: "船" },
-    black:  { name: "黒チケット", short: "黒" },
-  };
-  const TYPE_ORDER = ["train", "subway", "bus", "ferry"];
-  const DET_TYPES = ["train", "subway", "bus"];
-
-  const MAX_MOVES = 18;
-  const REVEAL = [3, 8, 13, 18];
-  const DET_COUNT = 4;
-  const DET_TICKETS = { train: 10, bus: 8, subway: 4 };
-  const X_BLACK = 5;
-  const X_DOUBLE = 3;
+  const TAXI = [[0, 7], [0, 8], [0, 9], [1, 2], [2, 3], [2, 5], [2, 12], [3, 4], [3, 12], [4, 14], [5, 6], [5, 7], [5, 12], [6, 7], [6, 21], [7, 8], [8, 9], [8, 10], [9, 11], [10, 11], [10, 23], [11, 24], [11, 25], [12, 13], [13, 14], [13, 19], [14, 15], [14, 18], [15, 16], [15, 18], [15, 82], [16, 17], [16, 83], [16, 84], [17, 84], [18, 19], [18, 42], [18, 82], [19, 20], [19, 40], [19, 42], [20, 21], [20, 39], [21, 22], [21, 37], [21, 39], [22, 23], [22, 36], [23, 34], [23, 35], [24, 27], [24, 34], [25, 26], [25, 27], [26, 28], [27, 28], [27, 30], [28, 29], [28, 30], [29, 30], [29, 31], [30, 31], [30, 32], [31, 32], [31, 60], [31, 61], [32, 33], [32, 59], [32, 60], [33, 34], [33, 53], [33, 59], [34, 35], [34, 53], [35, 36], [35, 52], [36, 37], [36, 51], [36, 52], [37, 38], [37, 39], [37, 49], [37, 50], [38, 39], [38, 40], [38, 48], [38, 49], [40, 41], [40, 47], [40, 48], [41, 42], [41, 44], [41, 46], [42, 43], [42, 44], [43, 44], [43, 80], [43, 81], [43, 82], [44, 45], [44, 80], [45, 46], [45, 74], [45, 79], [46, 47], [47, 48], [47, 73], [48, 49], [48, 57], [48, 72], [48, 73], [49, 50], [49, 57], [50, 51], [50, 57], [51, 52], [51, 55], [52, 53], [52, 54], [52, 55], [53, 54], [53, 59], [54, 55], [54, 58], [54, 59], [55, 56], [55, 58], [56, 57], [56, 71], [56, 72], [57, 72], [58, 64], [58, 68], [59, 60], [59, 64], [60, 61], [61, 62], [62, 63], [63, 65], [64, 66], [64, 67], [64, 68], [65, 66], [66, 67], [66, 70], [67, 68], [67, 70], [67, 94], [68, 69], [68, 71], [69, 71], [69, 76], [69, 94], [70, 94], [71, 72], [71, 76], [72, 73], [73, 75], [73, 76], [74, 75], [74, 77], [74, 79], [75, 76], [77, 78], [77, 79], [77, 86], [78, 86], [78, 88], [79, 80], [79, 85], [79, 86], [80, 81], [80, 85], [81, 82], [81, 85], [82, 83], [83, 84], [83, 87], [85, 86], [85, 87], [87, 88], [88, 89], [88, 95], [89, 90], [89, 95], [90, 91], [91, 92], [93, 94]];
+  const THAMES = [[280, 1392], [420, 1392], [510, 1380], [560, 1470], [590, 1600], [640, 1710], [760, 1725], [860, 1650], [950, 1545], [1070, 1490], [1200, 1470], [1310, 1450], [1400, 1415], [1452, 1340], [1462, 1240], [1478, 1150], [1530, 1098], [1640, 1088], [1760, 1092], [1880, 1108], [1990, 1172], [2085, 1178], [2165, 1110], [2235, 1112], [2255, 1250], [2285, 1385], [2345, 1452], [2420, 1440], [2450, 1330], [2445, 1195], [2455, 1080], [2515, 1050], [2585, 1140], [2610, 1290], [2700, 1390], [2800, 1420]];
 
   const N = STATIONS.length;
   const IDX = Object.fromEntries(STATIONS.map((s, i) => [s[0], i]));
   const NAME = i => STATIONS[i][0];
+  const NO = i => i + 1;
 
+  const TUBE = [
+    ["セントラル線", ["ホワイト・シティ","シェパーズ・ブッシュ","ノッティング・ヒル","マーブル・アーチ","ボンド・ストリート","オックスフォード・サーカス","トッテナム・コート・ロード","ホルボーン","セント・ポール","バンク","リバプール・ストリート","ベスナル・グリーン","マイル・エンド","ストラトフォード"]],
+    ["ノーザン線", ["ハムステッド","ベルサイズ・パーク","カムデン・タウン","ユーストン","トッテナム・コート・ロード","レスター・スクエア","チャリング・クロス","ウォータールー","ケニントン"]],
+    ["ノーザン線", ["ハイゲート","アーチウェイ","ケンティッシュ・タウン","カムデン・タウン"]],
+    ["ノーザン線", ["キングス・クロス","エンジェル","オールド・ストリート","バンク","ロンドン・ブリッジ","バラ","エレファント&キャッスル","ケニントン","ストックウェル","クラパム・コモン"]],
+    ["ノーザン線", ["ケニントン","バタシー"]],
+    ["ピカデリー線", ["フィンズベリー・パーク","ホロウェイ","キングス・クロス","ラッセル・スクエア","ホルボーン","コヴェント・ガーデン","レスター・スクエア","ピカデリー・サーカス","グリーン・パーク","ハイド・パーク・コーナー","ナイツブリッジ","サウス・ケンジントン","アールズ・コート","ハマースミス"]],
+    ["ヴィクトリア線", ["フィンズベリー・パーク","ハイベリー","キングス・クロス","ユーストン","オックスフォード・サーカス","グリーン・パーク","ヴィクトリア","ピムリコ","ヴォクソール","ストックウェル","ブリクストン"]],
+    ["ジュビリー線", ["キルバーン","スイス・コテージ","セント・ジョンズ・ウッド","ベイカー・ストリート","ボンド・ストリート","グリーン・パーク","ウェストミンスター","ウォータールー","サザーク","ロンドン・ブリッジ","バーモンジー","カナリー・ワーフ","ノース・グリニッジ","ストラトフォード"]],
+    ["ディストリクト線", ["アールズ・コート","サウス・ケンジントン","スローン・スクエア","ヴィクトリア","セント・ジェームズ・パーク","ウェストミンスター","チャリング・クロス","テンプル","ブラックフライアーズ","タワー・ヒル","オールドゲート・イースト","ホワイトチャペル","マイル・エンド","ボウ"]],
+    ["ディストリクト線", ["アールズ・コート","フラム・ブロードウェイ","パトニー・ブリッジ"]],
+    ["ハマースミス&シティ線", ["ハマースミス","シェパーズ・ブッシュ","ラドブローク・グローブ","パディントン"]],
+    ["サークル線", ["アールズ・コート","ケンジントン","ノッティング・ヒル","パディントン","ベイカー・ストリート","キングス・クロス","ファリンドン","バービカン","リバプール・ストリート","オールドゲート・イースト"]],
+    ["ベーカールー線", ["メイダ・ヴェール","パディントン","ベイカー・ストリート","リージェンツ・パーク","オックスフォード・サーカス","ピカデリー・サーカス","チャリング・クロス","ウォータールー","ランベス・ノース","エレファント&キャッスル"]],
+    ["DLR", ["バンク","シャドウェル","ライムハウス","カナリー・ワーフ","アイランド・ガーデンズ","グリニッジ","デプトフォード"]],
+    ["DLR", ["ストラトフォード","ボウ"]],
+    ["オーバーグラウンド", ["キルバーン","ハムステッド","ケンティッシュ・タウン","ホロウェイ","ハイベリー","ダルストン","ハックニー","ハックニー・ウィック","ストラトフォード"]],
+    ["オーバーグラウンド", ["ダルストン","ハガーストン","ショーディッチ","ホワイトチャペル","シャドウェル","ワッピング","ロザーハイズ","ニュー・クロス"]],
+    ["オーバーグラウンド", ["ワンズワース","クラパム・ジャンクション","クラパム・コモン","キャンバーウェル","ペッカム","ニュー・クロス"]],
+  ];
+  const BUS = [
+    ["9番", ["ハマースミス","ケンジントン","ナイツブリッジ","ハイド・パーク・コーナー","ピカデリー・サーカス","チャリング・クロス"]],
+    ["11番", ["フラム・ブロードウェイ","チェルシー","スローン・スクエア","ヴィクトリア","ウェストミンスター","チャリング・クロス","セント・ポール","バンク","リバプール・ストリート"]],
+    ["24番", ["ハムステッド","カムデン・タウン","ユーストン","トッテナム・コート・ロード","レスター・スクエア","ウェストミンスター","ヴィクトリア","ピムリコ"]],
+    ["38番", ["ヴィクトリア","ピカデリー・サーカス","ホルボーン","エンジェル","ダルストン","ハックニー"]],
+    ["73番", ["ストーク・ニューイントン","エンジェル","キングス・クロス","ユーストン","オックスフォード・サーカス"]],
+    ["25番", ["オックスフォード・サーカス","ホルボーン","バンク","オールドゲート・イースト","ホワイトチャペル","マイル・エンド","ボウ","ストラトフォード"]],
+    ["15番", ["カナリー・ワーフ","ライムハウス","タワー・ヒル","セント・ポール","テンプル","チャリング・クロス"]],
+    ["36番", ["パディントン","マーブル・アーチ","ハイド・パーク・コーナー","ヴィクトリア","ヴォクソール","ケニントン","キャンバーウェル","ペッカム","ニュー・クロス"]],
+    ["381番", ["ウォータールー","サザーク","ロンドン・ブリッジ","バーモンジー","ロザーハイズ"]],
+    ["188番", ["ノース・グリニッジ","グリニッジ","デプトフォード","ニュー・クロス"]],
+    ["35番", ["クラパム・ジャンクション","バタシー","ヴォクソール","ケニントン","エレファント&キャッスル","ロンドン・ブリッジ","リバプール・ストリート"]],
+    ["31番", ["カムデン・タウン","スイス・コテージ","キルバーン","メイダ・ヴェール","ノッティング・ヒル","アールズ・コート"]],
+    ["390番", ["ハイゲート","アーチウェイ","ホロウェイ","キングス・クロス","ラッセル・スクエア"]],
+    ["22番", ["パトニー・ブリッジ","フラム・ブロードウェイ","チェルシー","スローン・スクエア","ナイツブリッジ","ハイド・パーク・コーナー","グリーン・パーク","ピカデリー・サーカス"]],
+    ["49番", ["クラパム・ジャンクション","チェルシー","サウス・ケンジントン","ケンジントン","ノッティング・ヒル","ホワイト・シティ"]],
+    ["26番", ["ハックニー・ウィック","ハックニー","ベスナル・グリーン","ショーディッチ","リバプール・ストリート","バンク","セント・ポール","ブラックフライアーズ","ウォータールー"]],
+    ["D3番", ["マイル・エンド","ライムハウス","カナリー・ワーフ","アイランド・ガーデンズ"]],
+    ["55番", ["トッテナム・コート・ロード","ホルボーン","ファリンドン","オールド・ストリート","ショーディッチ","ベスナル・グリーン"]],
+    ["12番", ["オックスフォード・サーカス","ピカデリー・サーカス","ウェストミンスター","ランベス・ノース","エレファント&キャッスル","キャンバーウェル","ペッカム"]],
+    ["2番", ["ベイカー・ストリート","マーブル・アーチ","ハイド・パーク・コーナー","ヴィクトリア","ヴォクソール","ストックウェル","ブリクストン"]],
+    ["88番", ["カムデン・タウン","リージェンツ・パーク","オックスフォード・サーカス","ピカデリー・サーカス","ウェストミンスター","ヴォクソール","クラパム・コモン"]],
+    ["37番", ["パトニー・ブリッジ","ワンズワース","クラパム・ジャンクション","クラパム・コモン","ブリクストン","ペッカム"]],
+    ["94番", ["シェパーズ・ブッシュ","ノッティング・ヒル","マーブル・アーチ","ボンド・ストリート"]],
+    ["205番", ["パディントン","ベイカー・ストリート","ユーストン","キングス・クロス","エンジェル","オールド・ストリート","リバプール・ストリート","オールドゲート・イースト","ホワイトチャペル","マイル・エンド","ボウ"]],
+    ["108番", ["ストラトフォード","ボウ","ノース・グリニッジ"]],
+    ["46番", ["ハムステッド","スイス・コテージ","セント・ジョンズ・ウッド","メイダ・ヴェール","パディントン"]],
+    ["214番", ["ハイゲート","ケンティッシュ・タウン","カムデン・タウン"]],
+    ["76番", ["ストーク・ニューイントン","ダルストン","ハガーストン","ショーディッチ"]],
+    ["190番", ["ハマースミス","フラム・ブロードウェイ"]],
+    ["100番", ["タワー・ヒル","ワッピング","シャドウェル"]],
+    ["1番", ["エレファント&キャッスル","バラ","バーモンジー","ロザーハイズ"]],
+    ["236番", ["フィンズベリー・パーク","ストーク・ニューイントン","ハイベリー"]],
+  ];
+  // テムズ川のボート：怪盗Xが黒チケットでのみ使える
+  const PIERS = ["パトニー・ブリッジ","チェルシー","バタシー","ウェストミンスター","チャリング・クロス","ブラックフライアーズ","ロンドン・ブリッジ","タワー・ヒル","ロザーハイズ","カナリー・ワーフ","グリニッジ","ノース・グリニッジ"];
+
+  const TYPE = {
+    taxi:  { name: "タクシー", en: "Taxi", short: "タ" },
+    bus:   { name: "バス", en: "Bus", short: "バ" },
+    tube:  { name: "地下鉄", en: "Underground", short: "地" },
+    ferry: { name: "ボート", en: "Boat", short: "船" },
+    black: { name: "黒チケット", en: "Black", short: "黒" },
+  };
+  const DET_TYPES = ["taxi", "bus", "tube"];
+
+  const MAX_MOVES = 24;
+  const REVEAL = [3, 8, 13, 18, 24];
+  const DET_TICKETS = { taxi: 12, bus: 9, tube: 5 };
+  const X_DOUBLE = 2;
+
+  // 区間ごとの交通手段
   const edgeTypes = new Map(); // "a-b" -> Map(type -> 路線名[])
-  for (const [type, lineName, seq] of LINES) {
-    for (let k = 0; k < seq.length - 1; k++) {
-      const a = IDX[seq[k]], b = IDX[seq[k + 1]];
-      if (a === undefined || b === undefined) throw new Error("unknown station " + seq[k] + "/" + seq[k + 1]);
-      const key = a < b ? a + "-" + b : b + "-" + a;
-      if (!edgeTypes.has(key)) edgeTypes.set(key, new Map());
-      const m = edgeTypes.get(key);
-      if (!m.has(type)) m.set(type, []);
-      if (!m.get(type).includes(lineName)) m.get(type).push(lineName);
-    }
+  function addEdge(a, b, type, line) {
+    if (a === b) return;
+    const key = a < b ? a + "-" + b : b + "-" + a;
+    if (!edgeTypes.has(key)) edgeTypes.set(key, new Map());
+    const m = edgeTypes.get(key);
+    if (!m.has(type)) m.set(type, []);
+    if (line && !m.get(type).includes(line)) m.get(type).push(line);
   }
+  const id = n => { const i = IDX[n]; if (i === undefined) throw new Error("unknown station " + n); return i; };
+  for (const [a, b] of TAXI) addEdge(a, b, "taxi", "タクシー");
+  for (const [line, seq] of TUBE) for (let k = 0; k < seq.length - 1; k++) addEdge(id(seq[k]), id(seq[k + 1]), "tube", line);
+  for (const [line, seq] of BUS) for (let k = 0; k < seq.length - 1; k++) addEdge(id(seq[k]), id(seq[k + 1]), "bus", "バス " + line);
+  for (let k = 0; k < PIERS.length - 1; k++) addEdge(id(PIERS[k]), id(PIERS[k + 1]), "ferry", "テムズ川ボート");
+
   const ADJ = Array.from({ length: N }, () => []);
   for (const [key, types] of edgeTypes) {
     const [a, b] = key.split("-").map(Number);
-    for (const t of types.keys()) {
-      ADJ[a].push({ to: b, type: t });
-      ADJ[b].push({ to: a, type: t });
-    }
+    for (const t of types.keys()) { ADJ[a].push({ to: b, type: t }); ADJ[b].push({ to: a, type: t }); }
   }
-  // 刑事が使える路線だけでの最短距離
   const D = Array.from({ length: N }, (_, s) => {
     const d = new Array(N).fill(Infinity);
     d[s] = 0;
@@ -639,24 +583,26 @@
   const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
   const clone = o => JSON.parse(JSON.stringify(o));
 
-  // ゲーム状態 G は公開情報のみ。怪盗Xの現在地は sec（秘密）に分けて持つ。
-  function newGame(detCount = DET_COUNT) {
+  function newGame(detCount) {
     const ids = shuffle([...Array(N).keys()]);
-    const det = ids.slice(0, detCount).map(pos => ({ pos, t: { ...DET_TICKETS } }));
+    const det = [];
+    for (const p of ids) {
+      if (det.length >= detCount) break;
+      if (det.every(d => D[p][d.pos] >= 2)) det.push({ pos: p, t: { ...DET_TICKETS } });
+    }
     const startable = ids.filter(p => det.every(d => D[p][d.pos] >= 2));
     const xStart = startable[0];
     const G = {
-      seq: 1, turn: "x", det, xLog: [], black: X_BLACK, dbl: X_DOUBLE, doubling: false,
+      seq: 1, turn: "x", det, xLog: [], black: detCount, dbl: X_DOUBLE, doubling: false,
       possible: startable.slice().sort((a, b) => a - b), lastSeen: null,
-      over: false, winner: null, reason: "", xPath: null,
+      over: false, winner: null, reason: "",
     };
     return { G, sec: { pos: xStart, path: [xStart] } };
   }
 
   function xMoves(G, sec) {
     const occ = new Set(G.det.map(d => d.pos));
-    const out = [];
-    const blackTo = new Set();
+    const out = [], blackTo = new Set();
     for (const e of ADJ[sec.pos]) {
       if (occ.has(e.to)) continue;
       if (e.type !== "ferry") out.push({ to: e.to, type: e.type });
@@ -712,14 +658,13 @@
   function skipD(G, k) { advance(G, k); G.seq++; }
   function finish(G, winner, reason) { G.over = true; G.winner = winner; G.reason = reason; G.seq++; }
 
-  // ---------------- CPU ----------------
   function aiX(G, sec) {
     const moves = xMoves(G, sec);
     const cpos = G.det.map(d => d.pos);
     const score = to => {
       const dmin = Math.min(...cpos.map(c => D[to][c]));
       const dsum = cpos.reduce((s, c) => s + Math.min(D[to][c], 5), 0);
-      const exits = ADJ[to].filter(e => !cpos.some(c => D[e.to][c] <= 1)).length;
+      const exits = ADJ[to].filter(e => e.type !== "ferry" && !cpos.some(c => D[e.to][c] <= 1)).length;
       let s = Math.min(dmin, 4) * 10 + dsum + exits * 1.5 + Math.random() * 3;
       if (dmin <= 1) s -= 40;
       return { s, dmin };
@@ -759,7 +704,6 @@
       const s = prob * 30 - ed * 4 + spread - (spare <= 1 ? 1.5 : 0) + Math.random() * 0.8;
       if (s > bs) { bs = s; best = to; }
     }
-    // 残り枚数が多い切符を使う
     const types = moves.filter(m => m.to === best).map(m => m.type);
     types.sort((a, b) => G.det[k].t[b] - G.det[k].t[a]);
     return { to: best, type: types[0] };
@@ -768,6 +712,12 @@
   // CORE-END
   // ======================================================================
 
+  // 生成画像を使うときはここにファイル名を入れる（例: map: "art/map.jpg"）
+  const ART = { map: null, x: null, d: [null, null, null, null, null], title: null };
+
+  const DCOL = ["#3B82F6", "#F97316", "#A855F7", "#14B8A6", "#E879F9"];
+  const AI_DELAY = 650;
+  const SAVE_KEY = "london-chase-save-v1";
   const $ = id => document.getElementById(id);
   const SVGNS = "http://www.w3.org/2000/svg";
   function el(tag, attrs = {}, parent) {
@@ -777,928 +727,714 @@
     return e;
   }
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const DCOL = ["#4F8DFF", "#FF8A3D", "#B46CFF", "#2FD1C0"];
-  const AI_DELAY = 550;
-
-  function face(kind, k = 0) {
-    if (kind === "x") {
-      return `<svg class="face" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="#1D2130" stroke="#E5484D" stroke-width="2"></circle><use href="#chr-x" x="-20" y="-20" width="40" height="40"></use></svg>`;
-    }
-    return `<svg class="face" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="${DCOL[k % DCOL.length]}"></circle><use href="#chr-d" x="-20" y="-20" width="40" height="40"></use></svg>`;
-  }
   const dName = k => "刑事" + (k + 1);
 
+  function portrait(kind, k = 0, cls = "") {
+    const src = kind === "x" ? ART.x : ART.d[k];
+    if (src) return `<span class="portrait ${cls}"><img src="${src}" alt=""></span>`;
+    const ring = kind === "x" ? "#C0271F" : DCOL[k];
+    const inner = kind === "x" ? `<use href="#chr-x" x="-20" y="-20" width="40" height="40"></use>` :
+      `<circle r="20" fill="${ring}"></circle><use href="#chr-d" x="-20" y="-20" width="40" height="40"></use>`;
+    return `<svg class="portrait ${cls}" viewBox="-22 -22 44 44" aria-hidden="true"><circle r="21.5" fill="none" stroke="${ring}" stroke-width="3"></circle>${inner}</svg>`;
+  }
+
   // ======================================================================
-  // アプリ状態
+  // 状態
   // ======================================================================
   const A = {
-    mode: null,          // "local" | "online"
-    role: null,          // local: "x" | "d"
+    role: null,        // "x" | "d" | "pass"
+    detCount: 5,
     G: null,
-    sec: null,           // 怪盗Xの秘密（自分がXのときだけ）
-    pending: null,       // 同じ駅へ複数の手段があるときの選択
-    useBlack: false,
+    sec: null,
+    feed: [],
+    sel: null,         // 選択中の移動先
     useDouble: false,
     hints: true,
-    tab: "log",
-    feed: [],            // {n, text, hot}
-    showResult: false,
-    screen: "menu",      // menu | lobby | room | game
+    cover: null,       // パス&プレイの目隠し："x"（Xへ渡す）| "x-open" | "d"（刑事へ渡す）
+    screen: "title",   // title | rules | game | result
+    busy: false,
   };
-  const NET = { db: null, user: null, me: null, rooms: [], room: null, code: null, chat: [], unsub: [], names: {}, handledSeq: 0, busy: false, readOnly: false };
   let timer = null;
 
-  // ---------------- 手番の担当 ----------------
-  function mySeatsD() {
-    if (A.mode === "local") return A.role === "d" ? A.G.det.map((_, k) => k) : [];
-    const s = NET.room?.seats || {};
-    return A.G.det.map((_, k) => k).filter(k => s["d" + k]?.uid === NET.me && !s["d" + k]?.cpu);
-  }
-  const iAmX = () => A.mode === "local" ? A.role === "x" : (NET.room?.seats?.x?.uid === NET.me && !!NET.me);
-  function isMyTurn() {
+  const humanTurn = () => {
     const G = A.G;
     if (!G || G.over) return false;
-    if (G.turn === "x") return iAmX() && !!A.sec;
-    return mySeatsD().includes(G.turn);
-  }
-  function seatLabel(key) {
-    if (A.mode !== "online") return key === "x" ? (A.role === "x" ? "あなた" : "CPU") : (A.role === "d" ? "あなた" : "CPU");
-    const s = NET.room?.seats?.[key];
-    if (!s) return "空席";
-    if (s.cpu) return "CPU";
-    if (!s.uid) return "空席";
-    if (s.uid === NET.me) return "あなた";
-    return NET.names[s.uid] || "プレイヤー";
-  }
+    if (A.role === "pass") return G.turn === "x" ? A.cover === "x-open" : A.cover === null;
+    return A.role === "x" ? G.turn === "x" : G.turn !== "x";
+  };
+  const xVisible = () => {
+    const G = A.G;
+    if (!G) return false;
+    if (G.over || A.role === "x") return true;
+    return A.role === "pass" && A.cover === "x-open";
+  };
+  const sideName = () => A.role === "x" ? "x" : A.role === "d" ? "d" : null;
 
-  // ---------------- ログ（状態の差分から作る） ----------------
+  function pushFeed(n, text, hot = false) {
+    A.feed.unshift({ n, text, hot });
+    if (A.feed.length > 200) A.feed.length = 200;
+  }
   function describe(prev, G) {
-    const out = [];
-    if (!prev) return out;
     for (let i = prev.xLog.length; i < G.xLog.length; i++) {
       const e = G.xLog[i];
       let s = `怪盗Xが ${TYPE[e.t].name} で移動`;
       if (e.d === 1) s = "怪盗Xが2倍移動！ " + s;
-      if (iAmX() && A.sec) s += `（→ ${NAME(A.sec.path[i + 1])}）`;
-      out.push({ n: i + 1, text: s });
-      if (e.p !== null) out.push({ n: i + 1, text: `目撃情報！ 怪盗Xは ${NAME(e.p)} にいる`, hot: true });
+      if (xVisible()) s += `（→ ${NO(A.sec.path[i + 1])} ${NAME(A.sec.path[i + 1])}）`;
+      pushFeed(i + 1, s);
+      if (e.p !== null) { pushFeed(i + 1, `目撃情報！ 怪盗Xは ${NO(e.p)} ${NAME(e.p)} にいる`, true); toast(`目撃情報！ 怪盗Xは ${NAME(e.p)} に`); }
     }
     G.det.forEach((d, k) => {
       const p = prev.det[k];
-      if (!p) return;
-      if (p.pos !== d.pos) {
+      if (p && p.pos !== d.pos) {
         const used = DET_TYPES.find(t => p.t[t] !== d.t[t]);
-        out.push({ n: G.xLog.length, text: `${dName(k)} → ${NAME(d.pos)}（${used ? TYPE[used].name : ""}）` });
+        pushFeed(G.xLog.length, `${dName(k)} → ${NO(d.pos)} ${NAME(d.pos)}（${used ? TYPE[used].name : ""}）`);
       }
     });
-    if (!prev.over && G.over) {
-      const msg = G.winner === "x"
-        ? (G.reason === "stuck" ? "刑事が全員動けなくなった。怪盗Xの勝ち！" : "怪盗Xが逃げ切った！")
-        : (G.reason === "trapped" ? "怪盗Xは囲まれて動けない。刑事の勝ち！" : "怪盗Xを逮捕！ 刑事の勝ち！");
-      out.push({ n: G.xLog.length, text: msg, hot: true });
-    }
-    return out;
-  }
-  function pushFeed(items) {
-    for (const it of items) A.feed.unshift(it);
-    if (A.feed.length > 120) A.feed.length = 120;
+    if (!prev.over && G.over) pushFeed(G.xLog.length, G.winner === "x" ? "怪盗Xの勝ち！" : "怪盗Xを逮捕！ 刑事の勝ち！", true);
   }
 
+  function save() {
+    try {
+      if (!A.G || A.G.over) localStorage.removeItem(SAVE_KEY);
+      else localStorage.setItem(SAVE_KEY, JSON.stringify({ role: A.role, detCount: A.detCount, G: A.G, sec: A.sec, feed: A.feed.slice(0, 60), cover: A.cover === "x-open" ? "x" : A.cover }));
+    } catch (e) {}
+  }
+  function loadSave() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) { return null; } }
+
   // ======================================================================
-  // ローカル（CPU対戦）
+  // 進行
   // ======================================================================
-  function startLocal(role) {
-    leaveRoom();
+  function startGame(role) {
     clearTimeout(timer);
-    const { G, sec } = newGame();
-    A.mode = "local"; A.role = role; A.G = G; A.sec = sec;
-    A.feed = []; A.pending = null; A.useBlack = false; A.useDouble = false; A.showResult = false;
-    A.screen = "game";
-    pushFeed([{ n: 0, text: role === "x" ? "あなたは怪盗X。18手逃げ切れば勝ち！" : "あなたは刑事4人を指揮する。怪盗Xを逮捕せよ！", hot: true }]);
-    localStep();
+    const { G, sec } = newGame(A.detCount);
+    Object.assign(A, { role, G, sec, feed: [], sel: null, useDouble: false, screen: "game", busy: false });
+    A.cover = role === "pass" ? "x" : null;
+    pushFeed(0, role === "x" ? `あなたは怪盗X。${MAX_MOVES}手逃げ切れば勝ち！` : role === "d" ? `あなたは刑事${A.detCount}人を指揮する。怪盗Xを逮捕せよ！` : "パス&プレイ。怪盗X役の人から始めます。", true);
+    buildTokens();
+    fitView(false);
+    step();
+    if (role !== "pass") setTimeout(() => focusTurn(), 50);
   }
 
-  function localApply(fn) {
+  function resume(s) {
+    clearTimeout(timer);
+    Object.assign(A, { role: s.role, detCount: s.detCount, G: s.G, sec: s.sec, feed: s.feed || [], sel: null, useDouble: false, screen: "game", busy: false, cover: s.cover || null });
+    buildTokens();
+    fitView(false);
+    step();
+  }
+
+  function apply(fn) {
     const prev = clone(A.G);
     fn();
-    // 逮捕判定（ローカルは秘密を知っている）
     if (!A.G.over && A.G.det.some(d => d.pos === A.sec.pos)) finish(A.G, "d", "caught");
-    pushFeed(describe(prev, A.G));
+    describe(prev, A.G);
   }
 
-  function localStep() {
+  function step() {
     clearTimeout(timer);
     const G = A.G;
     while (!G.over) {
       if (G.turn === "x") {
-        if (!xMoves(G, A.sec).length) { localApply(() => finish(G, "d", "trapped")); continue; }
-        if (A.role === "x") { render(); return; }
+        if (!xMoves(G, A.sec).length) { apply(() => finish(G, "d", "trapped")); continue; }
+        if (A.role === "pass" && A.cover === null) A.cover = "x";
+        if (A.role === "x" || A.role === "pass") { save(); render(); return; }
         render();
         timer = setTimeout(() => {
           const m = aiX(G, A.sec);
-          localApply(() => applyX(G, A.sec, m.to, m.type, m.useDouble));
-          localStep();
+          apply(() => applyX(G, A.sec, m.to, m.type, m.useDouble));
+          step();
         }, AI_DELAY);
         return;
       }
       const k = G.turn;
-      if (allStuck(G)) { localApply(() => finish(G, "x", "stuck")); continue; }
+      if (allStuck(G)) { apply(() => finish(G, "x", "stuck")); continue; }
       if (!detMoves(G, k).length) {
-        pushFeed([{ n: G.xLog.length, text: `${dName(k)} は使える切符がないので待機` }]);
-        localApply(() => skipD(G, k));
+        pushFeed(G.xLog.length, `${dName(k)} は使える切符がないので待機`);
+        apply(() => skipD(G, k));
         continue;
       }
-      if (A.role === "d") { render(); return; }
+      if (A.role !== "x") { save(); render(); ensureVisible(G.det[k].pos); return; }
       render();
       timer = setTimeout(() => {
         const m = aiD(G, k);
-        localApply(() => applyD(G, k, m.to, m.type));
-        localStep();
+        apply(() => applyD(G, k, m.to, m.type));
+        step();
       }, AI_DELAY);
       return;
     }
-    A.showResult = true;
+    save();
+    A.cover = null;
     render();
+    setTimeout(() => { A.screen = "result"; renderScreen(); }, 900);
   }
 
-  // ======================================================================
-  // オンライン（db 共有状態）
-  // ======================================================================
-  const ROOM_TTL = 3 * 60 * 60 * 1000;
-  const roomRef = code => NET.db.doc("rooms/" + code);
-  const secretRef = code => NET.db.doc("data/users/" + NET.me + "/x-" + code);
-
-  async function initNet() {
-    try {
-      if (!window.claude?.use) return;
-      const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
-      if (!db || !user) return;
-      const me = await user.id();
-      if (!me) return;
-      NET.db = db; NET.user = user; NET.me = me;
-      const can = await user.can("data.write");
-      NET.readOnly = can === false;
-      $("net").classList.add("on");
-      $("netText").textContent = "オンライン";
-      if (A.screen === "menu") showMenu();
-    } catch (e) { /* オンライン機能なしで続行 */ }
+  function commitX(to, type) {
+    const dbl = A.useDouble && canDouble(A.G);
+    A.sel = null; A.useDouble = false;
+    apply(() => applyX(A.G, A.sec, to, type, dbl));
+    if (A.role === "pass" && !A.G.over && A.G.turn !== "x") A.cover = "d";
+    step();
+  }
+  function commitD(k, to, type) {
+    A.sel = null;
+    apply(() => applyD(A.G, k, to, type));
+    step();
   }
 
-  async function resolveNames(ids) {
-    if (!NET.user) return;
-    const want = [...new Set(ids.filter(Boolean))].filter(id => !(id in NET.names));
-    if (!want.length) return;
-    try {
-      const ps = await NET.user.profiles(want);
-      let changed = false;
-      for (const id of want) { NET.names[id] = ps[id]?.name || ""; changed = true; }
-      if (changed) { renderOverlay(); render(); }
-    } catch (e) {}
-  }
-
-  function stopSubs() { NET.unsub.forEach(u => { try { u(); } catch (e) {} }); NET.unsub = []; }
-
-  function openLobby() {
-    if (!NET.db) return;
-    leaveRoom();
-    A.screen = "lobby";
-    stopSubs();
-    const q = NET.db.collection("rooms").where("status", "==", "lobby").orderBy("created", "desc").limit(20);
-    NET.unsub.push(q.onSnapshot(snap => {
-      const now = Date.now();
-      NET.rooms = snap.docs.map(d => d.data()).filter(r => r && now - (r.created || 0) < ROOM_TTL);
-      resolveNames(NET.rooms.map(r => r.seats?.x?.uid));
-      if (A.screen === "lobby") renderOverlay();
-    }, () => {}));
-    renderOverlay();
-  }
-
-  function makeCode() {
-    const cs = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    return Array.from({ length: 4 }, () => cs[Math.floor(Math.random() * cs.length)]).join("");
-  }
-  function emptySeats() {
-    const s = { x: { uid: null, cpu: false } };
-    for (let k = 0; k < DET_COUNT; k++) s["d" + k] = { uid: null, cpu: false };
-    return s;
-  }
-
-  async function createRoom() {
-    const code = makeCode();
-    const seats = emptySeats();
-    seats.x.uid = NET.me;
-    try {
-      await roomRef(code).set({ code, created: Date.now(), owner: NET.me, status: "lobby", seats, game: null });
-      enterRoom(code);
-    } catch (e) { toast("ルームを作れませんでした。共有設定で編集できる権限が必要です。"); }
-  }
-
-  function enterRoom(code) {
-    stopSubs();
-    NET.code = code; NET.room = null; NET.chat = []; NET.handledSeq = 0;
-    A.mode = "online"; A.screen = "room"; A.G = null; A.sec = null; A.feed = []; A.showResult = false;
-    NET.unsub.push(roomRef(code).onSnapshot(onRoom, () => {}));
-    NET.unsub.push(NET.db.collection("rooms/" + code + "/chat").orderBy("t", "desc").limit(40).onSnapshot(snap => {
-      NET.chat = snap.docs.map(d => d.data()).reverse();
-      resolveNames(NET.chat.map(c => c.uid));
-      if (A.tab === "chat") renderFeed();
-    }, () => {}));
-    render();
-    renderOverlay();
-  }
-
-  function leaveRoom() {
-    stopSubs();
-    NET.code = null; NET.room = null; NET.chat = [];
-    if (A.mode === "online") { A.mode = null; A.G = null; A.sec = null; }
-  }
-
-  async function onRoom(snap) {
-    if (!snap.exists) { NET.room = null; A.screen = "lobby"; openLobby(); return; }
-    const room = snap.data();
-    const prevG = A.G;
-    NET.room = room;
-    const s = room.seats || {};
-    resolveNames([s.x?.uid, ...Array.from({ length: DET_COUNT }, (_, k) => s["d" + k]?.uid)]);
-
-    if (room.status === "lobby") {
-      A.G = null; A.sec = null; A.screen = "room"; A.showResult = false;
-      render(); renderOverlay();
-      return;
-    }
-    const G = clone(room.game);
-    A.G = G;
-    A.screen = "game";
-    if (iAmX() && !A.sec) {
-      try {
-        const sd = await secretRef(room.code).get();
-        if (sd.exists) A.sec = clone(sd.data());
-      } catch (e) {}
-    }
-    if (prevG && prevG.seq !== G.seq) pushFeed(describe(prevG, G));
-    else if (!prevG) pushFeed([{ n: G.xLog.length, text: "ゲームに接続しました", hot: true }]);
-    if (G.over && !prevG?.over) A.showResult = true;
-    if (!G.over) A.showResult = false;
-    if (A.pending && !isMyTurn()) A.pending = null;
-    render(); renderOverlay();
-    onlineTick();
-  }
-
-  async function writeGame(G, fields) {
-    const part = {};
-    for (const f of fields) part[f] = G[f];
-    if (G.over) { part.over = true; part.winner = G.winner; part.reason = G.reason; }
-    part.seq = G.seq;
-    const extra = G.over ? { status: "over" } : {};
-    await roomRef(NET.code).update({ game: part, ...extra });
-  }
-  const X_FIELDS = ["xLog", "black", "dbl", "doubling", "possible", "lastSeen", "turn"];
-  const D_FIELDS = ["det", "possible", "turn"];
-
-  // 怪盗Xのクライアントが進行役：逮捕判定・待機・CPU刑事を処理する
-  function onlineTick() {
-    const room = NET.room, G = A.G;
-    if (!room || room.status === "lobby" || !G || NET.busy) return;
-    if (!iAmX() || !A.sec) return;
-    if (G.over) {
-      if (!G.xPath) {
-        NET.busy = true;
-        roomRef(NET.code).update({ game: { xPath: A.sec.path }, status: "over" }).finally(() => { NET.busy = false; });
-      }
-      return;
-    }
-    if (NET.handledSeq === G.seq) return;
-    const g = clone(G);
-    let fields = null;
-    if (g.det.some(d => d.pos === A.sec.pos)) { finish(g, "d", "caught"); fields = []; }
-    else if (g.turn === "x") {
-      if (!xMoves(g, A.sec).length) { finish(g, "d", "trapped"); fields = []; }
-      else return; // 自分の入力待ち
-    } else {
-      const k = g.turn;
-      const seat = room.seats["d" + k] || {};
-      if (allStuck(g)) { finish(g, "x", "stuck"); fields = []; }
-      else if (!detMoves(g, k).length) { skipD(g, k); fields = D_FIELDS; }
-      else if (seat.cpu || !seat.uid) {
-        NET.busy = true;
-        NET.handledSeq = G.seq;
-        clearTimeout(timer);
-        timer = setTimeout(async () => {
-          const m = aiD(g, k);
-          applyD(g, k, m.to, m.type);
-          if (g.det.some(d => d.pos === A.sec.pos)) finish(g, "d", "caught");
-          try { await writeGame(g, D_FIELDS); } catch (e) { NET.handledSeq = 0; }
-          NET.busy = false;
-        }, AI_DELAY);
-        return;
-      } else return; // 人間の刑事の入力待ち
-    }
-    NET.busy = true;
-    NET.handledSeq = G.seq;
-    writeGame(g, fields).catch(() => { NET.handledSeq = 0; }).finally(() => { NET.busy = false; });
-  }
-
-  async function sit(key) {
-    const s = NET.room?.seats?.[key];
-    if (!s || (s.uid && s.uid !== NET.me)) return;
-    try { await roomRef(NET.code).update({ seats: { [key]: { uid: NET.me, cpu: false } } }); }
-    catch (e) { toast("席に座れませんでした。"); }
-  }
-  async function standUp(key) {
-    try { await roomRef(NET.code).update({ seats: { [key]: { uid: null, cpu: false } } }); } catch (e) {}
-  }
-  async function toggleCpu(key) {
-    const s = NET.room?.seats?.[key];
-    if (!s) return;
-    try { await roomRef(NET.code).update({ seats: { [key]: { uid: null, cpu: !s.cpu } } }); } catch (e) {}
-  }
-
-  async function startOnline() {
-    const room = NET.room;
-    if (!room || !iAmX()) return;
-    const { G, sec } = newGame(DET_COUNT);
-    const seats = clone(room.seats);
-    for (let k = 0; k < DET_COUNT; k++) if (!seats["d" + k].uid) seats["d" + k].cpu = true;
-    try {
-      await secretRef(room.code).set(sec);
-      A.sec = sec;
-      NET.handledSeq = 0;
-      A.feed = [];
-      await roomRef(room.code).set({ ...room, status: "play", seats, game: G, started: Date.now() });
-    } catch (e) { toast("ゲームを始められませんでした。"); }
-  }
-
-  async function backToRoom() {
-    if (!NET.room) return;
-    try { await roomRef(NET.code).update({ status: "lobby", game: null }); } catch (e) {}
-  }
-
-  async function sendChat(text) {
-    if (!NET.code || !text.trim()) return;
-    try { await NET.db.collection("rooms/" + NET.code + "/chat").add({ uid: NET.me, text: text.trim().slice(0, 120), t: Date.now() }); }
-    catch (e) { toast("送信できませんでした。"); }
-  }
-
-  // ======================================================================
-  // 入力
-  // ======================================================================
-  async function commitX(to, type, useDouble) {
-    if (A.mode === "local") {
-      localApply(() => applyX(A.G, A.sec, to, type, useDouble));
-      A.pending = null; A.useBlack = false; A.useDouble = false;
-      localStep();
-      return;
-    }
-    const g = clone(A.G), s = clone(A.sec);
-    applyX(g, s, to, type, useDouble);
-    A.pending = null; A.useBlack = false; A.useDouble = false;
-    try {
-      await secretRef(NET.code).set(s);
-      A.sec = s;
-      await writeGame(g, X_FIELDS);
-    } catch (e) { toast("移動を送れませんでした。もう一度試してください。"); }
-  }
-
-  async function commitD(k, to, type) {
-    if (A.mode === "local") {
-      localApply(() => applyD(A.G, k, to, type));
-      A.pending = null;
-      localStep();
-      return;
-    }
-    const g = clone(A.G);
-    applyD(g, k, to, type);
-    A.pending = null;
-    try { await writeGame(g, D_FIELDS); } catch (e) { toast("移動を送れませんでした。"); }
-  }
-
-  function onStation(id) {
-    if (!isMyTurn()) return;
+  // 駅をタップ
+  function onStationTap(i) {
     const G = A.G;
-    if (G.turn === "x") {
-      const opts = xMoves(G, A.sec).filter(m => m.to === id);
-      if (!opts.length) return;
-      const dbl = A.useDouble && canDouble(G);
-      if (A.useBlack && G.black > 0) return commitX(id, "black", dbl);
-      const types = [...new Set(opts.map(o => o.type).filter(t => t !== "black"))];
-      if (!types.length) { A.pending = { to: id, types: ["black"] }; render(); return; }
-      if (types.length > 1) { A.pending = { to: id, types }; render(); return; }
-      return commitX(id, types[0], dbl);
-    }
-    const k = G.turn;
-    const opts = detMoves(G, k).filter(m => m.to === id);
-    if (!opts.length) return;
-    const types = [...new Set(opts.map(o => o.type))];
-    if (types.length > 1) { A.pending = { to: id, types }; render(); return; }
-    commitD(k, id, types[0]);
+    if (!G || A.screen !== "game") return;
+    if (!humanTurn()) { toast(`${NO(i)} ${NAME(i)}`); return; }
+    const opts = G.turn === "x" ? xMoves(G, A.sec).filter(m => m.to === i) : detMoves(G, G.turn).filter(m => m.to === i);
+    if (!opts.length) { toast(`${NO(i)} ${NAME(i)} へは行けません`); return; }
+    A.sel = i;
+    render();
+    openSheet();
   }
 
   // ======================================================================
-  // 描画
+  // 盤面（パン・ズーム）
   // ======================================================================
-  function buildBackground() {
-    const g = $("gBg");
-    el("rect", { x: 0, y: 0, width: 1400, height: 750, class: "bg-land" }, g);
+  const V = { s: 1, tx: 0, ty: 0, fit: 1 };
+  const mapEl = $("map"), world = $("world");
+  let anim = null;
 
-    // 路地：ゆがんだ格子で古地図の街並みを描く（毎回同じ形になるよう固定シード）
-    let seed = 20251;
+  function vpSize() { const r = mapEl.getBoundingClientRect(); return { w: r.width, h: r.height, r }; }
+  function clampView() {
+    const { w, h } = vpSize();
+    V.s = Math.min(3, Math.max(V.fit * 0.85, V.s));
+    const mw = W * V.s, mh = H * V.s, pad = 80;
+    V.tx = mw + pad * 2 <= w ? (w - mw) / 2 : Math.min(pad, Math.max(w - mw - pad, V.tx));
+    V.ty = mh + pad * 2 <= h ? (h - mh) / 2 : Math.min(pad + 60, Math.max(h - mh - pad - 110, V.ty));
+  }
+  function applyView() {
+    world.setAttribute("transform", `translate(${V.tx.toFixed(1)} ${V.ty.toFixed(1)}) scale(${V.s.toFixed(4)})`);
+    mapEl.classList.toggle("z0", V.s < 0.62);
+    mapEl.classList.toggle("z1", V.s >= 0.62 && V.s < 1.15);
+  }
+  function setView(s, tx, ty) { V.s = s; V.tx = tx; V.ty = ty; clampView(); applyView(); }
+  function animateView(s, tx, ty, ms = 380) {
+    cancelAnimationFrame(anim);
+    const from = { ...V }, to = { s, tx, ty };
+    const tmp = { ...V }; Object.assign(V, to); clampView(); Object.assign(to, { s: V.s, tx: V.tx, ty: V.ty }); Object.assign(V, tmp);
+    const t0 = performance.now();
+    const tick = now => {
+      const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      V.s = from.s + (to.s - from.s) * e; V.tx = from.tx + (to.tx - from.tx) * e; V.ty = from.ty + (to.ty - from.ty) * e;
+      applyView();
+      if (k < 1) anim = requestAnimationFrame(tick);
+    };
+    anim = requestAnimationFrame(tick);
+  }
+  function fitView(animate = true) {
+    const { w, h } = vpSize();
+    V.fit = Math.min(w / W, (h - 120) / H);
+    const s = V.fit * 1.02, tx = (w - W * s) / 2, ty = (h - H * s) / 2 + 10;
+    animate ? animateView(s, tx, ty) : setView(s, tx, ty);
+  }
+  function zoomAt(factor, cx, cy, animate = true) {
+    const s = Math.min(3, Math.max(V.fit * 0.85, V.s * factor));
+    const k = s / V.s;
+    const tx = cx - (cx - V.tx) * k, ty = cy - (cy - V.ty) * k;
+    animate ? animateView(s, tx, ty, 220) : setView(s, tx, ty);
+  }
+  function centerOn(i, s = Math.max(V.s, 0.95)) {
+    const { w, h } = vpSize();
+    const [, x, y] = STATIONS[i];
+    animateView(s, w / 2 - x * s, h / 2 - y * s - 20);
+  }
+  function ensureVisible(i) {
+    const { w, h } = vpSize();
+    const [, x, y] = STATIONS[i];
+    const sx = x * V.s + V.tx, sy = y * V.s + V.ty;
+    if (sx < 70 || sx > w - 70 || sy < 110 || sy > h - 170) centerOn(i, V.s);
+  }
+  function focusTurn() {
+    const G = A.G;
+    if (!G) return;
+    if (G.turn === "x") { if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else fitView(); }
+    else centerOn(G.det[G.turn].pos);
+  }
+
+  // ポインター操作：1本指でパン、2本指でピンチ、タップで駅を選ぶ
+  const ptrs = new Map();
+  let gesture = null;
+  mapEl.addEventListener("pointerdown", e => {
+    mapEl.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    cancelAnimationFrame(anim);
+    if (ptrs.size === 1) gesture = { type: "pan", sx: e.clientX, sy: e.clientY, tx: V.tx, ty: V.ty, moved: 0, t: performance.now() };
+    else if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()];
+      gesture = { type: "pinch", d: Math.hypot(a.x - b.x, a.y - b.y), s: V.s, tx: V.tx, ty: V.ty, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, moved: 99 };
+    }
+  });
+  mapEl.addEventListener("pointermove", e => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!gesture) return;
+    const { r } = vpSize();
+    if (gesture.type === "pan" && ptrs.size === 1) {
+      const dx = e.clientX - gesture.sx, dy = e.clientY - gesture.sy;
+      gesture.moved = Math.max(gesture.moved, Math.hypot(dx, dy));
+      if (gesture.moved > 6) { mapEl.classList.add("dragging"); setView(V.s, gesture.tx + dx, gesture.ty + dy); }
+    } else if (gesture.type === "pinch" && ptrs.size >= 2) {
+      const [a, b] = [...ptrs.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+      const s = Math.min(3, Math.max(V.fit * 0.85, gesture.s * d / gesture.d));
+      const k = s / gesture.s;
+      const gx = gesture.mx - r.left, gy = gesture.my - r.top;
+      setView(s, mx - (gx - gesture.tx) * k, my - (gy - gesture.ty) * k);
+    }
+  });
+  const endPtr = e => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.delete(e.pointerId);
+    mapEl.classList.remove("dragging");
+    if (gesture && gesture.type === "pan" && gesture.moved <= 6 && e.type === "pointerup" && performance.now() - gesture.t < 600) {
+      const { r } = vpSize();
+      const wx = (e.clientX - r.left - V.tx) / V.s, wy = (e.clientY - r.top - V.ty) / V.s;
+      let best = -1, bd = Math.max(34, 26 / V.s);
+      STATIONS.forEach(([, x, y], i) => { const d = Math.hypot(x - wx, y - wy); if (d < bd) { bd = d; best = i; } });
+      if (best >= 0) onStationTap(best);
+    }
+    if (ptrs.size === 1) {
+      const [p] = [...ptrs.values()];
+      gesture = { type: "pan", sx: p.x, sy: p.y, tx: V.tx, ty: V.ty, moved: 99, t: 0 };
+    } else if (!ptrs.size) gesture = null;
+  };
+  mapEl.addEventListener("pointerup", endPtr);
+  mapEl.addEventListener("pointercancel", endPtr);
+  mapEl.addEventListener("wheel", e => {
+    e.preventDefault();
+    const { r } = vpSize();
+    zoomAt(Math.exp(-e.deltaY * 0.0018), e.clientX - r.left, e.clientY - r.top, false);
+  }, { passive: false });
+  mapEl.addEventListener("dblclick", e => {
+    const { r } = vpSize();
+    zoomAt(1.8, e.clientX - r.left, e.clientY - r.top);
+  });
+  window.addEventListener("resize", () => { const { w, h } = vpSize(); V.fit = Math.min(w / W, (h - 120) / H); clampView(); applyView(); });
+
+  // ======================================================================
+  // 盤面の描画
+  // ======================================================================
+  function smoothPath(pts) {
+    let d = `M${pts[0][0]},${pts[0][1]}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+      const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      d += ` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0]},${p2[1]}`;
+    }
+    return d;
+  }
+  const P = i => STATIONS[i].slice(1, 3);
+  const avg = (...ids) => [ids.reduce((s, i) => s + STATIONS[i][1], 0) / ids.length, ids.reduce((s, i) => s + STATIONS[i][2], 0) / ids.length];
+
+  // 背景（古地図）を SVG で組み立て、ビットマップにして敷く
+  function backgroundSVG() {
+    let seed = 1895;
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    const SP = 36, cols = Math.ceil(1400 / SP) + 3, rows = Math.ceil(750 / SP) + 3;
-    const P = [];
-    for (let r = 0; r < rows; r++) {
-      P.push([]);
-      for (let c = 0; c < cols; c++) P[r].push([(c - 1) * SP + (rnd() - 0.5) * 20, (r - 1) * SP + (rnd() - 0.5) * 20]);
-    }
-    const pt = q => q[0].toFixed(1) + "," + q[1].toFixed(1);
-    let d = "";
-    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-      if (c + 1 < cols && rnd() > 0.14) d += `M${pt(P[r][c])}L${pt(P[r][c + 1])}`;
-      if (r + 1 < rows && rnd() > 0.2) d += `M${pt(P[r][c])}L${pt(P[r + 1][c])}`;
-      if (r + 1 < rows && c + 1 < cols && rnd() < 0.07) d += `M${pt(P[r][c])}L${pt(P[r + 1][c + 1])}`;
-    }
-    el("path", { d, class: "bg-street" }, g);
-
-    // 以下は元の座標系で描いて横長に変換する
-    const w = el("g", { transform: "matrix(1.45 0 0 0.9 -12.5 30)" }, g);
-    const ns = { "vector-effect": "non-scaling-stroke" };
-    const roads = [
-      "M -10,250 C 150,250 350,240 560,262 C 700,276 820,270 1010,262",     // ユーストン・ロード
-      "M -10,378 C 150,372 300,368 470,376 C 600,382 720,392 830,420 C 900,440 950,450 1010,452", // オックスフォード・ストリート〜ホワイトチャペル
-      "M 60,520 C 180,506 300,500 400,500 C 470,500 520,520 560,560",        // ケンジントン〜ピカデリー
-      "M 470,0 C 480,120 470,240 480,380 C 486,470 470,560 470,640 C 470,700 440,760 430,810", // 南北の大通り
-      "M 820,0 C 800,120 780,260 760,420",
-    ];
-    for (const rd of roads) el("path", { d: rd, class: "bg-road-edge", ...ns }, w);
-    for (const rd of roads) el("path", { d: rd, class: "bg-road", ...ns }, w);
-
-    // 公園
-    const park = (cx, cy, rx, ry, rot = 0) => el("ellipse", { cx, cy, rx, ry, class: "bg-park", transform: `rotate(${rot} ${cx} ${cy})`, ...ns }, w);
-    park(290, 32, 80, 26, -4);    // ハムステッド・ヒース
-    park(345, 220, 48, 36);       // リージェンツ・パーク
-    park(285, 442, 72, 30, 3);    // ハイド・パーク
-    park(452, 522, 34, 18, 10);   // グリーン・パーク／セント・ジェームズ
-    park(335, 692, 42, 22);       // バタシー・パーク
-    park(880, 192, 34, 24);       // ヴィクトリア・パーク
-    park(965, 775, 52, 26);       // グリニッジ・パーク
-
-    // テムズ川（ドッグ島を回り込む大きな蛇行）
-    const thames = "M -20,658 C 60,664 130,668 200,652 C 280,636 330,626 400,622 C 470,618 520,612 560,628 C 600,644 640,650 700,640 C 760,628 800,630 838,642 C 878,656 866,724 918,744 C 968,762 990,700 1030,652";
-    el("path", { d: thames, class: "bg-river-edge", "stroke-width": 30, ...ns }, w);
-    el("path", { d: thames, class: "bg-river", "stroke-width": 26, ...ns }, w);
-
-    // 地区名・地名（ゆがませないよう変換後の座標で置く）
-    const txt = (x, y, str, cls, extra = {}) => el("text", { x: MX(x), y: MY(y), class: cls, "text-anchor": "middle", ...extra }, g).textContent = str;
-    txt(115, 545, "KENSINGTON", "bg-ward");
-    txt(470, 432, "WESTMINSTER", "bg-ward");
-    txt(425, 128, "CAMDEN", "bg-ward");
-    txt(640, 170, "ISLINGTON", "bg-ward");
-    txt(815, 438, "THE CITY", "bg-ward");
-    txt(720, 735, "SOUTHWARK", "bg-ward");
-    txt(250, 36, "ハムステッド・ヒース", "bg-place");
-    txt(345, 224, "リージェンツ・パーク", "bg-place");
-    txt(285, 446, "ハイド・パーク", "bg-place");
-    txt(335, 697, "バタシー・パーク", "bg-place");
-    txt(965, 780, "グリニッジ", "bg-place");
-    txt(150, 676, "テ ム ズ 川", "bg-place water");
-
-    // 名所のイラスト
-    const lm = (x, y, fn) => { const grp = el("g", { transform: `translate(${MX(x).toFixed(1)} ${MY(y).toFixed(1)})` }, g); fn(grp); };
-    lm(548, 606, q => { // ビッグ・ベンと国会議事堂
-      el("rect", { x: -62, y: -16, width: 54, height: 14, class: "lm" }, q);
-      el("path", { d: "M-62,-16 l0,-4 l6,0 l0,4 M-50,-16 l0,-4 l6,0 l0,4 M-38,-16 l0,-4 l6,0 l0,4 M-26,-16 l0,-4 l6,0 l0,4", class: "lm-line" }, q);
-      el("rect", { x: -6, y: -46, width: 12, height: 44, class: "lm" }, q);
-      el("path", { d: "M-7,-46 L0,-64 L7,-46 Z", class: "lm" }, q);
-      el("circle", { cx: 0, cy: -38, r: 4.5, class: "lm" }, q);
-      el("path", { d: "M0,-38 L0,-41 M0,-38 L2.5,-38", class: "lm-line" }, q);
-      el("text", { x: -24, y: 12, class: "lm-label" }, q).textContent = "Big Ben";
-    });
-    lm(743, 636, q => { // タワー・ブリッジ
-      el("rect", { x: -44, y: -3, width: 88, height: 5, class: "lm" }, q);
-      for (const tx of [-20, 20]) {
-        el("rect", { x: tx - 6, y: -32, width: 12, height: 34, class: "lm" }, q);
-        el("path", { d: `M${tx - 7},-32 L${tx},-42 L${tx + 7},-32 Z`, class: "lm" }, q);
+    const o = [];
+    o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`);
+    o.push(`<defs>
+      <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" seed="4"/><feColorMatrix type="matrix" values="0 0 0 0 0.33  0 0 0 0 0.24  0 0 0 0 0.12  0 0 0 0.18 0"/></filter>
+      <filter id="blotch" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.004" numOctaves="3" seed="9"/><feColorMatrix type="matrix" values="0 0 0 0 0.5  0 0 0 0 0.36  0 0 0 0 0.16  0 0 0 0.45 -0.12"/></filter>
+      <radialGradient id="vig" cx="50%" cy="50%" r="72%"><stop offset="62%" stop-color="#5A3B16" stop-opacity="0"/><stop offset="100%" stop-color="#5A3B16" stop-opacity="0.5"/></radialGradient>
+      <pattern id="trees" width="26" height="22" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="4.5" fill="#8FA464"/><circle cx="19" cy="17" r="4" fill="#8FA464"/></pattern>
+    </defs>`);
+    o.push(`<rect width="${W}" height="${H}" fill="#E8DAB8"/>`);
+    // 路地
+    const SP = 30, cols = Math.ceil(W / SP) + 3, rows = Math.ceil(H / SP) + 3, G = [];
+    for (let r = 0; r < rows; r++) { G.push([]); for (let c = 0; c < cols; c++) G[r].push([(c - 1) * SP + (rnd() - 0.5) * 18, (r - 1) * SP + (rnd() - 0.5) * 18]); }
+    const pt = q => q[0].toFixed(0) + "," + q[1].toFixed(0);
+    let d = "", blocks = "";
+    for (let r = 0; r < rows - 1; r++) for (let c = 0; c < cols - 1; c++) {
+      if (rnd() > 0.12) d += `M${pt(G[r][c])}L${pt(G[r][c + 1])}`;
+      if (rnd() > 0.18) d += `M${pt(G[r][c])}L${pt(G[r + 1][c])}`;
+      if (rnd() < 0.55) {
+        const a = G[r][c], b = G[r][c + 1], cc = G[r + 1][c + 1], dd = G[r + 1][c];
+        const sh = q => [(q[0] * 0.8 + (a[0] + b[0] + cc[0] + dd[0]) / 4 * 0.2), (q[1] * 0.8 + (a[1] + b[1] + cc[1] + dd[1]) / 4 * 0.2)];
+        blocks += `M${pt(sh(a))}L${pt(sh(b))}L${pt(sh(cc))}L${pt(sh(dd))}Z`;
       }
-      el("rect", { x: -14, y: -29, width: 28, height: 4, class: "lm" }, q);
-      el("path", { d: "M-44,0 Q-32,-14 -26,-16 M44,0 Q32,-14 26,-16", class: "lm-line" }, q);
-      el("text", { x: 0, y: 16, class: "lm-label" }, q).textContent = "Tower Bridge";
-    });
-    lm(632, 486, q => { // セント・ポール大聖堂
-      el("rect", { x: -18, y: -10, width: 36, height: 10, class: "lm" }, q);
-      el("rect", { x: -9, y: -18, width: 18, height: 8, class: "lm" }, q);
-      el("path", { d: "M-10,-18 A10,10 0 0 1 10,-18 Z", class: "lm" }, q);
-      el("rect", { x: -1.8, y: -34, width: 3.6, height: 7, class: "lm" }, q);
-      el("path", { d: "M0,-34 L0,-39 M-2,-37 L2,-37", class: "lm-line" }, q);
-      el("text", { x: 0, y: 12, class: "lm-label" }, q).textContent = "St Paul's";
-    });
-    lm(548, 668, q => { // ロンドン・アイ
-      el("circle", { cx: 0, cy: -26, r: 22, class: "lm", "fill-opacity": 0.35 }, q);
-      let sp = "";
-      for (let a = 0; a < 12; a++) { const t = a * Math.PI / 6; sp += `M0,-26 L${(22 * Math.cos(t)).toFixed(1)},${(-26 + 22 * Math.sin(t)).toFixed(1)}`; }
-      el("path", { d: sp + "M0,-26 L-10,0 M0,-26 L10,0", class: "lm-line" }, q);
-      el("text", { x: 0, y: 12, class: "lm-label" }, q).textContent = "London Eye";
-    });
-    lm(440, 548, q => { // バッキンガム宮殿
-      el("rect", { x: -18, y: -10, width: 36, height: 10, class: "lm" }, q);
-      el("path", { d: "M-6,-10 L0,-15 L6,-10 Z", class: "lm" }, q);
-      el("path", { d: "M0,-15 L0,-24 L6,-22 L0,-20", class: "lm-line" }, q);
-    });
-
-    // 方位記号
-    const cx = 1352, cy = 58;
-    const cg = el("g", { transform: `translate(${cx} ${cy})` }, g);
-    el("circle", { r: 28, class: "bg-inkline", "stroke-width": 1.2 }, cg);
-    el("circle", { r: 22, class: "bg-inkline", "stroke-width": 0.8 }, cg);
-    el("path", { d: "M0,-30 L5,0 L0,30 L-5,0 Z M-30,0 L0,-5 L30,0 L0,5 Z", class: "lm" }, cg);
-    el("path", { d: "M0,-30 L5,0 L-5,0 Z", class: "bg-ink" }, cg);
-    el("text", { y: -34, class: "lm-label", style: "font-size:13px" }, cg).textContent = "N";
-
-    // 表題の飾り枠と縮尺
-    const tg = el("g", { transform: "translate(22 650)" }, g);
-    el("rect", { x: 0, y: 0, width: 214, height: 84, rx: 3, class: "cartouche" }, tg);
-    el("rect", { x: 5, y: 5, width: 204, height: 74, rx: 2, class: "bg-inkline", "stroke-width": 0.8 }, tg);
-    el("text", { x: 107, y: 40, class: "cartouche-title" }, tg).textContent = "LONDON";
-    el("path", { d: "M52,56 h110 M52,52 v8 M107,54 v4 M162,52 v8", class: "bg-inkline", "stroke-width": 1.2 }, tg);
-    el("text", { x: 107, y: 72, class: "cartouche-sub" }, tg).textContent = "Scale of Two Miles";
-
-    // 紙の質感と周辺の焼け
-    el("rect", { x: 0, y: 0, width: 1400, height: 750, filter: "url(#blotch)", "pointer-events": "none" }, g);
-    el("rect", { x: 0, y: 0, width: 1400, height: 750, filter: "url(#paper)", "pointer-events": "none" }, g);
-    el("rect", { x: 0, y: 0, width: 1400, height: 750, fill: "url(#vignette)", "pointer-events": "none" }, g);
+    }
+    o.push(`<path d="${blocks}" fill="#DCCBA4" opacity="0.8"/>`);
+    o.push(`<path d="${d}" stroke="#C8B48A" stroke-width="1.6" fill="none"/>`);
+    // 大通り（主なバス路線に沿わせる）
+    for (const [, seq] of BUS.slice(0, 12)) {
+      const pts = seq.map(n => P(IDX[n]));
+      o.push(`<path d="${smoothPath(pts)}" stroke="#BCA67A" stroke-width="15" fill="none" stroke-linecap="round" opacity="0.55"/>`);
+      o.push(`<path d="${smoothPath(pts)}" stroke="#F2E8CF" stroke-width="10" fill="none" stroke-linecap="round"/>`);
+    }
+    // 公園
+    const park = (c, rx, ry, rot = 0) => `<g transform="translate(${c[0].toFixed(0)} ${c[1].toFixed(0)}) rotate(${rot})"><ellipse rx="${rx}" ry="${ry}" fill="#B9C68E" stroke="#6E7F3E" stroke-width="2.5"/><ellipse rx="${rx - 6}" ry="${ry - 6}" fill="url(#trees)" opacity="0.7"/></g>`;
+    o.push(park([990, 1110], 175, 62, 8));                  // ハイド・パーク
+    o.push(park(avg(22, 23), 80, 70));                       // リージェンツ・パーク
+    o.push(park([1060, 250], 150, 80, -6));                  // ハムステッド・ヒース
+    o.push(park(avg(52, 53, 55), 52, 30, 12));               // グリーン・パーク
+    o.push(park([1110, 1600], 70, 42, -10));                 // バタシー・パーク
+    o.push(park([2180, 690], 85, 48));                       // ヴィクトリア・パーク
+    o.push(park([2470, 1650], 90, 60));                      // グリニッジ・パーク
+    o.push(park([1180, 1850], 110, 45));                     // クラパム・コモン
+    o.push(park([650, 1180], 40, 38));                       // ホランド・パーク
+    // テムズ川
+    const th = smoothPath(THAMES);
+    o.push(`<path d="${th}" stroke="#6E9AA3" stroke-width="64" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
+    o.push(`<path d="${th}" stroke="#A7C8CB" stroke-width="56" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
+    o.push(`<path d="${th}" stroke="#BDD6D6" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.6"/>`);
+    // 地区名
+    const ward = (x, y, s, rot = 0) => `<text x="${x}" y="${y}" transform="rotate(${rot} ${x} ${y})" font-family="IM Fell English SC, Georgia, serif" font-size="48" letter-spacing="14" fill="#5A4428" opacity="0.2" text-anchor="middle">${s}</text>`;
+    o.push(ward(1330, 1175, "WESTMINSTER"), ward(1760, 890, "THE CITY"), ward(1150, 540, "CAMDEN"), ward(1700, 600, "ISLINGTON"),
+      ward(760, 1260, "KENSINGTON", -6), ward(1850, 1330, "SOUTHWARK"), ward(1500, 1540, "LAMBETH"), ward(2150, 930, "TOWER HAMLETS"),
+      ward(2000, 450, "HACKNEY"), ward(2380, 1560, "GREENWICH"), ward(950, 1650, "BATTERSEA"), ward(700, 820, "PADDINGTON"));
+    o.push(`<text x="1660" y="1112" font-family="IM Fell English SC, Georgia, serif" font-size="30" letter-spacing="30" fill="#4E7880" font-style="italic" text-anchor="middle">RIVER  THAMES</text>`);
+    // 名所
+    const ink = `stroke="#3B2C1E" stroke-width="2.2" stroke-linejoin="round"`, fill = `fill="#D9C79E"`;
+    const lm = (x, y, sc, body) => `<g transform="translate(${x} ${y}) scale(${sc})">${body}</g>`;
+    o.push(lm(1425, 1300, 1.6, `<rect x="-62" y="-16" width="54" height="14" ${fill} ${ink}/><rect x="-6" y="-46" width="12" height="44" ${fill} ${ink}/><path d="M-7,-46 L0,-64 L7,-46 Z" ${fill} ${ink}/><circle cy="-38" r="4.5" fill="#F7EFD9" ${ink}/>`));   // ビッグ・ベン
+    o.push(lm(1880, 1108, 1.8, `<rect x="-44" y="-3" width="88" height="5" ${fill} ${ink}/><rect x="-26" y="-32" width="12" height="34" ${fill} ${ink}/><rect x="14" y="-32" width="12" height="34" ${fill} ${ink}/><path d="M-27,-32 L-20,-42 L-13,-32 Z M13,-32 L20,-42 L27,-32 Z" ${fill} ${ink}/><rect x="-14" y="-29" width="28" height="4" ${fill} ${ink}/>`)); // タワー・ブリッジ
+    o.push(lm(1735, 940, 1.6, `<rect x="-18" y="-10" width="36" height="10" ${fill} ${ink}/><rect x="-9" y="-18" width="18" height="8" ${fill} ${ink}/><path d="M-10,-18 A10,10 0 0 1 10,-18 Z" ${fill} ${ink}/><rect x="-1.8" y="-34" width="3.6" height="7" ${fill} ${ink}/>`)); // セント・ポール
+    o.push(lm(1500, 1225, 1.5, `<circle cy="-26" r="22" fill="none" ${ink}/>` + Array.from({ length: 12 }, (_, a) => `<path d="M0,-26 L${(22 * Math.cos(a * Math.PI / 6)).toFixed(1)},${(-26 + 22 * Math.sin(a * Math.PI / 6)).toFixed(1)}" ${ink}/>`).join("") + `<path d="M0,-26 L-10,0 M0,-26 L10,0" ${ink}/>`)); // ロンドン・アイ
+    o.push(lm(1130, 1190, 1.5, `<rect x="-22" y="-12" width="44" height="12" ${fill} ${ink}/><path d="M-7,-12 L0,-18 L7,-12 Z" ${fill} ${ink}/><path d="M0,-18 L0,-28 L7,-26 L0,-23" fill="#C0271F" ${ink}/>`)); // バッキンガム宮殿
+    o.push(lm(1300, 1540, 1.5, `<rect x="-26" y="-18" width="52" height="18" ${fill} ${ink}/>` + [-22, -10, 10, 22].map(x => `<rect x="${x - 3}" y="-40" width="6" height="22" fill="#F2E8CF" ${ink}/>`).join(""))); // バタシー発電所
+    o.push(lm(1850, 1180, 1.6, `<path d="M-10,0 L0,-60 L10,0 Z" fill="#CFE0E2" ${ink}/>`)); // ザ・シャード
+    o.push(lm(2380, 1170, 1.5, `<rect x="-9" y="-50" width="18" height="50" ${fill} ${ink}/><path d="M-9,-50 L0,-60 L9,-50 Z" ${fill} ${ink}/><rect x="-26" y="-28" width="12" height="28" ${fill} ${ink}/><rect x="14" y="-34" width="12" height="34" ${fill} ${ink}/>`)); // カナリー・ワーフ
+    o.push(lm(2560, 1240, 1.5, `<path d="M-30,0 A30,20 0 0 1 30,0 Z" fill="#F2E8CF" ${ink}/>` + [-24, -12, 0, 12, 24].map(x => `<path d="M${x},-12 L${x * 1.25},-30" ${ink}/>`).join(""))); // O2
+    o.push(lm(2330, 1580, 1.5, `<path d="M-26,0 L26,0 L20,8 L-20,8 Z" ${fill} ${ink}/><path d="M-12,0 L-12,-30 M0,0 L0,-36 M12,0 L12,-30" ${ink}/><path d="M-12,-26 L12,-26" ${ink}/>`)); // カティーサーク
+    // 方位記号と表題
+    o.push(`<g transform="translate(2840 170)"><circle r="78" fill="#F2E8CF" stroke="#3B2C1E" stroke-width="3"/><circle r="64" fill="none" stroke="#3B2C1E" stroke-width="1.5"/><path d="M0,-86 L14,0 L0,86 L-14,0 Z M-86,0 L0,-14 L86,0 L0,14 Z" fill="#D9C79E" stroke="#3B2C1E" stroke-width="2"/><path d="M0,-86 L14,0 L-14,0 Z" fill="#3B2C1E"/><text y="-96" font-family="Georgia, serif" font-size="30" fill="#3B2C1E" text-anchor="middle">N</text></g>`);
+    o.push(`<g transform="translate(90 1640)"><rect width="440" height="190" rx="6" fill="#F4EBD3" stroke="#3B2C1E" stroke-width="3"/><rect x="10" y="10" width="420" height="170" rx="4" fill="none" stroke="#3B2C1E" stroke-width="1.5"/><text x="220" y="92" font-family="IM Fell English SC, Georgia, serif" font-size="76" letter-spacing="12" fill="#3B2C1E" text-anchor="middle">LONDON</text><path d="M110,122 h220 M110,114 v16 M220,117 v10 M330,114 v16" stroke="#3B2C1E" stroke-width="2.5"/><text x="220" y="160" font-family="IM Fell English SC, Georgia, serif" font-size="24" fill="#3B2C1E" text-anchor="middle">Scale of Two Miles · MDCCCXCV</text></g>`);
+    // 紙の質感
+    o.push(`<rect width="${W}" height="${H}" filter="url(#blotch)"/>`);
+    o.push(`<rect width="${W}" height="${H}" filter="url(#grain)"/>`);
+    o.push(`<rect width="${W}" height="${H}" fill="url(#vig)"/>`);
+    o.push(`</svg>`);
+    return o.join("");
   }
 
-  function buildMap() {
-    buildBackground();
-    const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels"), gH = $("gHits");
+  async function renderBackground() {
+    const img = $("bgimg");
+    if (ART.map) { img.setAttribute("href", ART.map); return; }
+    const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(backgroundSVG());
+    try {
+      const im = new Image();
+      im.src = url;
+      await im.decode();
+      const k = 1.25;
+      const c = document.createElement("canvas");
+      c.width = Math.round(W * k); c.height = Math.round(H * k);
+      c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.9));
+      if (!blob) throw new Error("no blob");
+      img.setAttribute("href", URL.createObjectURL(blob));
+    } catch (e) {
+      img.setAttribute("href", url);
+    }
+  }
+
+  function buildBoard() {
+    const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels"), gB = $("gBoat");
+    // テムズ川のボート航路と乗り場
+    el("path", { d: smoothPath(THAMES.slice(3, 33)), class: "boat-lane" }, gB);
+    // 路線：地下鉄 → バス → タクシーの順に重ねる
+    const layers = { tube: el("g", {}, gE), bus: el("g", {}, gE), taxi: el("g", {}, gE) };
     for (const [key, types] of edgeTypes) {
       const [a, b] = key.split("-").map(Number);
-      const [, x1, y1] = STATIONS[a], [, x2, y2] = STATIONS[b];
+      const [x1, y1] = P(a), [x2, y2] = P(b);
       const len = Math.hypot(x2 - x1, y2 - y1);
       const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
-      const list = TYPE_ORDER.filter(t => types.has(t));
+      const list = ["tube", "bus", "taxi"].filter(t => types.has(t));
       list.forEach((t, k) => {
-        const off = (k - (list.length - 1) / 2) * 11;
+        const off = (k - (list.length - 1) / 2) * 13;
         const pts = { x1: x1 + nx * off, y1: y1 + ny * off, x2: x2 + nx * off, y2: y2 + ny * off };
-        const grp = el("g", {}, gE);
-        el("title", {}, grp).textContent = `${types.get(t).join("・")}（${TYPE[t].name}）`;
-        el("line", { ...pts, class: `edge ${t} base` }, grp);
-        if (t === "train" || t === "subway") el("line", { ...pts, class: `edge ${t} tie` }, grp);
+        const g = el("g", {}, layers[t]);
+        el("title", {}, g).textContent = types.get(t).join("・");
+        el("line", { ...pts, class: `edge ${t} casing` }, g);
+        el("line", { ...pts, class: `edge ${t}` }, g);
+        if (t === "tube") el("line", { ...pts, class: "edge tube dash" }, g);
       });
     }
-    STATIONS.forEach(([name, x, y, dx, dy, anchor], i) => {
-      // ボードゲーム風の駅マーク：上半分を使える交通手段の色で塗り分け、番号を入れる
-      const R = 15;
-      if (ADJ[i].some(e => e.type === "ferry")) el("circle", { cx: x, cy: y, r: R + 4.5, class: "stn-pier" }, gS);
-      el("circle", { cx: x, cy: y, r: R, class: "stn" }, gS);
+    // 駅：上半分を使える交通手段で塗り分け、下半分に番号
+    const R = 21;
+    STATIONS.forEach(([name, x, y], i) => {
+      const g = el("g", {}, gS);
+      if (ADJ[i].some(e => e.type === "ferry")) el("circle", { cx: x, cy: y, r: R + 6, class: "pier" }, g);
+      el("circle", { cx: x, cy: y, r: R, class: "stn-base" }, g);
       const ts = DET_TYPES.filter(t => ADJ[i].some(e => e.type === t));
       ts.forEach((t, k) => {
         const a0 = Math.PI + Math.PI * k / ts.length, a1 = Math.PI + Math.PI * (k + 1) / ts.length;
-        const pa = `M${x},${y} L${(x + R * Math.cos(a0)).toFixed(2)},${(y + R * Math.sin(a0)).toFixed(2)} A${R},${R} 0 0 1 ${(x + R * Math.cos(a1)).toFixed(2)},${(y + R * Math.sin(a1)).toFixed(2)} Z`;
-        el("path", { d: pa, class: "wedge " + t }, gS);
+        el("path", { d: `M${x},${y} L${(x + R * Math.cos(a0)).toFixed(2)},${(y + R * Math.sin(a0)).toFixed(2)} A${R},${R} 0 0 1 ${(x + R * Math.cos(a1)).toFixed(2)},${(y + R * Math.sin(a1)).toFixed(2)} Z`, class: "wedge " + t }, g);
       });
-      el("circle", { cx: x, cy: y, r: R, class: "stn-rim" }, gS);
-      el("text", { x, y: y + 11, class: "stn-num" }, gS).textContent = i + 1;
-      el("text", { x: x + dx, y: y + dy, "text-anchor": anchor, class: "stn-label", "dominant-baseline": "middle" }, gL).textContent = name;
-      const hit = el("circle", { cx: x, cy: y, r: 30, class: "stn-hit" }, gH);
-      hit.addEventListener("click", () => onStation(i));
+      el("path", { d: `M${x - R},${y} H${x + R}`, stroke: "#3B2C1E", "stroke-width": 1.5 }, g);
+      el("circle", { cx: x, cy: y, r: R, class: "stn-rim" }, g);
+      el("text", { x, y: y + 15, class: "stn-num" }, g).textContent = NO(i);
+      el("text", { x, y: y + R + 22, class: "stn-label", id: "lbl" + i }, gL).textContent = name;
     });
   }
 
-  function buildLegend() {
-    const sw = t => `<svg class="sw" viewBox="0 0 38 12" aria-hidden="true"><line x1="3" y1="6" x2="35" y2="6" class="edge ${t} base"></line>${t === "train" || t === "subway" ? `<line x1="3" y1="6" x2="35" y2="6" class="edge ${t} tie"></line>` : ""}</svg>`;
-    $("legend").innerHTML =
-      `<span>${sw("train")}タクシー</span><span>${sw("subway")}地下鉄</span><span>${sw("bus")}バス</span><span>${sw("ferry")}テムズ川ボート（黒チケットのみ）</span>` +
-      `<span>${face("x")}怪盗X</span><span>${face("d", 0)}${face("d", 1)}${face("d", 2)}${face("d", 3)}刑事</span>`;
-    $("brandChars").innerHTML = face("x") + face("d", 0);
+  function buildTokens() {
+    const gT = $("gTokens");
+    gT.replaceChildren();
+    const mk = (id, kind, k) => {
+      const g = el("g", { class: "tok", id }, gT);
+      el("circle", { r: 34, class: "ring", visibility: "hidden" }, g);
+      el("circle", { r: 27, fill: kind === "x" ? "#C0271F" : DCOL[k], stroke: "#FBF5E4", "stroke-width": 3 }, g);
+      el("use", { href: kind === "x" ? "#chr-x" : "#chr-d", x: -23, y: -23, width: 46, height: 46 }, g);
+      el("circle", { r: 27, class: "ring2" }, g);
+      if (kind === "d") {
+        el("circle", { cx: 20, cy: 20, r: 11, class: "num" }, g);
+        el("text", { x: 20, y: 20.5, class: "num-t" }, g).textContent = k + 1;
+      }
+      return g;
+    };
+    mk("tokX", "x", 0);
+    A.G.det.forEach((_, k) => mk("tokD" + k, "d", k));
   }
 
+  function placeToken(g, pos, dx = 0, dy = 0) {
+    const [x, y] = P(pos);
+    g.style.transform = `translate(${x + dx}px, ${y + dy}px)`;
+  }
+
+  // ======================================================================
+  // 描画（HUD）
+  // ======================================================================
   function render() {
-    renderHeader();
-    renderMapState();
-    renderTurn();
-    renderBoard();
-    renderFeed();
-    if (A.mode === "local") renderOverlay();
-  }
-
-  function renderHeader() {
-    const G = A.G;
-    $("roundNo").textContent = G ? String(G.xLog.length).padStart(2, "0") + "/" + MAX_MOVES : "--/" + MAX_MOVES;
-    const nx = G ? REVEAL.find(r => r > G.xLog.length) : undefined;
-    $("nextReveal").textContent = !G ? "次の出現 --" : G.over ? "ゲーム終了" : nx === undefined ? "出現なし" : `次の出現 ${nx}手目`;
+    renderMap();
+    renderTop();
+    renderPrompt();
+    renderLog();
+    renderScreen();
+    renderSheet();
     const hb = $("hintBtn");
-    hb.hidden = !G || iAmX();
+    hb.hidden = A.role === "x";
     hb.setAttribute("aria-pressed", String(A.hints));
-    $("tabChat").hidden = A.mode !== "online";
-    if (A.mode !== "online" && A.tab === "chat") A.tab = "log";
-    $("tabLog").setAttribute("aria-selected", String(A.tab === "log"));
-    $("tabChat").setAttribute("aria-selected", String(A.tab === "chat"));
-    $("chatForm").hidden = A.tab !== "chat";
   }
 
-  function xVisiblePos() {
+  function renderMap() {
     const G = A.G;
-    if (!G) return null;
-    if (iAmX() && A.sec) return A.sec.pos;
-    if (G.over && G.xPath) return G.xPath[G.xPath.length - 1];
-    return null;
-  }
-
-  function renderMapState() {
-    const gP = $("gPoss"), gT = $("gTokens"), gD = $("gDest"), gTr = $("gTrail");
-    gP.replaceChildren(); gT.replaceChildren(); gD.replaceChildren(); gTr.replaceChildren();
-    const hitEls = document.querySelectorAll(".stn-hit");
-    hitEls.forEach(h => h.classList.remove("can"));
-    const G = A.G;
+    const gP = $("gPoss"), gD = $("gDest"), gM = $("gMarks"), gTr = $("gTrail");
+    gP.replaceChildren(); gD.replaceChildren(); gM.replaceChildren(); gTr.replaceChildren();
+    document.querySelectorAll(".stn-label.hot").forEach(l => l.classList.remove("hot"));
     if (!G) return;
-    const xPos = xVisiblePos();
+    const hot = i => $("lbl" + i)?.classList.add("hot");
+    const showX = xVisible();
 
-    if (!iAmX() && A.hints && !G.over) {
-      for (const p of G.possible) {
-        const [, x, y] = STATIONS[p];
-        el("circle", { cx: x, cy: y, r: 26, class: "poss" }, gP);
+    if (!showX && A.hints && !G.over) for (const p of G.possible) { const [x, y] = P(p); el("circle", { cx: x, cy: y, r: 32, class: "poss" }, gP); }
+    const path = G.over || showX ? A.sec.path : null;
+    if (path && path.length > 1) el("path", { d: "M" + path.map(p => P(p).join(",")).join(" L"), class: "trail", opacity: G.over ? 0.95 : 0.45 }, gTr);
+
+    if (humanTurn()) {
+      const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+      for (const to of new Set(moves.map(m => m.to))) {
+        const [x, y] = P(to);
+        el("circle", { cx: x, cy: y, r: 31, class: "dest pulse" }, gD);
+        el("circle", { cx: x, cy: y, r: 35, class: "dest-outer pulse" }, gD);
+        hot(to);
       }
     }
-    const path = G.over ? G.xPath : (iAmX() && A.sec ? A.sec.path : null);
-    if (path && path.length > 1) {
-      el("polyline", { points: path.map(p => STATIONS[p][1] + "," + STATIONS[p][2]).join(" "), class: "trail", opacity: G.over ? 0.9 : 0.35 }, gTr);
+    if (A.sel !== null) { const [x, y] = P(A.sel); el("circle", { cx: x, cy: y, r: 36, class: "sel" }, gM); hot(A.sel); }
+    if (!showX && G.lastSeen && !G.over) {
+      const [x, y] = P(G.lastSeen.pos);
+      el("circle", { cx: x, cy: y, r: 40, class: "lastseen" }, gM);
+      el("text", { x, y: y - 48, class: "lastseen-label" }, gM).textContent = `X? ${G.lastSeen.n}手目`;
     }
 
-    if (isMyTurn()) {
-      const dests = G.turn === "x" ? new Set(xMoves(G, A.sec).map(m => m.to)) : new Set(detMoves(G, G.turn).map(m => m.to));
-      for (const d of dests) {
-        const [, x, y] = STATIONS[d];
-        el("circle", { cx: x, cy: y, r: 21, class: "dest pulse" }, gD);
-        hitEls[d].classList.add("can");
-      }
-      if (A.pending) {
-        const [, x, y] = STATIONS[A.pending.to];
-        el("circle", { cx: x, cy: y, r: 21, class: "dest", style: "stroke: var(--xrim); stroke-width: 4.5" }, gD);
-      }
-    }
-
-    if (xPos === null && G.lastSeen && !G.over) {
-      const [, x, y] = STATIONS[G.lastSeen.pos];
-      el("circle", { cx: x, cy: y, r: 24, class: "lastseen" }, gT);
-      el("text", { x: x + 26, y: y - 24, class: "lastseen-label" }, gT).textContent = `X? ${G.lastSeen.n}手目`;
-    }
-
+    // コマ（同じ駅に重なったら少しずらす）
     const stack = {};
-    const place = p => { stack[p] = (stack[p] || 0) + 1; return stack[p] - 1; };
-    const offset = k => [[0, 0], [22, -18], [-22, -18], [22, 18], [-22, 18]][k] || [0, 0];
-    if (xPos !== null) drawToken(gT, "x", 0, xPos, offset(place(xPos)), G.turn === "x" && !G.over);
-    G.det.forEach((d, k) => drawToken(gT, "d", k, d.pos, offset(place(d.pos)), G.turn === k && !G.over));
-  }
-
-  function drawToken(g, kind, k, pos, [ox, oy], active) {
-    const [, sx, sy] = STATIONS[pos];
-    const grp = el("g", { class: "tok", transform: `translate(${sx + ox} ${sy + oy})` }, g);
-    if (active) el("circle", { r: 29, class: "ring" }, grp);
-    if (kind === "x") {
-      el("circle", { r: 23, class: "disc x" }, grp);
-      el("use", { href: "#chr-x", x: -23, y: -23, width: 46, height: 46 }, grp);
-    } else {
-      el("circle", { r: 23, class: "disc", fill: DCOL[k % DCOL.length] }, grp);
-      el("use", { href: "#chr-d", x: -23, y: -23, width: 46, height: 46 }, grp);
-      el("circle", { cx: 17, cy: 17, r: 9, class: "num" }, grp);
-      el("text", { x: 17, y: 17.5, class: "num-t" }, grp).textContent = k + 1;
+    const off = p => { const k = stack[p] = (stack[p] || 0) + 1; return [[0, 0], [26, -22], [-26, -22], [26, 22], [-26, 22], [0, 30]][k - 1] || [0, 0]; };
+    const tx = $("tokX");
+    if (tx) {
+      tx.style.display = showX ? "" : "none";
+      if (showX) { const [dx, dy] = off(A.sec.pos); placeToken(tx, A.sec.pos, dx, dy); hot(A.sec.pos); }
+      tx.querySelector(".ring").setAttribute("visibility", G.turn === "x" && !G.over ? "visible" : "hidden");
     }
+    G.det.forEach((d, k) => {
+      const t = $("tokD" + k);
+      if (!t) return;
+      const [dx, dy] = off(d.pos);
+      placeToken(t, d.pos, dx, dy);
+      t.querySelector(".ring").setAttribute("visibility", G.turn === k && !G.over ? "visible" : "hidden");
+      hot(d.pos);
+    });
   }
 
-  function turnOwnerLabel(G) {
-    if (G.turn === "x") return { html: `${face("x")} 怪盗X`, who: seatLabel("x") };
-    return { html: `${face("d", G.turn)} ${dName(G.turn)}`, who: seatLabel("d" + G.turn) };
-  }
-
-  function renderTurn() {
-    const card = $("turnCard");
+  function renderTop() {
     const G = A.G;
-    if (!G) {
-      card.innerHTML = `<div class="label">いまの手番</div><p class="turn-help">${A.screen === "room" ? "ルームでメンバーを待っています。" : "モードを選ぶとゲームが始まります。"}</p>`;
-      return;
-    }
+    if (!G) { $("xcard").innerHTML = ""; $("dets").innerHTML = ""; return; }
+    const nx = REVEAL.find(r => r > G.xLog.length);
+    $("xcard").innerHTML = `${portrait("x")}<span class="who"><b>怪盗X</b>
+      <small class="nx">${G.over ? "ゲーム終了" : nx ? `次の出現 ${nx}手目` : "出現なし"}</small>
+      <span class="chipsx"><span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span></span></span>`;
+    $("xcard").classList.toggle("active", G.turn === "x");
+    $("dets").innerHTML = G.det.map((d, k) => `
+      <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="focusD" data-k="${k}" aria-label="${dName(k)}：タクシー${d.t.taxi}・バス${d.t.bus}・地下鉄${d.t.tube}">
+        ${portrait("d", k, "sm")}
+        <span class="tks"><span class="tk taxi ${d.t.taxi ? "" : "zero"}">${d.t.taxi}</span><span class="tk bus ${d.t.bus ? "" : "zero"}">${d.t.bus}</span><span class="tk tube ${d.t.tube ? "" : "zero"}">${d.t.tube}</span></span>
+      </button>`).join("");
+  }
+
+  function renderPrompt() {
+    const G = A.G, el_ = $("prompt");
+    if (!G) { el_.innerHTML = ""; return; }
+    const move = `<span class="pill gold">${G.xLog.length}/${MAX_MOVES}手</span>`;
     if (G.over) {
-      const iWon = iAmX() ? G.winner === "x" : (A.mode === "local" || mySeatsD().length ? G.winner === "d" : null);
-      card.innerHTML = `
-        <div class="label">結果</div>
-        <div class="turn-title">${iWon === null ? (G.winner === "x" ? "怪盗Xの勝ち" : "刑事チームの勝ち") : iWon ? "あなたの勝ち！" : "あなたの負け…"}</div>
-        <p class="turn-help">地図上の赤い点線が怪盗Xの逃走経路です。</p>
-        <div class="row">${resultButtons()}</div>`;
+      el_.innerHTML = `${portrait(G.winner === "x" ? "x" : "d", 0)}<div class="txt"><div class="t1">${G.winner === "x" ? "怪盗Xの勝ち" : "刑事チームの勝ち"}</div><div class="t2">赤い点線が怪盗Xの逃走経路です</div></div><button class="btn" data-act="result">結果</button>`;
       return;
     }
-    const owner = turnOwnerLabel(G);
-    if (!isMyTurn()) {
-      const waitingX = G.turn === "x" && A.mode === "online" && !iAmX();
-      card.innerHTML = `
-        <div class="label">いまの手番</div>
-        <div class="turn-title"><span class="who">${owner.html}</span><small style="color:var(--muted);font-weight:400">${esc(owner.who)}</small></div>
-        <p class="turn-help">${waitingX ? "怪盗Xが逃げ道を考えています…" : owner.who === "CPU" ? "CPUが考え中…" : "相手の操作を待っています。"}</p>`;
-      return;
-    }
-    let help = "", extra = "", chips = "";
-    if (G.turn === "x") {
-      const moves = xMoves(G, A.sec);
-      const byDest = new Map();
-      for (const m of moves) { if (!byDest.has(m.to)) byDest.set(m.to, new Set()); byDest.get(m.to).add(m.type); }
-      chips = [...byDest.entries()].sort((a, b) => a[0] - b[0]).map(([to, ts]) =>
-        `<button class="chip" data-act="go" data-to="${to}">${NAME(to)}<span class="dots">${[...TYPE_ORDER.filter(t => ts.has(t) || (t === "ferry" && ts.has("black") && ADJ[A.sec.pos].some(e => e.to === to && e.type === "ferry")))].map(t => `<span class="dot ${t}"></span>`).join("")}</span></button>`).join("");
-      help = G.doubling ? "2倍移動の2手目です。続けてもう1駅動いてください。" : "逃げる駅を選んでください。使った切符の種類は刑事に知られます。";
-      extra = `<div class="row">
-        <button class="btn ghost small toggle" data-act="black" aria-pressed="${A.useBlack}" ${G.black ? "" : "disabled"}>黒チケット（残り ${G.black}）</button>
-        <button class="btn ghost small toggle" data-act="double" aria-pressed="${A.useDouble}" ${canDouble(G) ? "" : "disabled"}>2倍移動（残り ${G.dbl}）</button>
-      </div>`;
+    const who = G.turn === "x" ? portrait("x") : portrait("d", G.turn);
+    const name = G.turn === "x" ? "怪盗X" : dName(G.turn);
+    let t1, t2;
+    if (humanTurn()) {
+      t1 = `${name} の番`;
+      t2 = G.turn === "x"
+        ? (G.doubling ? "2倍移動の2手目。もう1駅進んでください" : "光っている駅をタップして逃げる先を選ぶ")
+        : "光っている駅をタップ。怪盗Xのいる駅に入れば逮捕";
     } else {
-      const k = G.turn;
-      const moves = detMoves(G, k);
-      const byDest = new Map();
-      for (const m of moves) { if (!byDest.has(m.to)) byDest.set(m.to, new Set()); byDest.get(m.to).add(m.type); }
-      chips = [...byDest.entries()].sort((a, b) => a[0] - b[0]).map(([to, ts]) =>
-        `<button class="chip" data-act="go" data-to="${to}">${NAME(to)}<span class="dots">${DET_TYPES.filter(t => ts.has(t)).map(t => `<span class="dot ${t}"></span>`).join("")}</span></button>`).join("");
-      help = "怪盗Xのいる駅に入れば逮捕。赤くにじんだ駅はXがいるかもしれない場所です。切符には限りがあります。";
+      t1 = `${name} が考え中…`;
+      t2 = G.turn === "x" ? "怪盗Xの切符は下の記録に残ります" : "CPUの刑事が動いています";
     }
-    if (A.pending) {
-      extra += `<div class="label">${NAME(A.pending.to)} へ使う切符</div><div class="chips">` +
-        A.pending.types.map(ty => `<button class="chip" data-act="via" data-type="${ty}"><span class="dot ${ty}"></span>${TYPE[ty].name}</button>`).join("") + `</div>`;
-    }
-    card.innerHTML = `
-      <div class="label">あなたの番</div>
-      <div class="turn-title"><span class="who">${owner.html}</span> を動かす</div>
-      <p class="turn-help">${help}</p>
-      <div class="chips">${chips}</div>
-      ${extra}`;
+    el_.innerHTML = `${who}<div class="txt"><div class="t1">${t1}</div><div class="t2">${t2}</div></div>${move}`;
   }
 
-  function resultButtons() {
-    if (A.mode === "local") return `<button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="menu">メニュー</button>`;
-    return iAmX()
-      ? `<button class="btn" data-act="toRoom">ルームに戻る</button><button class="btn ghost" data-act="lobby">ロビーへ</button>`
-      : `<button class="btn ghost" data-act="lobby">ロビーへ</button>`;
-  }
-
-  function renderBoard() {
+  function renderLog() {
     const G = A.G;
-    const showPos = G && ((iAmX() && A.sec) || (G.over && G.xPath));
-    const path = G ? (iAmX() && A.sec ? A.sec.path : G.xPath) : null;
+    if (!G) { $("xlog").innerHTML = ""; return; }
+    const showX = xVisible();
     let html = "";
     for (let i = 0; i < MAX_MOVES; i++) {
-      const e = G?.xLog[i];
+      const e = G.xLog[i];
       const cls = ["slot"];
       if (e) cls.push(e.t);
       if (REVEAL.includes(i + 1)) cls.push("reveal");
-      if (G && !G.over && i === G.xLog.length && G.turn === "x") cls.push("now");
+      if (!G.over && i === G.xLog.length) cls.push("now");
       let st = "";
-      if (e && e.p !== null) st = NAME(e.p);
-      else if (e && showPos && path) st = NAME(path[i + 1]);
-      html += `<div class="${cls.join(" ")}" title="${i + 1}手目${e ? "：" + TYPE[e.t].name : ""}${st ? "（" + st + "）" : ""}">
-        <span class="n">${i + 1}</span>${e?.d ? `<span class="dbl">2×</span>` : ""}
-        <span>${e ? TYPE[e.t].short : REVEAL.includes(i + 1) ? "？" : ""}</span>
-        ${st ? `<span class="st">${st}</span>` : ""}</div>`;
+      if (e && e.p !== null) st = NO(e.p);
+      else if (e && showX) st = NO(A.sec.path[i + 1]);
+      const title = `${i + 1}手目${e ? "：" + TYPE[e.t].name : ""}${st ? "（" + NAME(st - 1) + "）" : ""}`;
+      html += `<div class="${cls.join(" ")}" title="${esc(title)}"><span class="n">${i + 1}</span>${e ? TYPE[e.t].short : ""}${st ? `<span class="st">${st}</span>` : ""}${e?.d ? `<span class="dbl">2×</span>` : ""}</div>`;
     }
-    $("xlog").innerHTML = html;
-    $("xinfo").innerHTML = G
-      ? `${face("x")}<span>怪盗X（${esc(seatLabel("x"))}）</span><span class="tk black ${G.black ? "" : "zero"}">黒 ${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2× ${G.dbl}</span>`
-      : `<span class="turn-help">怪盗Xの切符：黒チケット ${X_BLACK}枚・2倍移動 ${X_DOUBLE}枚（タクシー・地下鉄・バスは使い放題）</span>`;
-    const dets = G ? G.det : Array.from({ length: DET_COUNT }, () => ({ t: DET_TICKETS }));
-    $("dets").innerHTML = dets.map((d, k) => `
-      <div class="det-row ${G && !G.over && G.turn === k ? "active" : ""}">
-        ${face("d", k)}
-        <span class="nm">${dName(k)} <small>${esc(G ? seatLabel("d" + k) : "")}</small></span>
-        <span class="tks">${DET_TYPES.map(t => `<span class="tk ${t} ${d.t[t] ? "" : "zero"}">${TYPE[t].short} ${d.t[t]}</span>`).join("")}</span>
-      </div>`).join("");
+    const xl = $("xlog");
+    xl.innerHTML = html;
+    const now = xl.children[Math.min(G.xLog.length, MAX_MOVES - 1)];
+    if (now) xl.scrollLeft = Math.max(0, now.offsetLeft - xl.clientWidth / 2);
+    $("feed").innerHTML = A.feed.map(l => `<li class="${l.hot ? "hot" : ""}"><span class="r">${String(l.n).padStart(2, "0")}手</span><span>${esc(l.text)}</span></li>`).join("");
   }
 
-  function renderFeed() {
-    const f = $("feed");
-    if (A.tab === "chat" && A.mode === "online") {
-      f.innerHTML = NET.chat.length ? NET.chat.slice().reverse().map(c =>
-        `<li class="chat"><span class="who-n" style="color:${c.uid === NET.me ? "var(--accent)" : "var(--ink)"}">${esc(c.uid === NET.me ? "あなた" : (NET.names[c.uid] || "プレイヤー"))}</span><span>${esc(c.text)}</span></li>`).join("")
-        : `<li><span class="turn-help">まだメッセージはありません。</span></li>`;
-      return;
-    }
-    f.innerHTML = A.feed.map(l =>
-      `<li class="${l.hot ? "hot" : ""}"><span class="r">${String(l.n).padStart(2, "0")}手</span><span>${esc(l.text)}</span></li>`).join("");
-  }
-
-  // ---------------- オーバーレイ ----------------
-  function showMenu() {
-    if (A.mode === "online") leaveRoom();
-    clearTimeout(timer);
-    A.screen = "menu";
-    renderOverlay();
-    render();
-  }
-
-  function renderOverlay() {
-    const ov = $("overlay");
+  // 切符を選ぶシート
+  function openSheet() { renderSheet(); }
+  function renderSheet() {
+    const wrap = $("sheet");
     const G = A.G;
-    if (A.screen === "menu") { ov.hidden = false; ov.innerHTML = menuHTML(); return; }
-    if (A.screen === "lobby") { ov.hidden = false; ov.innerHTML = lobbyHTML(); return; }
-    if (A.screen === "room") { ov.hidden = false; ov.innerHTML = roomHTML(); return; }
-    if (G && G.over && A.showResult) {
-      ov.hidden = false;
-      const xWin = G.winner === "x";
-      const reason = { escape: "最後まで逃げ切りました。", stuck: "刑事が全員、動ける切符を失いました。", caught: "刑事が怪盗Xのいる駅に踏み込みました。", trapped: "怪盗Xは四方を囲まれて動けなくなりました。" }[G.reason] || "";
-      ov.innerHTML = `
-        <div class="sheet" role="dialog" aria-label="結果">
-          <div class="result-chars">${xWin ? face("x") : [0, 1, 2, 3].map(k => face("d", k)).join("")}</div>
-          <div class="label">${G.xLog.length}手目で決着</div>
-          <h2>${xWin ? "怪盗Xの逃走成功" : "怪盗X、逮捕！"}</h2>
-          <p>${reason}</p>
-          <div class="row">${resultButtons()}<button class="btn ghost" data-act="close">逃走経路を見る</button></div>
+    if (A.sel === null || !G || !humanTurn()) { wrap.hidden = true; return; }
+    const to = A.sel;
+    let tickets = "", opt = "";
+    if (G.turn === "x") {
+      const opts = xMoves(G, A.sec).filter(m => m.to === to).map(m => m.type);
+      const ferryOnly = !opts.some(t => t !== "black");
+      tickets = ["taxi", "bus", "tube", "black"].filter(t => opts.includes(t)).map(t =>
+        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}${t === "black" ? "（手段を隠す" + (ferryOnly ? "・ボート" : "") + "）" : ""}</span>${t === "black" ? `<span class="cnt">${G.black}</span>` : ""}</button>`).join("");
+      if (canDouble(G)) opt = `<div class="opt-row"><div><b>2倍移動</b><div style="font-size:12px;color:var(--muted)">この後もう1駅続けて動く（残り${G.dbl}）</div></div><button class="switch" role="switch" aria-checked="${A.useDouble}" data-act="double" aria-label="2倍移動"></button></div>`;
+    } else {
+      const k = G.turn, d = G.det[k];
+      const opts = detMoves(G, k).filter(m => m.to === to).map(m => m.type);
+      tickets = DET_TYPES.filter(t => opts.includes(t)).map(t =>
+        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}</span><span class="cnt">${d.t[t]}</span></button>`).join("");
+    }
+    wrap.hidden = false;
+    wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="切符を選ぶ">
+      <h3><span class="no">${NO(to)}</span>${esc(NAME(to))} へ</h3>
+      <div class="tickets">${tickets}</div>
+      ${opt}
+      <button class="btn ghost wide" data-act="cancel">キャンセル</button></div>`;
+  }
+
+  // 全面スクリーン
+  function renderScreen() {
+    const sc = $("screen");
+    const G = A.G;
+    sc.className = "screen";
+    if (A.screen === "title") {
+      const sv = loadSave();
+      sc.hidden = false;
+      sc.classList.add("title");
+      sc.innerHTML = `${skylineSVG()}<div class="fog"></div>
+        <div class="card">
+          <div class="logo"><div class="faces">${portrait("x", 0, "lg")}${[0, 1, 2].map(k => portrait("d", k, "lg")).join("")}</div>
+            <div class="en">LONDON · MDCCCXCV</div><h1>ロンドン・チェイス</h1><p>霧の街に消えた怪盗Xを、刑事たちが追う</p></div>
+          <div class="menu">
+            ${sv ? `<button class="btn" data-act="resume">つづきから<span class="s">${sv.G.xLog.length}/${MAX_MOVES}手・${sv.role === "x" ? "怪盗X" : sv.role === "d" ? "刑事" : "パス&プレイ"}</span></button>` : ""}
+            <button class="btn ${sv ? "ghost" : ""}" data-act="start" data-role="x">${portrait("x")}怪盗Xで遊ぶ<span class="s">CPUの刑事から逃げる</span></button>
+            <button class="btn ghost" data-act="start" data-role="d">${portrait("d", 0)}刑事で遊ぶ<span class="s">CPUの怪盗Xを追う</span></button>
+            <button class="btn ghost" data-act="start" data-role="pass">${portrait("d", 1)}みんなで遊ぶ<span class="s">1台を回すパス&プレイ</span></button>
+          </div>
+          <div class="field"><label>刑事の人数</label><div class="seg">${[3, 4, 5].map(n => `<button data-act="dets" data-n="${n}" aria-pressed="${A.detCount === n}">${n}人</button>`).join("")}</div></div>
+          <p class="c" style="font-size:12px;margin-top:-6px">刑事が少ないほど怪盗Xが有利です（5人が標準）</p>
+          <button class="btn ghost wide" data-act="rules">遊び方</button>
         </div>`;
       return;
     }
-    ov.hidden = true;
+    if (A.screen === "rules") {
+      sc.hidden = false;
+      sc.classList.add("title");
+      sc.innerHTML = `<div class="card"><h2>遊び方</h2><ol class="rules">
+        <li><b>怪盗X</b> 1人と <b>刑事</b> 3〜5人の追いかけっこ。駅から駅へ、1手に1駅ずつ動きます。</li>
+        <li>移動には切符を使います。<b>タクシー</b>（黄）・<b>バス</b>（緑）・<b>地下鉄</b>（赤）。駅マークの上半分の色が、その駅で使える乗り物です。</li>
+        <li>怪盗Xの居場所は秘密。刑事にわかるのは下の記録に残る <b>切符の種類</b> だけ。${REVEAL.join("・")}手目の後だけ姿を現します。</li>
+        <li>刑事の切符は有限（タクシー${DET_TICKETS.taxi}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.tube}）。使い切ると動けません。</li>
+        <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す・テムズ川のボートに乗れる。刑事の人数と同じ枚数）と <b>2倍移動</b> ${X_DOUBLE}枚を持っています。</li>
+        <li>刑事が怪盗Xのいる駅に入れば <b>逮捕</b>。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
+        <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。</li>
+      </ol><button class="btn wide" data-act="title">戻る</button></div>`;
+      return;
+    }
+    if (A.screen === "result" && G && G.over) {
+      const xWin = G.winner === "x";
+      const you = A.role === "x" ? xWin : A.role === "d" ? !xWin : null;
+      const reason = { escape: `${MAX_MOVES}手を逃げ切りました。`, stuck: "刑事が全員、使える切符を失いました。", caught: "刑事が怪盗Xのいる駅に踏み込みました。", trapped: "怪盗Xは四方を塞がれて動けなくなりました。" }[G.reason] || "";
+      sc.hidden = false;
+      sc.classList.add("dim");
+      sc.innerHTML = `<div class="card"><div class="faces">${xWin ? portrait("x", 0, "lg") : G.det.map((_, k) => portrait("d", k, "lg")).join("")}</div>
+        <h2>${you === null ? (xWin ? "怪盗Xの逃走成功" : "怪盗X、逮捕！") : you ? "あなたの勝ち！" : "あなたの負け…"}</h2>
+        <p class="c">${G.xLog.length}手目で決着。${reason}</p>
+        <div class="row"><button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="title">タイトルへ</button></div>
+        <button class="btn ghost wide" data-act="closeResult">盤面と逃走経路を見る</button></div>`;
+      return;
+    }
+    if (G && A.role === "pass" && !G.over && (A.cover === "x" || A.cover === "d")) {
+      sc.hidden = false;
+      sc.classList.add("cover");
+      const toX = A.cover === "x";
+      sc.innerHTML = `<div class="card"><div class="faces">${toX ? portrait("x", 0, "lg") : G.det.map((_, k) => portrait("d", k, "lg")).join("")}</div>
+        <h2>${toX ? "怪盗Xの番です" : "刑事の番です"}</h2>
+        <p class="c">${toX ? "刑事のみなさんは画面を見ないでください。<br>怪盗X役の人に端末を渡してください。" : "怪盗Xは移動しました。<br>刑事のみなさんに端末を渡してください。"}</p>
+        <button class="btn wide" data-act="${toX ? "openX" : "openD"}">${toX ? "怪盗Xです。表示する" : "刑事です。はじめる"}</button></div>`;
+      return;
+    }
+    sc.hidden = true;
   }
 
-  function menuHTML() {
-    const online = !!NET.db;
-    return `
-      <div class="sheet" role="dialog" aria-label="メニュー">
-        <div class="label">怪盗X 対 刑事チーム</div>
-        <h2>霧のロンドンに消えた怪盗Xを追え</h2>
-        <ul>
-          <li>怪盗X 1人 対 刑事 ${DET_COUNT}人。怪盗Xの居場所は秘密で、使った切符だけが公開されます。</li>
-          <li>${REVEAL.join("・")}手目の移動後、怪盗Xが姿を現します。</li>
-          <li>刑事の切符は有限（タクシー${DET_TICKETS.train}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.subway}）。使い切ると動けません。</li>
-          <li>怪盗Xは黒チケット（手段を隠す・テムズ川のボートに乗れる）${X_BLACK}枚と、2倍移動 ${X_DOUBLE}枚を持っています。</li>
-          <li>刑事が怪盗Xのいる駅に入れば逮捕。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
-        </ul>
-        <div class="modes">
-          <div class="mode">
-            <h3>ひとりで遊ぶ</h3>
-            <p>CPUを相手にすぐ遊べます。</p>
-            <div class="row">
-              <button class="btn" data-act="local" data-role="x">怪盗Xで</button>
-              <button class="btn ghost" data-act="local" data-role="d">刑事で</button>
-            </div>
-          </div>
-          <div class="mode">
-            <h3>オンライン対戦</h3>
-            <p>${online ? "ルームを作って友だちと対戦。空いた刑事の席はCPUが担当します。" : "claude.ai でこのページを開き、サインインしていると使えます。"}</p>
-            <div class="row"><button class="btn" data-act="lobby" ${online ? "" : "disabled"}>ロビーへ</button></div>
-          </div>
-        </div>
-      </div>`;
+  function skylineSVG() {
+    return `<svg class="skyline" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <path d="M0,400 V300 H60 V270 H90 V300 H140 V250 H170 V300 H230 V280 H260 V220 L275,120 L290,220 V300 H320 V285 H380 V300 H420
+        V180 H424 V170 L432,150 L440,170 V180 H444 V300 H470 V260 A40,40 0 0 1 550,260 V300 H600 V280 H640 V300
+        H700 V200 L716,180 L732,200 V300 H760 V210 L776,190 L792,210 V300 H830 V290 H880 V240 H900 V300 H960 V270 H990 V300 H1040 V230 L1060,140 L1080,230 V300 H1120 V280 H1200 V400 Z" fill="#0A0D14"/>
+      <path d="M700,236 H792" stroke="#0A0D14" stroke-width="8"/>
+      <circle cx="432" cy="195" r="7" fill="#E3B341" opacity="0.8"/>
+      ${Array.from({ length: 26 }, (_, i) => `<rect x="${40 + i * 44}" y="${320 + (i % 3) * 18}" width="6" height="9" fill="#E3B341" opacity="${0.25 + (i % 4) * 0.12}"/>`).join("")}
+    </svg>`;
   }
 
-  function lobbyHTML() {
-    const rows = NET.rooms.map(r => {
-      const s = r.seats || {};
-      const filled = Object.keys(s).filter(k => s[k]?.uid).length;
-      const host = s.x?.uid ? (s.x.uid === NET.me ? "あなた" : (NET.names[s.x.uid] || "プレイヤー")) : "空席";
-      return `<div class="room-row"><span class="code">${esc(r.code)}</span>
-        <span><b>${esc(host)}</b> が怪盗X<br><small style="color:var(--muted)">参加 ${filled}/${DET_COUNT + 1}人</small></span>
-        <button class="btn small" data-act="join" data-code="${esc(r.code)}">参加</button></div>`;
-    }).join("");
-    return `
-      <div class="sheet" role="dialog" aria-label="ロビー">
-        <div class="label">オンライン ロビー</div>
-        <h2>ルームを選んで参加</h2>
-        <div class="rooms">${rows || `<p>募集中のルームはありません。ルームを作って友だちを呼びましょう。</p>`}</div>
-        <div class="row">
-          <button class="btn" data-act="create" ${NET.readOnly ? "disabled" : ""}>ルームを作る（怪盗Xになる）</button>
-          <button class="btn ghost" data-act="menu">戻る</button>
-        </div>
-        ${NET.readOnly ? `<p class="note">このページを閲覧のみの権限で開いているため、ルームを作ったり参加したりできません。</p>` : ""}
-        <p class="note">友だちを誘うときは、このページの共有メニューから「編集可」で招待してください。</p>
-      </div>`;
-  }
-
-  function roomHTML() {
-    const r = NET.room;
-    if (!r) return `<div class="sheet"><p>ルームに接続しています…</p></div>`;
-    const s = r.seats || {};
-    const seat = (key, label, fc) => {
-      const v = s[key] || {};
-      const mine = v.uid === NET.me;
-      const who = v.cpu ? "CPU" : v.uid ? (mine ? "あなた" : (NET.names[v.uid] || "プレイヤー")) : "空席";
-      let acts = "";
-      if (!v.uid && !v.cpu) acts += `<button class="btn small" data-act="sit" data-seat="${key}">座る</button>`;
-      if (mine && key !== "x") acts += `<button class="btn ghost small" data-act="stand" data-seat="${key}">席を立つ</button>`;
-      if (key !== "x" && iAmX() && !v.uid) acts += `<button class="btn ghost small toggle" aria-pressed="${!!v.cpu}" data-act="cpu" data-seat="${key}">CPU</button>`;
-      return `<div class="seat ${mine ? "mine" : ""}">${fc}<span class="role-n">${label}</span><span class="pl">${esc(who)}</span>${acts ? `<div class="acts">${acts}</div>` : ""}</div>`;
-    };
-    let seats = seat("x", "怪盗X", face("x"));
-    for (let k = 0; k < DET_COUNT; k++) seats += seat("d" + k, dName(k), face("d", k));
-    const canStart = iAmX();
-    return `
-      <div class="sheet" role="dialog" aria-label="ルーム">
-        <div class="row" style="justify-content:space-between"><div class="label">ルーム</div><span class="code">${esc(r.code)}</span></div>
-        <h2>メンバーを待っています</h2>
-        <div class="seats">${seats}</div>
-        <p class="note">${canStart ? "準備ができたら開始してください。空いている刑事の席はCPUが担当します。" : "怪盗Xの人がゲームを開始します。好きな刑事の席に座ってください（複数の席に座ってもOK）。"}</p>
-        <div class="row">
-          ${canStart ? `<button class="btn" data-act="start">ゲーム開始</button>` : ""}
-          <button class="btn ghost" data-act="lobby">ルームを出る</button>
-        </div>
-      </div>`;
-  }
-
-  let toastTimer = null;
   function toast(msg) {
-    pushFeed([{ n: A.G ? A.G.xLog.length : 0, text: msg, hot: true }]);
-    renderFeed();
-    clearTimeout(toastTimer);
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    $("toastHost").replaceChildren(t);
+    setTimeout(() => { if (t.parentNode) t.remove(); }, 2500);
   }
 
   // ======================================================================
@@ -1708,52 +1444,62 @@
     const b = ev.target.closest("[data-act]");
     if (!b || b.disabled) return;
     const act = b.dataset.act;
+    const { w, h } = vpSize();
     switch (act) {
-      case "local": return startLocal(b.dataset.role);
-      case "again": return startLocal(A.role);
-      case "menu": return showMenu();
-      case "lobby": return openLobby();
-      case "create": return createRoom();
-      case "join": return enterRoom(b.dataset.code);
-      case "sit": return sit(b.dataset.seat);
-      case "stand": return standUp(b.dataset.seat);
-      case "cpu": return toggleCpu(b.dataset.seat);
-      case "start": return startOnline();
-      case "toRoom": return backToRoom();
-      case "close": A.showResult = false; renderOverlay(); return;
-      case "tab": A.tab = b.dataset.tab; render(); return;
-      case "go": return onStation(Number(b.dataset.to));
-      case "black": A.useBlack = !A.useBlack; A.pending = null; render(); return;
-      case "double": A.useDouble = !A.useDouble; render(); return;
-      case "via": {
-        if (!A.pending || !isMyTurn()) return;
-        const { to } = A.pending, type = b.dataset.type;
-        if (A.G.turn === "x") return commitX(to, type, A.useDouble && canDouble(A.G));
-        return commitD(A.G.turn, to, type);
+      case "start": return startGame(b.dataset.role);
+      case "resume": { const s = loadSave(); if (s) resume(s); return; }
+      case "again": return startGame(A.role);
+      case "title": clearTimeout(timer); A.screen = "title"; A.sel = null; renderScreen(); renderSheet(); return;
+      case "menu": clearTimeout(timer); save(); A.screen = "title"; A.sel = null; renderScreen(); renderSheet(); return;
+      case "rules": A.screen = "rules"; renderScreen(); return;
+      case "dets": A.detCount = Number(b.dataset.n); renderScreen(); return;
+      case "result": A.screen = "result"; renderScreen(); return;
+      case "closeResult": A.screen = "game"; renderScreen(); fitView(); return;
+      case "openX": A.cover = "x-open"; render(); focusTurn(); return;
+      case "openD": A.cover = null; render(); step(); return;
+      case "zoomIn": return zoomAt(1.5, w / 2, h / 2);
+      case "zoomOut": return zoomAt(1 / 1.5, w / 2, h / 2);
+      case "fit": return fitView();
+      case "focusTurn": return focusTurn();
+      case "focusX": { const G = A.G; if (!G) return; if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else toast("怪盗Xはまだ姿を見せていません"); return; }
+      case "focusD": return A.G && centerOn(A.G.det[Number(b.dataset.k)].pos);
+      case "hint": A.hints = !A.hints; render(); return;
+      case "log": $("drawer").hidden = !$("drawer").hidden; return;
+      case "cancel": A.sel = null; A.useDouble = false; render(); return;
+      case "double": A.useDouble = !A.useDouble; renderSheet(); return;
+      case "ticket": {
+        const G = A.G, to = A.sel, type = b.dataset.type;
+        if (to === null || !humanTurn()) return;
+        if (G.turn === "x") commitX(to, type); else commitD(G.turn, to, type);
+        return;
       }
     }
   });
-  $("menuBtn").addEventListener("click", showMenu);
-  $("hintBtn").addEventListener("click", () => { A.hints = !A.hints; render(); });
-  $("chatForm").addEventListener("submit", ev => {
-    ev.preventDefault();
-    const inp = $("chatInput");
-    sendChat(inp.value);
-    inp.value = "";
+  $("sheet").addEventListener("click", e => { if (e.target === $("sheet")) { A.sel = null; A.useDouble = false; render(); } });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && A.sel !== null) { A.sel = null; render(); }
+    if (A.screen !== "game") return;
+    const { w, h } = vpSize();
+    if (e.key === "+" || e.key === "=") zoomAt(1.4, w / 2, h / 2);
+    if (e.key === "-") zoomAt(1 / 1.4, w / 2, h / 2);
   });
 
+  // ======================================================================
+  // 起動
+  // ======================================================================
   function boot(data) {
-    buildMap();
-    buildLegend();
-    if (data && data.A && data.A.mode === "local" && data.A.G) {
-      Object.assign(A, data.A);
-      localStep();
+    renderBackground();
+    buildBoard();
+    fitView(false);
+    if (data && data.A && data.A.G) {
+      Object.assign(A, data.A, { busy: false });
+      buildTokens();
+      if (A.screen === "game" && !A.G.over) step(); else render();
     } else {
-      showMenu();
+      renderScreen();
     }
-    initNet();
   }
-  try { window.claude?.hot?.snapshot?.(() => ({ A: A.mode === "local" ? A : null })); } catch (e) {}
+  try { window.claude?.hot?.snapshot?.(() => ({ A })); } catch (e) {}
   if (window.claude?.hot?.ready) window.claude.hot.ready(boot);
   else boot(window.claude?.hot?.data ?? {});
 })();
