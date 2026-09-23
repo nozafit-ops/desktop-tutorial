@@ -729,7 +729,7 @@
   // ======================================================================
 
   // 生成画像を使うときはここにファイル名を入れる（例: map: "art/map.jpg"）
-  const ART = { map: null, x: null, d: [null, null, null, null, null], title: null };
+  const ART = { map: "art/london-map.webp", x: null, d: [null, null, null, null, null], title: null };
 
   const DCOL = ["#3B82F6", "#F97316", "#A855F7", "#14B8A6", "#E879F9"];
   const AI_DELAY = 650;
@@ -1000,7 +1000,7 @@
   function focusTurn() {
     const G = A.G;
     if (!G) return;
-    if (G.turn === "x") { if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else fitView(); }
+    if (G.turn === "x") { if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else if (A.role === "d") centerOn(G.det[0].pos); else fitView(); }
     else centerOn(G.det[G.turn].pos);
   }
 
@@ -1186,7 +1186,11 @@
 
   async function renderBackground() {
     const img = $("bgimg");
-    if (ART.map) { img.setAttribute("href", ART.map); return; }
+    if (ART.map) {
+      // 用意した盤面画像を使う。読み込めなければコードで描いた古地図にする
+      const ok = await new Promise(res => { const im = new Image(); im.onload = () => res(true); im.onerror = () => res(false); im.src = ART.map; });
+      if (ok) { img.setAttribute("href", ART.map); return; }
+    }
     const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(backgroundSVG());
     try {
       const im = new Image();
@@ -1471,7 +1475,7 @@
           <div class="field"><label>刑事の人数</label><div class="seg">${[3, 4, 5].map(n => `<button data-act="dets" data-n="${n}" aria-pressed="${A.detCount === n}">${n}人</button>`).join("")}</div></div>
           <p class="c" style="font-size:12px;margin-top:-6px">3人が標準。刑事を増やすほど怪盗Xは苦しくなります</p>
           <button class="btn ghost wide" data-act="rules">遊び方</button>
-          <div class="row"><button class="btn ghost" data-act="exportBg" data-fmt="png">背景画像を保存（PNG）</button><button class="btn ghost" data-act="exportBg" data-fmt="svg">元データ（SVG）</button></div>
+          <div class="row"><button class="btn ghost" data-act="exportBg" data-fmt="png">古地図の下絵を保存（PNG）</button><button class="btn ghost" data-act="exportBg" data-fmt="svg">元データ（SVG）</button></div>
         </div>`;
       return;
     }

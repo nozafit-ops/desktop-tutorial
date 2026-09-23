@@ -25,12 +25,13 @@ Write your name on line 6, save it, and then head back to GitHub Desktop.
 - モード：怪盗Xで遊ぶ／刑事で遊ぶ（相手はCPU）／みんなで遊ぶ（1台を回すパス&プレイ）。途中経過は自動保存され「つづきから」で再開できます。
 
 ### 盤面の画像
+- `tokyo-chase/art/london-map.webp`：ゲームで使っている盤面の背景画像（古地図の下絵をもとに描き起こしたもの）
 - `tokyo-chase/art/london-background.svg`：背景（古地図）の元データ（ベクター）
 - `tokyo-chase/art/london-background.png`：背景画像（3000×1900）
 - `tokyo-chase/art/london-board.png`：路線と駅を載せた盤面全体（3000×1900）
-- タイトル画面の「背景画像を保存」からも書き出せます。
+- タイトル画面の「古地図の下絵を保存」から、コードで描いた下絵を書き出せます。
 
 ### 画像の差し替え
-`ART`（`map`・`x`・`d`・`title`）に画像ファイルを指定すると、盤面の背景や人物の肖像を生成画像に置き換えられます。未指定のときはコードで描いた古地図と人物を使います。
+`ART`（`map`・`x`・`d`・`title`）に画像ファイルを指定すると、盤面の背景や人物の肖像を差し替えられます。現在は `map` に `art/london-map.webp` を指定しています。画像を読み込めないときはコードで描いた古地図を使います。
 
 駅・路線は `STATIONS`・`TAXI`・`TUBE`・`BUS`・`BOAT`・`HELI`、ルールの数値は `MAX_MOVES` などの定数で変更できます。
