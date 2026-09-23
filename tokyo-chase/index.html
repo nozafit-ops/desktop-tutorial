@@ -1,0 +1,1105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- ARTIFACT-START -->
+<title>トーキョー・チェイス</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+  :root {
+    --ground: #EEF1F4;
+    --panel: #FFFFFF;
+    --ink: #1B2230;
+    --muted: #5F6B7A;
+    --rule: #CDD5DF;
+    --train: #2E9A4E;
+    --subway: #7D4CC0;
+    --bus: #E0801C;
+    --secret: #1B2230;
+    --target: #D7263D;
+    --chaser: #1F3F8F;
+    --agent: #D99A00;
+    --board: #16181D;
+    --board-ink: #FFB547;
+    --station: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0F131B;
+      --panel: #171D28;
+      --ink: #E6EBF2;
+      --muted: #93A0B2;
+      --rule: #2A3343;
+      --train: #46C06B;
+      --subway: #A67DEA;
+      --bus: #F29A3A;
+      --secret: #E6EBF2;
+      --target: #FF4F65;
+      --chaser: #7FA6FF;
+      --agent: #FFC83D;
+      --board: #07090C;
+      --board-ink: #FFB547;
+      --station: #171D28;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0F131B;
+    --panel: #171D28;
+    --ink: #E6EBF2;
+    --muted: #93A0B2;
+    --rule: #2A3343;
+    --train: #46C06B;
+    --subway: #A67DEA;
+    --bus: #F29A3A;
+    --secret: #E6EBF2;
+    --target: #FF4F65;
+    --chaser: #7FA6FF;
+    --agent: #FFC83D;
+    --board: #07090C;
+    --board-ink: #FFB547;
+    --station: #171D28;
+  }
+
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .app {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 12px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ---------- header ---------- */
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  h1 {
+    font-family: "Dela Gothic One", "Zen Kaku Gothic New", sans-serif;
+    font-weight: 400;
+    font-size: clamp(22px, 3.2vw, 30px);
+    letter-spacing: 0.02em;
+    margin: 0;
+    line-height: 1.1;
+  }
+  .brand small { color: var(--muted); font-size: 12px; letter-spacing: 0.08em; }
+  .flap {
+    font-family: "DotGothic16", ui-monospace, monospace;
+    background: var(--board);
+    color: var(--board-ink);
+    border-radius: 6px;
+    padding: 6px 12px;
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.06em;
+  }
+  .flap b { font-weight: 400; font-size: 22px; }
+  .flap span { font-size: 12px; opacity: 0.85; }
+
+  /* ---------- layout ---------- */
+  .main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .main { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .mapwrap {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  svg#map { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
+
+  .side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  /* ---------- turn card ---------- */
+  .turn-title { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  .turn-help { color: var(--muted); font-size: 13px; margin: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  button:focus-visible { outline: 2px solid var(--chaser); outline-offset: 2px; }
+  .chip {
+    border: 1px solid var(--rule);
+    background: var(--ground);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip:hover { border-color: var(--ink); }
+  .dots { display: inline-flex; gap: 3px; }
+  .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .dot.train { background: var(--train); }
+  .dot.subway { background: var(--subway); }
+  .dot.bus { background: var(--bus); }
+  .btn {
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--panel);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 700;
+  }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+  .btn.ghost:hover { border-color: var(--ink); }
+  .btn.small { padding: 5px 10px; font-size: 13px; font-weight: 400; }
+  .toggle[aria-pressed="true"] { background: var(--secret); color: var(--panel); border-color: var(--secret); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  .who { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 5px; border-radius: 5px; font-size: 12px; font-weight: 700; color: #fff; }
+  .who.t { background: var(--target); }
+  .who.c { background: var(--chaser); color: var(--panel); }
+  .who.a { background: var(--agent); color: #1B2230; }
+
+  /* ---------- ticket board ---------- */
+  .board { display: flex; flex-direction: column; gap: 6px; }
+  .board-row { display: grid; grid-template-columns: 30px repeat(20, minmax(0, 1fr)); gap: 2px; align-items: center; }
+  .board-row .who { min-width: 0; height: 18px; font-size: 11px; padding: 0; }
+  .cell {
+    height: 22px;
+    border-radius: 3px;
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    font-family: "DotGothic16", ui-monospace, monospace;
+    font-size: 11px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+  }
+  .cell.reveal { border: 1.5px solid var(--target); }
+  .cell.now { box-shadow: 0 0 0 2px var(--ink); }
+  .cell.train { background: var(--train); border-color: var(--train); }
+  .cell.subway { background: var(--subway); border-color: var(--subway); }
+  .cell.bus { background: var(--bus); border-color: var(--bus); }
+  .cell.secret { background: var(--secret); border-color: var(--secret); color: var(--panel); }
+  .cell.reveal.train, .cell.reveal.subway, .cell.reveal.bus, .cell.reveal.secret { border-color: var(--target); }
+  .board-nums { display: grid; grid-template-columns: 30px repeat(20, minmax(0, 1fr)); gap: 2px; font-size: 9px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+  .board-nums .rv { color: var(--target); font-weight: 700; }
+
+  /* ---------- log ---------- */
+  .log { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+  .log li { display: flex; gap: 8px; }
+  .log .r { font-family: "DotGothic16", ui-monospace, monospace; color: var(--muted); min-width: 28px; font-variant-numeric: tabular-nums; }
+  .log li.hot { font-weight: 700; color: var(--target); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 18px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+
+  /* ---------- map SVG ---------- */
+  .edge { fill: none; stroke-width: 4.5; stroke-linecap: round; }
+  .edge.train { stroke: var(--train); }
+  .edge.subway { stroke: var(--subway); }
+  .edge.bus { stroke: var(--bus); stroke-dasharray: 2 7; stroke-width: 5; }
+  .stn { fill: var(--station); stroke: var(--ink); stroke-width: 2.5; }
+  .stn-hit { fill: transparent; cursor: default; }
+  .stn-hit.can { cursor: pointer; }
+  .stn-label {
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    fill: var(--ink);
+    paint-order: stroke;
+    stroke: var(--panel);
+    stroke-width: 5px;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+  .dest { fill: none; stroke: var(--ink); stroke-width: 3; pointer-events: none; }
+  .dest.pulse { animation: pulse 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .poss { fill: var(--target); opacity: 0.16; pointer-events: none; }
+  .lastseen { fill: none; stroke: var(--target); stroke-width: 2.5; stroke-dasharray: 5 4; pointer-events: none; }
+  .lastseen-label { font-size: 13px; font-weight: 700; fill: var(--target); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; pointer-events: none; }
+  .tok { pointer-events: none; }
+  .tok text { font-size: 13px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .tok.c rect { fill: var(--chaser); }
+  .tok.c text { fill: var(--panel); }
+  .tok.t circle { fill: var(--target); }
+  .tok.t text { fill: #fff; }
+  .tok.a circle { fill: var(--agent); }
+  .tok.a text { fill: #1B2230; }
+  .tok .ring { fill: none; stroke: var(--ink); stroke-width: 2.5; }
+  .trail { fill: none; stroke: var(--target); stroke-width: 3; stroke-dasharray: 8 6; opacity: 0.8; pointer-events: none; }
+
+  /* ---------- overlay ---------- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--ground) 72%, transparent);
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    backdrop-filter: blur(2px);
+  }
+  .sheet {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 20px 22px;
+    max-width: 460px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  }
+  .sheet h2 { font-family: "Dela Gothic One", sans-serif; font-weight: 400; font-size: 24px; margin: 0; text-wrap: balance; line-height: 1.25; }
+  .sheet p { margin: 0; color: var(--muted); font-size: 13px; }
+  .sheet ul { margin: 0; padding-left: 1.2em; font-size: 13px; display: flex; flex-direction: column; gap: 3px; }
+  .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .role {
+    border: 1px solid var(--rule);
+    background: var(--ground);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .role:hover { border-color: var(--ink); }
+  .role strong { font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .role span { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  @media (max-width: 520px) {
+    .roles { grid-template-columns: 1fr; }
+    .overlay { position: fixed; z-index: 10; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dest.pulse { animation: none; }
+  }
+</style>
+<!-- ARTIFACT-HEAD-END -->
+</head>
+<body>
+<!-- ARTIFACT-BODY-START -->
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1>トーキョー・チェイス</h1>
+      <small>路線図で遊ぶ 追跡ボードゲーム</small>
+    </div>
+    <div class="flap" aria-live="polite">
+      <span>ROUND</span><b id="roundNo">--/20</b>
+      <span id="nextReveal">次の公開 --</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="mapwrap">
+      <svg id="map" viewBox="0 0 990 800" role="img" aria-label="東京の路線図マップ">
+        <g id="gEdges"></g>
+        <g id="gPoss"></g>
+        <g id="gTrail"></g>
+        <g id="gStations"></g>
+        <g id="gDest"></g>
+        <g id="gTokens"></g>
+        <g id="gLabels"></g>
+        <g id="gHits"></g>
+      </svg>
+      <div class="overlay" id="overlay"></div>
+    </div>
+
+    <div class="side">
+      <section class="card" id="turnCard" aria-live="polite"></section>
+
+      <section class="card">
+        <div class="label">移動記録（ターゲットの切符）</div>
+        <div class="board" id="board"></div>
+      </section>
+
+      <section class="card">
+        <div class="row" style="justify-content: space-between;">
+          <div class="label">ログ</div>
+          <div class="row">
+            <button class="btn ghost small toggle" id="hintBtn" aria-pressed="true">推理ヒント</button>
+            <button class="btn ghost small" id="newBtn">新しいゲーム</button>
+          </div>
+        </div>
+        <ul class="log" id="log"></ul>
+      </section>
+
+      <div class="legend">
+        <span><i style="background: var(--train)"></i>電車</span>
+        <span><i style="background: var(--subway)"></i>地下鉄</span>
+        <span><i style="background: repeating-linear-gradient(90deg, var(--bus) 0 3px, transparent 3px 7px)"></i>バス</span>
+        <span><span class="who c" style="min-width:18px;height:16px;font-size:10px">C</span> チェイサー</span>
+        <span><span class="who t" style="min-width:18px;height:16px;font-size:10px">T</span> ターゲット</span>
+        <span><span class="who a" style="min-width:18px;height:16px;font-size:10px">A</span> エージェント</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ================= マップデータ =================
+  // [駅名, x, y, ラベルdx, ラベルdy, text-anchor]
+  const STATIONS = [
+    ["池袋", 220, 110, 0, -22, "middle"],
+    ["大塚", 400, 75, 0, -22, "middle"],
+    ["日暮里", 600, 50, 0, -22, "middle"],
+    ["上野", 740, 125, 20, 6, "start"],
+    ["浅草", 890, 110, 0, -22, "middle"],
+    ["秋葉原", 740, 230, 20, 6, "start"],
+    ["神田", 700, 310, 20, 6, "start"],
+    ["御茶ノ水", 590, 270, 0, -22, "middle"],
+    ["後楽園", 500, 190, 0, -22, "middle"],
+    ["高田馬場", 180, 230, -20, 6, "end"],
+    ["中野", 50, 360, 0, 32, "middle"],
+    ["新宿", 170, 370, -20, -8, "end"],
+    ["四ツ谷", 380, 370, 0, 32, "middle"],
+    ["大手町", 610, 370, -20, 6, "end"],
+    ["日本橋", 770, 380, 0, -22, "middle"],
+    ["錦糸町", 930, 280, 0, 32, "middle"],
+    ["東京", 700, 440, 20, 6, "start"],
+    ["赤坂見附", 390, 470, -20, 6, "end"],
+    ["霞ケ関", 500, 470, 0, 32, "middle"],
+    ["銀座", 670, 530, 20, 6, "start"],
+    ["門前仲町", 850, 480, 20, 6, "start"],
+    ["原宿", 190, 480, -20, 6, "end"],
+    ["表参道", 280, 540, 0, 32, "middle"],
+    ["渋谷", 180, 590, 0, 32, "middle"],
+    ["下北沢", 50, 610, 0, 32, "middle"],
+    ["六本木", 380, 590, 0, 32, "middle"],
+    ["新橋", 590, 590, -16, 30, "end"],
+    ["月島", 790, 590, 0, 32, "middle"],
+    ["麻布十番", 480, 650, 0, 32, "middle"],
+    ["浜松町", 610, 690, 20, 6, "start"],
+    ["豊洲", 920, 660, 0, 32, "middle"],
+    ["目黒", 250, 700, 0, 32, "middle"],
+    ["品川", 400, 740, 0, 32, "middle"],
+  ];
+
+  const LINES = [
+    // 電車
+    ["train", ["東京","神田","秋葉原","上野","日暮里","大塚","池袋","高田馬場","新宿","原宿","渋谷","目黒","品川","浜松町","新橋","東京"]],
+    ["train", ["中野","新宿","四ツ谷","御茶ノ水","神田"]],
+    ["train", ["秋葉原","錦糸町"]],
+    ["train", ["下北沢","渋谷"]],
+    ["train", ["下北沢","新宿"]],
+    ["train", ["新橋","豊洲"]],
+    // 地下鉄
+    ["subway", ["渋谷","表参道","赤坂見附","新橋","銀座","日本橋","神田","上野","浅草"]],
+    ["subway", ["中野","新宿","四ツ谷","赤坂見附","霞ケ関","銀座","東京","大手町","御茶ノ水","後楽園","池袋"]],
+    ["subway", ["中野","高田馬場","後楽園"]],
+    ["subway", ["大手町","日本橋","門前仲町"]],
+    ["subway", ["新宿","六本木","麻布十番","浜松町","月島"]],
+    ["subway", ["銀座","月島","豊洲"]],
+    ["subway", ["日本橋","錦糸町"]],
+    ["subway", ["六本木","霞ケ関"]],
+    ["subway", ["目黒","麻布十番"]],
+    // バス
+    ["bus", ["渋谷","六本木","新橋"]],
+    ["bus", ["原宿","表参道","六本木"]],
+    ["bus", ["中野","下北沢","目黒"]],
+    ["bus", ["大塚","後楽園","上野"]],
+    ["bus", ["日暮里","浅草","錦糸町","門前仲町","月島"]],
+    ["bus", ["門前仲町","豊洲"]],
+    ["bus", ["御茶ノ水","秋葉原"]],
+    ["bus", ["品川","麻布十番"]],
+    ["bus", ["霞ケ関","新橋"]],
+    ["bus", ["四ツ谷","後楽園"]],
+    ["bus", ["東京","日本橋"]],
+    ["bus", ["大手町","神田"]],
+    ["bus", ["赤坂見附","六本木"]],
+  ];
+
+  const TYPE = {
+    train:  { name: "電車",   short: "電" },
+    subway: { name: "地下鉄", short: "地" },
+    bus:    { name: "バス",   short: "バ" },
+    secret: { name: "シークレット", short: "？" },
+  };
+  const TYPE_ORDER = ["train", "subway", "bus"];
+
+  const MAX_ROUNDS = 20;
+  const REVEAL = [3, 7, 11, 15, 19];
+  const SECRETS = 3;
+  const AI_DELAY = 450;
+
+  const N = STATIONS.length;
+  const IDX = Object.fromEntries(STATIONS.map((s, i) => [s[0], i]));
+  const NAME = i => STATIONS[i][0];
+
+  // 隣接リスト（同じ区間に複数の交通手段がありうる）
+  const edgeTypes = new Map(); // "a-b" -> Set(type)
+  for (const [type, seq] of LINES) {
+    for (let k = 0; k < seq.length - 1; k++) {
+      const a = IDX[seq[k]], b = IDX[seq[k + 1]];
+      if (a === undefined || b === undefined) throw new Error("unknown station " + seq[k] + "/" + seq[k + 1]);
+      const key = a < b ? a + "-" + b : b + "-" + a;
+      if (!edgeTypes.has(key)) edgeTypes.set(key, new Set());
+      edgeTypes.get(key).add(type);
+    }
+  }
+  const ADJ = Array.from({ length: N }, () => []);
+  for (const [key, types] of edgeTypes) {
+    const [a, b] = key.split("-").map(Number);
+    for (const t of types) {
+      ADJ[a].push({ to: b, type: t });
+      ADJ[b].push({ to: a, type: t });
+    }
+  }
+  // 全点間の最短距離（交通手段を問わない）
+  const D = Array.from({ length: N }, (_, s) => {
+    const d = new Array(N).fill(Infinity);
+    d[s] = 0;
+    const q = [s];
+    while (q.length) {
+      const u = q.shift();
+      for (const e of ADJ[u]) if (d[e.to] === Infinity) { d[e.to] = d[u] + 1; q.push(e.to); }
+    }
+    return d;
+  });
+
+  // ================= 状態 =================
+  let S = null;
+  let timer = null;
+
+  const $ = id => document.getElementById(id);
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs = {}, parent) {
+    const e = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+  const tName = i => "T" + (i + 1);
+  const cName = i => "C" + (i + 1);
+
+  function newGame(role) {
+    clearTimeout(timer);
+    const ids = shuffle([...Array(N).keys()]);
+    const chaserPos = ids.slice(0, 3);
+    // スタート地点のルール（公開情報）：チェイサーから2駅以上離れている
+    const startable = ids.filter(p => chaserPos.every(c => D[p][c] >= 2));
+    const t1 = startable[0];
+    const t2 = startable.find(p => p !== t1 && D[p][t1] >= 2) ?? startable[1];
+    S = {
+      role,
+      round: 1,
+      queue: [],
+      qi: 0,
+      chasers: chaserPos.map(pos => ({ pos })),
+      targets: [t1, t2].map(pos => ({
+        pos, state: "free", secrets: SECRETS, moves: [], path: [pos],
+        possible: startable.slice(), lastSeen: null,
+      })),
+      log: [],
+      over: false,
+      winner: null,
+      useSecret: false,
+      pending: null,
+      hints: S ? S.hints : true,
+      showResult: false,
+    };
+    buildQueue();
+    addLog(role === "target"
+      ? "あなたはターゲット。20ラウンド逃げ切れば勝ち！"
+      : "あなたはチェイサー。20ラウンド以内に2人とも捕まえよう！", true);
+    $("overlay").hidden = true;
+    step();
+  }
+
+  function buildQueue() {
+    const q = [];
+    S.targets.forEach((t, i) => { if (t.state === "free") q.push({ k: "t", i }); });
+    S.targets.forEach((t, i) => { if (t.state === "agent") q.push({ k: "a", i }); });
+    S.chasers.forEach((_, i) => q.push({ k: "c", i }));
+    S.queue = q;
+    S.qi = 0;
+  }
+
+  function addLog(text, hot = false) {
+    S.log.unshift({ r: S.round, text, hot });
+    if (S.log.length > 80) S.log.pop();
+  }
+
+  const isHuman = a => S.role === "target" ? (a.k === "t" || a.k === "a") : a.k === "c";
+  const current = () => S.queue[S.qi];
+  function valid(a) {
+    if (a.k === "t") return S.targets[a.i].state === "free";
+    if (a.k === "a") return S.targets[a.i].state === "agent";
+    return true;
+  }
+  function actorName(a) {
+    if (a.k === "t") return tName(a.i);
+    if (a.k === "a") return tName(a.i) + "（エージェント）";
+    return cName(a.i);
+  }
+
+  function legal(a) {
+    const cpos = S.chasers.map(c => c.pos);
+    if (a.k === "t") {
+      const t = S.targets[a.i];
+      const others = S.targets.filter((o, j) => j !== a.i && o.state === "free").map(o => o.pos);
+      return ADJ[t.pos].filter(e => !cpos.includes(e.to) && !others.includes(e.to));
+    }
+    if (a.k === "a") {
+      return ADJ[S.targets[a.i].pos].filter(e => !cpos.includes(e.to));
+    }
+    const me = S.chasers[a.i];
+    const otherC = S.chasers.filter((_, j) => j !== a.i).map(c => c.pos);
+    const agents = S.targets.filter(t => t.state === "agent").map(t => t.pos);
+    return ADJ[me.pos].filter(e => !otherC.includes(e.to) && !agents.includes(e.to));
+  }
+
+  // ================= 進行 =================
+  function step() {
+    clearTimeout(timer);
+    while (!S.over) {
+      if (S.qi >= S.queue.length) {
+        endRound();
+        if (S.over) break;
+        continue;
+      }
+      const a = current();
+      if (!valid(a)) { S.qi++; continue; }
+      const moves = legal(a);
+      if (!moves.length) {
+        if (a.k === "t") {
+          addLog(`${tName(a.i)} は囲まれて動けない！`, true);
+          capture(a.i, null);
+        } else {
+          addLog(`${actorName(a)} は動ける駅がないので待機`);
+        }
+        S.qi++;
+        continue;
+      }
+      if (isHuman(a)) { S.pending = null; render(); return; }
+      render();
+      timer = setTimeout(() => {
+        const m = aiMove(a, moves);
+        doMove(a, m);
+        S.qi++;
+        step();
+      }, AI_DELAY);
+      return;
+    }
+    S.showResult = true;
+    render();
+  }
+
+  function endRound() {
+    if (S.round >= MAX_ROUNDS) {
+      S.over = true;
+      S.winner = "target";
+      addLog("逃げ切り成功！ターゲットの勝ち", true);
+      return;
+    }
+    S.round++;
+    buildQueue();
+  }
+
+  function doMove(a, m) {
+    if (a.k === "t") {
+      const t = S.targets[a.i];
+      t.pos = m.to;
+      t.path.push(m.to);
+      if (m.type === "secret") t.secrets--;
+      t.moves[S.round - 1] = m.type;
+      const occ = new Set(S.chasers.map(c => c.pos));
+      const next = new Set();
+      for (const s of t.possible) for (const e of ADJ[s]) {
+        if ((m.type === "secret" || e.type === m.type) && !occ.has(e.to)) next.add(e.to);
+      }
+      t.possible = [...next];
+      const via = TYPE[m.type].name;
+      if (S.role === "target") addLog(`${tName(a.i)} → ${NAME(m.to)}（${via}）`);
+      else addLog(`${tName(a.i)} が ${via} で移動した`);
+      if (REVEAL.includes(S.round)) {
+        t.possible = [m.to];
+        t.lastSeen = { pos: m.to, round: S.round };
+        addLog(`公開！ ${tName(a.i)} は ${NAME(m.to)} にいる`, true);
+      }
+    } else if (a.k === "a") {
+      S.targets[a.i].pos = m.to;
+      addLog(`${tName(a.i)}（エージェント）→ ${NAME(m.to)}`);
+    } else {
+      const c = S.chasers[a.i];
+      c.pos = m.to;
+      addLog(`${cName(a.i)} → ${NAME(m.to)}`);
+      const hit = S.targets.findIndex(t => t.state === "free" && t.pos === m.to);
+      if (hit >= 0) {
+        addLog(`${cName(a.i)} が ${tName(hit)} を ${NAME(m.to)} で捕まえた！`, true);
+        capture(hit, a.i);
+      }
+      for (const t of S.targets) {
+        if (t.state === "free") t.possible = t.possible.filter(p => p !== m.to);
+      }
+    }
+  }
+
+  function capture(i) {
+    const t = S.targets[i];
+    const othersFree = S.targets.some((o, j) => j !== i && o.state === "free");
+    t.state = othersFree ? "agent" : "caught";
+    t.possible = [t.pos];
+    t.lastSeen = { pos: t.pos, round: S.round };
+    if (othersFree) {
+      addLog(`${tName(i)} はエージェントになった。チェイサーはエージェントのいる駅に入れない`);
+    } else {
+      S.over = true;
+      S.winner = "chaser";
+      addLog("全員確保！チェイサーの勝ち", true);
+    }
+  }
+
+  // ================= CPU =================
+  function aiMove(a, moves) {
+    if (a.k === "t") return aiTarget(a.i, moves);
+    if (a.k === "a") return aiAgent(a.i, moves);
+    return aiChaser(a.i, moves);
+  }
+
+  function possibleAfter(t, type) {
+    const occ = new Set(S.chasers.map(c => c.pos));
+    const next = new Set();
+    for (const s of t.possible) for (const e of ADJ[s]) {
+      if ((type === "secret" || e.type === type) && !occ.has(e.to)) next.add(e.to);
+    }
+    return next.size;
+  }
+
+  function aiTarget(i, moves) {
+    const t = S.targets[i];
+    const cpos = S.chasers.map(c => c.pos);
+    let best = null, bestScore = -Infinity;
+    for (const to of new Set(moves.map(m => m.to))) {
+      const dmin = Math.min(...cpos.map(c => D[to][c]));
+      const dsum = cpos.reduce((s, c) => s + Math.min(D[to][c], 5), 0);
+      const exits = ADJ[to].filter(e => !cpos.some(c => D[e.to][c] <= 1)).length;
+      let score = Math.min(dmin, 4) * 10 + dsum + exits * 1.5 + Math.random() * 3;
+      if (dmin <= 1) score -= 40;
+      if (score > bestScore) { bestScore = score; best = to; }
+    }
+    // 交通手段の選択：推理されにくい方（候補駅が増える方）を選ぶ
+    const opts = moves.filter(m => m.to === best).map(m => m.type);
+    let type = opts[0], size = -1;
+    for (const ty of opts) { const n = possibleAfter(t, ty); if (n > size) { size = n; type = ty; } }
+    const danger = Math.min(...cpos.map(c => D[t.pos][c])) <= 2;
+    const justRevealed = REVEAL.includes(S.round - 1);
+    if (t.secrets > 0 && !REVEAL.includes(S.round) &&
+        ((justRevealed && Math.random() < 0.7) || (danger && Math.random() < 0.35))) {
+      type = "secret";
+    }
+    return { to: best, type };
+  }
+
+  function aiAgent(i, moves) {
+    const free = S.targets.find(t => t.state === "free");
+    if (!free) return moves[0];
+    let near = S.chasers[0];
+    for (const c of S.chasers) if (D[c.pos][free.pos] < D[near.pos][free.pos]) near = c;
+    let best = moves[0], bs = Infinity;
+    for (const m of moves) {
+      const s = D[m.to][near.pos] + D[m.to][free.pos] * 0.6 + Math.random() * 0.5;
+      if (s < bs) { bs = s; best = m; }
+    }
+    return best;
+  }
+
+  function aiChaser(ci, moves) {
+    const free = S.targets.filter(t => t.state === "free");
+    let best = moves[0], bs = -Infinity;
+    const seen = new Set();
+    for (const m of moves) {
+      if (seen.has(m.to)) continue;
+      seen.add(m.to);
+      let prob = 0, ed = 0;
+      free.forEach((t, k) => {
+        const focus = free.length > 1 ? (k === ci % 2 ? 0.7 : 0.3) : 1;
+        const P = t.possible;
+        const w = 1 / P.length;
+        if (P.includes(m.to)) prob += w;
+        let s = 0;
+        for (const p of P) s += Math.min(D[m.to][p], 8);
+        ed += s * w * focus;
+      });
+      let spread = 0;
+      S.chasers.forEach((o, j) => { if (j !== ci && D[m.to][o.pos] <= 1) spread -= 1.5; });
+      const score = prob * 30 - ed * 4 + spread + Math.random() * 0.8;
+      if (score > bs) { bs = score; best = m; }
+    }
+    return best;
+  }
+
+  // ================= プレイヤー操作 =================
+  function onStation(id) {
+    if (!S || S.over) return;
+    const a = current();
+    if (!a || !isHuman(a)) return;
+    const opts = legal(a).filter(m => m.to === id);
+    if (!opts.length) return;
+    if (a.k === "t") {
+      const t = S.targets[a.i];
+      if (S.useSecret && t.secrets > 0) return commit(a, { to: id, type: "secret" });
+      const types = [...new Set(opts.map(o => o.type))];
+      if (types.length > 1) { S.pending = { to: id, types }; render(); return; }
+      return commit(a, { to: id, type: types[0] });
+    }
+    commit(a, opts[0]);
+  }
+
+  function commit(a, m) {
+    doMove(a, m);
+    S.useSecret = false;
+    S.pending = null;
+    S.qi++;
+    step();
+  }
+
+  // ================= 描画 =================
+  function buildMap() {
+    const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels"), gH = $("gHits");
+    for (const [key, types] of edgeTypes) {
+      const [a, b] = key.split("-").map(Number);
+      const [, x1, y1] = STATIONS[a], [, x2, y2] = STATIONS[b];
+      const len = Math.hypot(x2 - x1, y2 - y1);
+      const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
+      const list = TYPE_ORDER.filter(t => types.has(t));
+      list.forEach((t, k) => {
+        const off = (k - (list.length - 1) / 2) * 6;
+        el("line", {
+          x1: x1 + nx * off, y1: y1 + ny * off, x2: x2 + nx * off, y2: y2 + ny * off,
+          class: "edge " + t,
+        }, gE);
+      });
+    }
+    STATIONS.forEach(([name, x, y, dx, dy, anchor], i) => {
+      el("circle", { cx: x, cy: y, r: 11, class: "stn" }, gS);
+      const tx = el("text", { x: x + dx, y: y + dy, "text-anchor": anchor, class: "stn-label", "dominant-baseline": "middle" }, gL);
+      tx.textContent = name;
+      const hit = el("circle", { cx: x, cy: y, r: 26, class: "stn-hit", "data-id": i }, gH);
+      hit.addEventListener("click", () => onStation(i));
+    });
+  }
+
+  function render() {
+    if (!S) return;
+    renderHeader();
+    renderMapState();
+    renderTurn();
+    renderBoard();
+    renderLog();
+    renderOverlay();
+  }
+
+  function renderHeader() {
+    $("roundNo").textContent = String(S.round).padStart(2, "0") + "/" + MAX_ROUNDS;
+    const nr = REVEAL.find(r => r >= S.round);
+    $("nextReveal").textContent = S.over ? "ゲーム終了"
+      : nr === undefined ? "公開なし"
+      : nr === S.round ? "このラウンド公開" : `次の公開 R${nr}`;
+    const hb = $("hintBtn");
+    hb.hidden = S.role !== "chaser";
+    hb.setAttribute("aria-pressed", String(S.hints));
+  }
+
+  function renderMapState() {
+    const gP = $("gPoss"), gT = $("gTokens"), gD = $("gDest"), gTr = $("gTrail");
+    gP.replaceChildren(); gT.replaceChildren(); gD.replaceChildren(); gTr.replaceChildren();
+    const a = S.over ? null : current();
+    const human = a && isHuman(a);
+    const reveal = S.role === "target" || S.over;
+
+    // 推理ヒント（チェイサー側）
+    if (!reveal && S.hints) {
+      const seen = new Set();
+      for (const t of S.targets) if (t.state === "free") for (const p of t.possible) {
+        if (seen.has(p)) continue;
+        seen.add(p);
+        const [, x, y] = STATIONS[p];
+        el("circle", { cx: x, cy: y, r: 22, class: "poss" }, gP);
+      }
+    }
+
+    // ゲーム終了後：ターゲットの逃走経路
+    if (S.over) {
+      for (const t of S.targets) {
+        const pts = t.path.map(p => STATIONS[p][1] + "," + STATIONS[p][2]).join(" ");
+        el("polyline", { points: pts, class: "trail" }, gTr);
+      }
+    }
+
+    // 移動できる駅
+    const hitEls = document.querySelectorAll(".stn-hit");
+    hitEls.forEach(h => h.classList.remove("can"));
+    if (human) {
+      const dests = new Set(legal(a).map(m => m.to));
+      for (const d of dests) {
+        const [, x, y] = STATIONS[d];
+        el("circle", { cx: x, cy: y, r: 19, class: "dest pulse" }, gD);
+        hitEls[d].classList.add("can");
+      }
+      if (S.pending) {
+        const [, x, y] = STATIONS[S.pending.to];
+        el("circle", { cx: x, cy: y, r: 19, class: "dest", style: "stroke: var(--target); stroke-width: 4" }, gD);
+      }
+    }
+
+    // コマ
+    const stack = {};
+    const place = (p) => { stack[p] = (stack[p] || 0) + 1; return stack[p] - 1; };
+    const offset = (k) => [[0, 0], [16, -14], [-16, -14], [16, 14]][k] || [0, 0];
+
+    // 最後に見た位置（チェイサー側）
+    if (!reveal) {
+      S.targets.forEach((t, i) => {
+        if (t.state !== "free" || !t.lastSeen) return;
+        const [, x, y] = STATIONS[t.lastSeen.pos];
+        el("circle", { cx: x, cy: y, r: 17, class: "lastseen" }, gT);
+        const lb = el("text", { x: x + 18, y: y - 18, class: "lastseen-label" }, gT);
+        lb.textContent = `${tName(i)}? R${t.lastSeen.round}`;
+      });
+    }
+
+    S.targets.forEach((t, i) => {
+      if (t.state === "caught") {
+        drawToken(gT, "t", tName(i), t.pos, place(t.pos), offset, false, 0.45);
+        return;
+      }
+      if (t.state === "agent") {
+        drawToken(gT, "a", "A" + (i + 1), t.pos, place(t.pos), offset, a && a.k === "a" && a.i === i);
+        return;
+      }
+      if (reveal) drawToken(gT, "t", tName(i), t.pos, place(t.pos), offset, a && a.k === "t" && a.i === i);
+    });
+    S.chasers.forEach((c, i) => {
+      drawToken(gT, "c", cName(i), c.pos, place(c.pos), offset, a && a.k === "c" && a.i === i);
+    });
+  }
+
+  function drawToken(g, kind, label, pos, k, offset, active, opacity = 1) {
+    const [, sx, sy] = STATIONS[pos];
+    const [ox, oy] = offset(k);
+    const x = sx + ox, y = sy + oy;
+    const grp = el("g", { class: "tok " + kind, opacity }, g);
+    if (active) el("circle", { cx: x, cy: y, r: 20, class: "ring" }, grp);
+    if (kind === "c") el("rect", { x: x - 15, y: y - 13, width: 30, height: 26, rx: 5 }, grp);
+    else el("circle", { cx: x, cy: y, r: 15 }, grp);
+    const t = el("text", { x, y }, grp);
+    t.textContent = label;
+  }
+
+  function whoBadge(a) {
+    const cls = a.k === "c" ? "c" : a.k === "a" ? "a" : "t";
+    const lbl = a.k === "c" ? cName(a.i) : a.k === "a" ? "A" + (a.i + 1) : tName(a.i);
+    return `<span class="who ${cls}">${lbl}</span>`;
+  }
+
+  function renderTurn() {
+    const card = $("turnCard");
+    if (S.over) {
+      const win = (S.winner === S.role);
+      card.innerHTML = `
+        <div class="label">結果</div>
+        <div class="turn-title">${win ? "あなたの勝ち！" : "あなたの負け…"}</div>
+        <p class="turn-help">${S.winner === "target" ? "ターゲットが逃げ切りました。" : "チェイサーが全員を確保しました。"}地図上の赤い点線がターゲットの逃走経路です。</p>
+        <div class="row"><button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="menu">役割を選び直す</button></div>`;
+      return;
+    }
+    const a = current();
+    if (!isHuman(a)) {
+      card.innerHTML = `
+        <div class="label">いまの手番</div>
+        <div class="turn-title">${whoBadge(a)} CPU が考え中…</div>
+        <p class="turn-help">${a.k === "t" ? "ターゲットがどの交通手段を使ったかは、下の移動記録に残ります。" : "しばらくお待ちください。"}</p>`;
+      return;
+    }
+    const moves = legal(a);
+    const byDest = new Map();
+    for (const m of moves) {
+      if (!byDest.has(m.to)) byDest.set(m.to, new Set());
+      byDest.get(m.to).add(m.type);
+    }
+    let help;
+    if (a.k === "t") help = "移動する駅を地図か下のボタンで選んでください。使った交通手段はチェイサーに知られます。";
+    else if (a.k === "a") help = "エージェントは見えていますが、チェイサーはこの駅に入れません。仲間の逃げ道を守りましょう。";
+    else help = "ターゲットのいる駅に入れば確保。ピンクの駅はターゲットがいる可能性のある場所です。";
+
+    let extra = "";
+    if (a.k === "t") {
+      const t = S.targets[a.i];
+      extra += `<div class="row">
+        <button class="btn ghost small toggle" data-act="secret" aria-pressed="${S.useSecret}" ${t.secrets ? "" : "disabled"}>
+          シークレット切符を使う（残り ${t.secrets}）</button></div>`;
+      if (S.pending) {
+        extra += `<div class="label">${NAME(S.pending.to)} へ行く手段</div><div class="chips">` +
+          S.pending.types.map(ty => `<button class="chip" data-act="via" data-type="${ty}"><span class="dot ${ty}"></span>${TYPE[ty].name}で行く</button>`).join("") +
+          `</div>`;
+      }
+    }
+    const chips = [...byDest.entries()].sort((x, y) => x[0] - y[0]).map(([to, types]) =>
+      `<button class="chip" data-act="go" data-to="${to}">${NAME(to)}<span class="dots">${TYPE_ORDER.filter(t => types.has(t)).map(t => `<span class="dot ${t}"></span>`).join("")}</span></button>`
+    ).join("");
+
+    card.innerHTML = `
+      <div class="label">あなたの番</div>
+      <div class="turn-title">${whoBadge(a)} ${actorName(a)} を動かす</div>
+      <p class="turn-help">${help}</p>
+      <div class="chips">${chips}</div>
+      ${extra}`;
+  }
+
+  function renderBoard() {
+    const reveal = S.role === "target" || S.over;
+    let html = `<div class="board-nums"><span></span>` +
+      Array.from({ length: MAX_ROUNDS }, (_, r) => `<span class="${REVEAL.includes(r + 1) ? "rv" : ""}">${r + 1}</span>`).join("") + `</div>`;
+    S.targets.forEach((t, i) => {
+      html += `<div class="board-row"><span class="who ${t.state === "agent" ? "a" : "t"}">${t.state === "agent" ? "A" + (i + 1) : tName(i)}</span>`;
+      for (let r = 0; r < MAX_ROUNDS; r++) {
+        const mv = t.moves[r];
+        const cls = ["cell"];
+        if (mv) cls.push(mv);
+        if (REVEAL.includes(r + 1)) cls.push("reveal");
+        if (!S.over && r + 1 === S.round) cls.push("now");
+        let title = `ラウンド${r + 1}`;
+        if (mv) title += `：${TYPE[mv].name}`;
+        if (mv && (reveal || REVEAL.includes(r + 1))) title += `（${NAME(t.path[t.moves.slice(0, r + 1).filter(Boolean).length])}）`;
+        html += `<span class="${cls.join(" ")}" title="${title}">${mv ? TYPE[mv].short : ""}</span>`;
+      }
+      html += `</div>`;
+    });
+    $("board").innerHTML = html;
+  }
+
+  function renderLog() {
+    $("log").innerHTML = S.log.map(l =>
+      `<li class="${l.hot ? "hot" : ""}"><span class="r">R${String(l.r).padStart(2, "0")}</span><span>${l.text}</span></li>`
+    ).join("");
+  }
+
+  function renderOverlay() {
+    const ov = $("overlay");
+    if (!S.over || !S.showResult) { ov.hidden = true; return; }
+    const win = S.winner === S.role;
+    ov.hidden = false;
+    ov.innerHTML = `
+      <div class="sheet" role="dialog" aria-label="結果">
+        <div class="label">ROUND ${S.round} で決着</div>
+        <h2>${win ? "作戦成功！" : "作戦失敗…"}</h2>
+        <p>${S.winner === "target" ? "ターゲットが最後まで逃げ切りました。" : "チェイサーがターゲットを全員確保しました。"}</p>
+        <div class="row">
+          <button class="btn" data-act="again">もう一度</button>
+          <button class="btn ghost" data-act="close">逃走経路を見る</button>
+          <button class="btn ghost" data-act="menu">役割を選び直す</button>
+        </div>
+      </div>`;
+  }
+
+  function showStart() {
+    const ov = $("overlay");
+    ov.hidden = false;
+    ov.innerHTML = `
+      <div class="sheet" role="dialog" aria-label="ゲーム開始">
+        <div class="label">路線図 追跡ゲーム</div>
+        <h2>東京を逃げ切るか、追い詰めるか</h2>
+        <ul>
+          <li>ターゲット2人、チェイサー3人。1ラウンドにつき全員が1駅ずつ動きます。</li>
+          <li>ターゲットの居場所は秘密。使った交通手段（電車・地下鉄・バス）だけが公開されます。</li>
+          <li>ラウンド ${REVEAL.join("・")} の移動後は居場所が公開されます。</li>
+          <li>捕まったターゲットは「エージェント」になり、チェイサーの通り道をふさげます。</li>
+          <li>ターゲットは「シークレット切符」を${SECRETS}枚持っていて、交通手段を隠して移動できます。</li>
+        </ul>
+        <div class="roles">
+          <button class="role" data-act="start" data-role="target">
+            <strong><span class="who t">T</span>ターゲットで遊ぶ</strong>
+            <span>2人を操作して、${MAX_ROUNDS}ラウンド逃げ切る。</span>
+          </button>
+          <button class="role" data-act="start" data-role="chaser">
+            <strong><span class="who c">C</span>チェイサーで遊ぶ</strong>
+            <span>3人を操作して、切符の記録から居場所を推理する。</span>
+          </button>
+        </div>
+      </div>`;
+  }
+
+  // ================= イベント =================
+  document.addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-act]");
+    if (!b) return;
+    const act = b.dataset.act;
+    if (act === "start") return newGame(b.dataset.role);
+    if (!S) return;
+    if (act === "again") return newGame(S.role);
+    if (act === "menu") { clearTimeout(timer); return showStart(); }
+    if (act === "close") { S.showResult = false; return render(); }
+    if (act === "go") return onStation(Number(b.dataset.to));
+    if (act === "secret") { S.useSecret = !S.useSecret; S.pending = null; return render(); }
+    if (act === "via" && S.pending) return commit(current(), { to: S.pending.to, type: b.dataset.type });
+  });
+  $("newBtn").addEventListener("click", () => { clearTimeout(timer); showStart(); });
+  $("hintBtn").addEventListener("click", () => { if (S) { S.hints = !S.hints; render(); } });
+
+  function boot(data) {
+    buildMap();
+    if (data && data.S) {
+      S = data.S;
+      step();
+      if (S.over) render();
+    } else {
+      showStart();
+    }
+  }
+  try { window.claude?.hot?.snapshot?.(() => ({ S })); } catch (e) {}
+  if (window.claude?.hot?.ready) window.claude.hot.ready(boot);
+  else boot(window.claude?.hot?.data ?? {});
+})();
+</script>
+<!-- ARTIFACT-BODY-END -->
+</body>
+</html>
