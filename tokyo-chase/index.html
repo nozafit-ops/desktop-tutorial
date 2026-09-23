@@ -4,36 +4,41 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- ARTIFACT-START -->
-<title>トーキョー・ヤード</title>
+<title>ロンドン・チェイス</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Old+Mincho:wght@700;900&display=swap">
 <style>
-  /* 夜の東京を舞台にした単一テーマ（ダーク固定） */
+  /* 霧のロンドン：卓上に広げたボードゲーム盤（単一テーマ） */
   :root {
     color-scheme: dark;
-    --ground: #0A0F1D;
-    --panel: #111A2E;
-    --panel-2: #17223B;
-    --ink: #E9EDF6;
-    --muted: #8D99B4;
-    --rule: #26324D;
-    --accent: #F2C230;
-    --land: #0F172B;
-    --block: #131D35;
-    --road: #1B2744;
-    --water: #0D2B4A;
-    --water-ink: #3F83B8;
-    --park: #10301F;
-    --train: #F2C230;
-    --subway: #E5484D;
-    --bus: #2DB37A;
-    --ferry: #3FA7D6;
-    --black: #05070C;
-    --xdisc: #1D2130;
-    --xrim: #E5484D;
-    --station: #0A0F1D;
-    --good: #2DB37A;
+    --ground: #16110C;
+    --panel: #221A12;
+    --panel-2: #2C2218;
+    --ink: #F2E8D5;
+    --muted: #B4A58B;
+    --rule: #43352A;
+    --accent: #E3B341;
+    /* 盤面（羊皮紙） */
+    --land: #E9DDC0;
+    --street: #CDBB93;
+    --road: #F3EAD2;
+    --road-edge: #BFAA7E;
+    --water: #9CBFC4;
+    --water-ink: #3F6B74;
+    --park: #B6C48A;
+    --park-ink: #5C6E33;
+    --map-ink: #3E2F20;
+    --lm: #D8C7A0;
+    --train: #E0A91C;
+    --subway: #C3342B;
+    --bus: #1F8A57;
+    --ferry: #2F7FB0;
+    --black: #0B0906;
+    --xdisc: #1D1A16;
+    --xrim: #B3261E;
+    --station: #FBF5E4;
+    --good: #5FBF7A;
   }
 
   [hidden] { display: none !important; }
@@ -69,8 +74,8 @@
   .brand-chars svg { width: 40px; height: 40px; }
   .brand-chars svg + svg { margin-left: -12px; }
   h1 {
-    font-family: "Dela Gothic One", "Zen Kaku Gothic New", sans-serif;
-    font-weight: 400;
+    font-family: "Zen Old Mincho", "Hiragino Mincho ProN", serif;
+    font-weight: 900;
     font-size: clamp(22px, 3.2vw, 32px);
     letter-spacing: 0.04em;
     margin: 0;
@@ -252,17 +257,24 @@
 
   /* ---------- map SVG ---------- */
   .bg-land { fill: var(--land); }
-  .bg-block { fill: var(--block); }
+  .bg-street { fill: none; stroke: var(--street); stroke-width: 1.4; stroke-linecap: round; }
+  .bg-road { fill: none; stroke: var(--road); stroke-width: 6; stroke-linecap: round; }
+  .bg-road-edge { fill: none; stroke: var(--road-edge); stroke-width: 9; stroke-linecap: round; }
   .bg-water { fill: var(--water); }
   .bg-river { fill: none; stroke: var(--water); stroke-linecap: round; stroke-linejoin: round; }
-  .bg-park { fill: var(--park); }
-  .bg-moat { fill: var(--park); stroke: var(--water); stroke-width: 5; }
-  .bg-road { fill: none; stroke: var(--road); stroke-width: 7; stroke-linecap: round; }
-  .bg-ward { font-family: "Dela Gothic One", sans-serif; font-size: 34px; letter-spacing: 0.4em; fill: var(--ink); opacity: 0.05; pointer-events: none; }
-  .bg-place { font-size: 13px; fill: var(--muted); font-weight: 700; letter-spacing: 0.15em; pointer-events: none; opacity: 0.8; }
-  .bg-place.water { fill: var(--water-ink); font-style: italic; }
-  .bg-ink { fill: var(--muted); }
-  .bg-inkline { stroke: var(--muted); fill: none; }
+  .bg-river-edge { fill: none; stroke: var(--water-ink); stroke-linecap: round; stroke-linejoin: round; opacity: 0.55; }
+  .bg-park { fill: var(--park); stroke: var(--park-ink); stroke-width: 1.2; stroke-opacity: 0.6; }
+  .bg-ward { font-family: "IM Fell English SC", Georgia, serif; font-size: 30px; letter-spacing: 0.3em; fill: var(--map-ink); opacity: 0.16; pointer-events: none; }
+  .bg-place { font-family: "Zen Old Mincho", serif; font-size: 13px; fill: var(--park-ink); font-weight: 700; letter-spacing: 0.12em; pointer-events: none; }
+  .bg-place.water { fill: var(--water-ink); font-style: italic; font-size: 16px; letter-spacing: 0.4em; }
+  .bg-ink { fill: var(--map-ink); }
+  .bg-inkline { stroke: var(--map-ink); fill: none; }
+  .lm { fill: var(--lm); stroke: var(--map-ink); stroke-width: 1.3; stroke-linejoin: round; opacity: 0.9; }
+  .lm-line { fill: none; stroke: var(--map-ink); stroke-width: 1.3; opacity: 0.9; }
+  .lm-label { font-family: "IM Fell English SC", Georgia, serif; font-size: 11px; fill: var(--map-ink); opacity: 0.75; text-anchor: middle; pointer-events: none; }
+  .cartouche { fill: var(--station); stroke: var(--map-ink); stroke-width: 1.5; }
+  .cartouche-title { font-family: "IM Fell English SC", Georgia, serif; font-size: 34px; fill: var(--map-ink); letter-spacing: 0.18em; text-anchor: middle; }
+  .cartouche-sub { font-family: "IM Fell English SC", Georgia, serif; font-size: 12px; fill: var(--map-ink); text-anchor: middle; opacity: 0.8; }
 
   .edge { fill: none; stroke-linecap: round; }
   .edge.train.base { stroke: var(--train); stroke-width: 8; stroke-linecap: butt; }
@@ -272,27 +284,33 @@
   .edge.bus.base { stroke: var(--bus); stroke-width: 7; stroke-dasharray: 0 13; }
   .edge.ferry.base { stroke: var(--ferry); stroke-width: 4; stroke-dasharray: 16 8 3 8; }
 
-  .stn { fill: var(--station); stroke: var(--ink); stroke-width: 3; }
+  .stn { fill: var(--station); }
+  .stn-rim { fill: none; stroke: var(--map-ink); stroke-width: 2.5; }
+  .stn-pier { fill: none; stroke: var(--ferry); stroke-width: 3; stroke-dasharray: 4 3; }
+  .wedge.train { fill: var(--train); }
+  .wedge.subway { fill: var(--subway); }
+  .wedge.bus { fill: var(--bus); }
+  .stn-num { font-family: "IM Fell English SC", Georgia, serif; font-size: 12px; font-weight: 700; fill: var(--map-ink); text-anchor: middle; pointer-events: none; }
   .stn-hit { fill: transparent; }
   .stn-hit.can { cursor: pointer; }
   .stn-label {
-    font-family: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif;
-    font-size: 18px; font-weight: 700; fill: var(--ink);
+    font-family: "Zen Old Mincho", "Hiragino Mincho ProN", serif;
+    font-size: 17px; font-weight: 900; fill: var(--map-ink);
     paint-order: stroke; stroke: var(--land); stroke-width: 6px; stroke-linejoin: round;
     pointer-events: none;
   }
-  .dest { fill: none; stroke: var(--accent); stroke-width: 3.5; pointer-events: none; }
+  .dest { fill: none; stroke: var(--map-ink); stroke-width: 4; pointer-events: none; }
   .dest.pulse { animation: pulse 1.2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .poss { fill: var(--xrim); opacity: 0.22; pointer-events: none; }
+  .poss { fill: var(--xrim); opacity: 0.25; pointer-events: none; }
   .lastseen { fill: none; stroke: var(--xrim); stroke-width: 3; stroke-dasharray: 6 5; pointer-events: none; }
   .lastseen-label { font-size: 15px; font-weight: 700; fill: var(--xrim); paint-order: stroke; stroke: var(--land); stroke-width: 5px; pointer-events: none; }
   .tok { pointer-events: none; }
-  .tok .disc { stroke: var(--ground); stroke-width: 3; }
+  .tok .disc { stroke: var(--station); stroke-width: 3; }
   .tok .disc.x { fill: var(--xdisc); stroke: var(--xrim); }
-  .tok .ring { fill: none; stroke: var(--accent); stroke-width: 3.5; }
-  .tok .num { fill: var(--ink); }
-  .tok .num-t { fill: var(--ground); font-size: 12px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .tok .ring { fill: none; stroke: var(--map-ink); stroke-width: 4; }
+  .tok .num { fill: var(--map-ink); }
+  .tok .num-t { fill: var(--station); font-size: 12px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
   .trail { fill: none; stroke: var(--xrim); stroke-width: 4; stroke-dasharray: 10 7; opacity: 0.9; pointer-events: none; }
 
   /* ---------- overlay ---------- */
@@ -318,7 +336,7 @@
     gap: 12px;
     box-shadow: 0 16px 48px rgba(0,0,0,0.5);
   }
-  .sheet h2 { font-family: "Dela Gothic One", sans-serif; font-weight: 400; font-size: 24px; margin: 0; text-wrap: balance; line-height: 1.25; }
+  .sheet h2 { font-family: "Zen Old Mincho", "Hiragino Mincho ProN", serif; font-weight: 900; font-size: 24px; margin: 0; text-wrap: balance; line-height: 1.25; }
   .sheet p { margin: 0; color: var(--muted); font-size: 13px; }
   .sheet ul { margin: 0; padding-left: 1.2em; font-size: 13px; display: flex; flex-direction: column; gap: 3px; }
   .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -402,9 +420,18 @@
         <path d="M-2.6,5 Q0,7 2.6,5" stroke="#6B3A2A" stroke-width="1.3" fill="none" stroke-linecap="round"></path>
       </g>
     </symbol>
-    <pattern id="blocks" width="34" height="26" patternUnits="userSpaceOnUse">
-      <rect x="3" y="3" width="28" height="20" rx="3" class="bg-block"></rect>
-    </pattern>
+    <filter id="paper" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="4"></feTurbulence>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.12  0 0 0 0.16 0"></feColorMatrix>
+    </filter>
+    <filter id="blotch" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="2" seed="11"></feTurbulence>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.33  0 0 0 0 0.15  0 0 0 0.35 -0.08"></feColorMatrix>
+    </filter>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
+      <stop offset="60%" stop-color="#6B4A22" stop-opacity="0"></stop>
+      <stop offset="100%" stop-color="#6B4A22" stop-opacity="0.38"></stop>
+    </radialGradient>
   </defs>
 </svg>
 
@@ -412,8 +439,8 @@
   <header>
     <div class="brand">
       <div class="brand-chars" id="brandChars"></div>
-      <h1>トーキョー・<em>ヤード</em></h1>
-      <small>怪盗Xを追え ― 路線図の追跡ゲーム</small>
+      <h1>ロンドン・<em>チェイス</em></h1>
+      <small>怪盗Xを追え ― 霧のロンドン追跡ゲーム</small>
     </div>
     <div class="status-bar">
       <span class="net" id="net"><i></i><span id="netText">オフライン</span></span>
@@ -428,7 +455,7 @@
 
   <div class="mapwrap">
     <div class="mapscroll">
-      <svg id="map" viewBox="0 0 1400 750" role="img" aria-label="東京の路線図マップ">
+      <svg id="map" viewBox="0 0 1400 750" role="img" aria-label="ロンドンのボードゲーム風マップ">
         <g id="gBg"></g>
         <g id="gEdges"></g>
         <g id="gPoss"></g>
@@ -487,81 +514,80 @@
   const MX = x => 60 + (x - 50) * 1.45;
   const MY = y => 30 + y * 0.9;
   const RAW_STATIONS = [
-    ["池袋", 220, 110, 0, -26, "middle"],
-    ["大塚", 400, 75, 0, -26, "middle"],
-    ["日暮里", 600, 50, 0, -26, "middle"],
-    ["上野", 740, 125, 22, 7, "start"],
-    ["浅草", 890, 110, 0, -26, "middle"],
-    ["秋葉原", 740, 230, 22, 7, "start"],
-    ["神田", 700, 310, 22, 7, "start"],
-    ["御茶ノ水", 590, 270, 0, -26, "middle"],
-    ["後楽園", 500, 190, 0, -26, "middle"],
-    ["高田馬場", 180, 230, -22, 7, "end"],
-    ["中野", 50, 360, 0, 36, "middle"],
-    ["新宿", 170, 370, -22, -12, "end"],
-    ["四ツ谷", 380, 370, 0, 36, "middle"],
-    ["大手町", 610, 370, -22, 7, "end"],
-    ["日本橋", 770, 380, 0, -26, "middle"],
-    ["錦糸町", 930, 280, 0, 36, "middle"],
-    ["東京", 700, 440, 22, 7, "start"],
-    ["赤坂見附", 390, 470, -22, 7, "end"],
-    ["霞ケ関", 500, 470, 0, 36, "middle"],
-    ["銀座", 670, 530, 22, 7, "start"],
-    ["門前仲町", 850, 480, 22, 7, "start"],
-    ["原宿", 190, 480, -22, 7, "end"],
-    ["表参道", 280, 540, 0, 36, "middle"],
-    ["渋谷", 180, 590, 0, 36, "middle"],
-    ["下北沢", 50, 610, 0, 36, "middle"],
-    ["六本木", 380, 590, 0, 36, "middle"],
-    ["新橋", 590, 590, -18, 34, "end"],
-    ["月島", 790, 590, 0, 36, "middle"],
-    ["麻布十番", 480, 650, 0, 36, "middle"],
-    ["浜松町", 610, 690, 22, 7, "start"],
-    ["豊洲", 920, 660, 0, 36, "middle"],
-    ["目黒", 250, 700, 0, 36, "middle"],
-    ["品川", 400, 740, 0, 36, "middle"],
+    ["キルバーン", 220, 110, 0, -28, "middle"],
+    ["ハムステッド", 400, 75, 0, -28, "middle"],
+    ["ハイゲート", 600, 50, 0, -28, "middle"],
+    ["ハイベリー", 740, 125, 24, 7, "start"],
+    ["ハックニー", 890, 110, 0, -28, "middle"],
+    ["エンジェル", 740, 230, 24, 7, "start"],
+    ["バービカン", 700, 310, 24, 7, "start"],
+    ["キングス・クロス", 590, 270, 0, -28, "middle"],
+    ["カムデン", 500, 190, 0, -28, "middle"],
+    ["メイダ・ヴェール", 180, 230, -24, 7, "end"],
+    ["シェパーズ・ブッシュ", 50, 360, -16, 38, "start"],
+    ["パディントン", 170, 370, -24, -14, "end"],
+    ["オックスフォード・サーカス", 380, 370, 0, 38, "middle"],
+    ["ホルボーン", 610, 370, -24, 7, "end"],
+    ["リバプール・ストリート", 770, 380, 0, -28, "middle"],
+    ["ストラトフォード", 930, 280, 16, 38, "end"],
+    ["バンク", 700, 440, 24, 7, "start"],
+    ["グリーン・パーク", 390, 470, -24, 7, "end"],
+    ["チャリング・クロス", 500, 470, 0, 38, "middle"],
+    ["セント・ポール", 670, 530, 24, 7, "start"],
+    ["ホワイトチャペル", 850, 480, 24, 7, "start"],
+    ["ケンジントン", 190, 480, -24, 7, "end"],
+    ["ナイツブリッジ", 280, 540, 0, 38, "middle"],
+    ["アールズ・コート", 180, 590, 0, 38, "middle"],
+    ["ハマースミス", 50, 610, -16, 38, "start"],
+    ["ヴィクトリア", 380, 590, 0, 38, "middle"],
+    ["ウェストミンスター", 590, 590, -18, 36, "end"],
+    ["タワー・ヒル", 790, 590, 0, 38, "middle"],
+    ["ランベス", 480, 650, 0, 38, "middle"],
+    ["ウォータールー", 610, 690, 24, 7, "start"],
+    ["カナリー・ワーフ", 920, 660, 0, 38, "middle"],
+    ["バタシー", 250, 700, 0, 38, "middle"],
+    ["クラパム", 400, 740, 0, 38, "middle"],
   ];
   const STATIONS = RAW_STATIONS.map(([n, x, y, dx, dy, a]) => [n, MX(x), MY(y), dx, dy, a]);
 
   const LINES = [
-    ["train", "山手線", ["東京","神田","秋葉原","上野","日暮里","大塚","池袋","高田馬場","新宿","原宿","渋谷","目黒","品川","浜松町","新橋","東京"]],
-    ["train", "中央線", ["中野","新宿","四ツ谷","御茶ノ水","神田"]],
-    ["train", "総武線", ["秋葉原","錦糸町"]],
-    ["train", "井の頭線", ["下北沢","渋谷"]],
-    ["train", "小田急線", ["下北沢","新宿"]],
-    ["train", "ゆりかもめ", ["新橋","豊洲"]],
-    ["subway", "銀座線", ["渋谷","表参道","赤坂見附","新橋","銀座","日本橋","神田","上野","浅草"]],
-    ["subway", "丸ノ内線", ["中野","新宿","四ツ谷","赤坂見附","霞ケ関","銀座","東京","大手町","御茶ノ水","後楽園","池袋"]],
-    ["subway", "東西線", ["中野","高田馬場","後楽園"]],
-    ["subway", "東西線", ["大手町","日本橋","門前仲町"]],
-    ["subway", "大江戸線", ["新宿","六本木","麻布十番","浜松町","月島"]],
-    ["subway", "有楽町線", ["銀座","月島","豊洲"]],
-    ["subway", "半蔵門線", ["日本橋","錦糸町"]],
-    ["subway", "日比谷線", ["六本木","霞ケ関"]],
-    ["subway", "南北線", ["目黒","麻布十番"]],
-    ["bus", "都01", ["渋谷","六本木","新橋"]],
-    ["bus", "青山ルート", ["原宿","表参道","六本木"]],
-    ["bus", "城西ルート", ["中野","下北沢","目黒"]],
-    ["bus", "文京ルート", ["大塚","後楽園","上野"]],
-    ["bus", "下町ルート", ["日暮里","浅草","錦糸町","門前仲町","月島"]],
-    ["bus", "湾岸ルート", ["門前仲町","豊洲"]],
-    ["bus", "神田ルート", ["御茶ノ水","秋葉原"]],
-    ["bus", "港南ルート", ["品川","麻布十番"]],
-    ["bus", "官庁ルート", ["霞ケ関","新橋"]],
-    ["bus", "飯田橋ルート", ["四ツ谷","後楽園"]],
-    ["bus", "八重洲ルート", ["東京","日本橋"]],
-    ["bus", "大手町ルート", ["大手町","神田"]],
-    ["bus", "赤坂ルート", ["赤坂見附","六本木"]],
-    // 水上バスは怪盗Xが黒チケットでのみ使える
-    ["ferry", "水上バス", ["浅草","月島","浜松町"]],
-    ["ferry", "水上バス", ["月島","豊洲"]],
+    ["train", "タクシー", ["バンク","バービカン","エンジェル","ハイベリー","ハイゲート","ハムステッド","キルバーン","メイダ・ヴェール","パディントン","ケンジントン","アールズ・コート","バタシー","クラパム","ウォータールー","ウェストミンスター","バンク"]],
+    ["train", "タクシー", ["シェパーズ・ブッシュ","パディントン","オックスフォード・サーカス","キングス・クロス","バービカン"]],
+    ["train", "タクシー", ["エンジェル","ストラトフォード"]],
+    ["train", "タクシー", ["ハマースミス","アールズ・コート"]],
+    ["train", "タクシー", ["ハマースミス","パディントン"]],
+    ["train", "タクシー", ["ウェストミンスター","カナリー・ワーフ"]],
+    ["subway", "ピカデリー線", ["アールズ・コート","ナイツブリッジ","グリーン・パーク","ウェストミンスター","セント・ポール","リバプール・ストリート","バービカン","ハイベリー","ハックニー"]],
+    ["subway", "セントラル線", ["シェパーズ・ブッシュ","パディントン","オックスフォード・サーカス","グリーン・パーク","チャリング・クロス","セント・ポール","バンク","ホルボーン","キングス・クロス","カムデン","キルバーン"]],
+    ["subway", "メトロポリタン線", ["シェパーズ・ブッシュ","メイダ・ヴェール","カムデン"]],
+    ["subway", "メトロポリタン線", ["ホルボーン","リバプール・ストリート","ホワイトチャペル"]],
+    ["subway", "ディストリクト線", ["パディントン","ヴィクトリア","ランベス","ウォータールー","タワー・ヒル"]],
+    ["subway", "DLR", ["セント・ポール","タワー・ヒル","カナリー・ワーフ"]],
+    ["subway", "エリザベス線", ["リバプール・ストリート","ストラトフォード"]],
+    ["subway", "ジュビリー線", ["ヴィクトリア","チャリング・クロス"]],
+    ["subway", "ノーザン線", ["バタシー","ランベス"]],
+    ["bus", "バス 9番", ["アールズ・コート","ヴィクトリア","ウェストミンスター"]],
+    ["bus", "バス 14番", ["ケンジントン","ナイツブリッジ","ヴィクトリア"]],
+    ["bus", "バス 72番", ["シェパーズ・ブッシュ","ハマースミス","バタシー"]],
+    ["bus", "バス 24番", ["ハムステッド","カムデン","ハイベリー"]],
+    ["bus", "バス 38番", ["ハイゲート","ハックニー","ストラトフォード","ホワイトチャペル","タワー・ヒル"]],
+    ["bus", "バス D3番", ["ホワイトチャペル","カナリー・ワーフ"]],
+    ["bus", "バス 73番", ["キングス・クロス","エンジェル"]],
+    ["bus", "バス 88番", ["クラパム","ランベス"]],
+    ["bus", "バス 11番", ["チャリング・クロス","ウェストミンスター"]],
+    ["bus", "バス 390番", ["オックスフォード・サーカス","カムデン"]],
+    ["bus", "バス 25番", ["バンク","リバプール・ストリート"]],
+    ["bus", "バス 55番", ["ホルボーン","バービカン"]],
+    ["bus", "バス 19番", ["グリーン・パーク","ヴィクトリア"]],
+    // テムズ川のボートは怪盗Xが黒チケットでのみ使える
+    ["ferry", "テムズ川ボート", ["ハマースミス","バタシー","ランベス","ウェストミンスター","タワー・ヒル","カナリー・ワーフ"]],
   ];
 
   const TYPE = {
-    train:  { name: "電車",   short: "電" },
+    train:  { name: "タクシー", short: "タ" },
     subway: { name: "地下鉄", short: "地" },
     bus:    { name: "バス",   short: "バ" },
-    ferry:  { name: "水上バス", short: "船" },
+    ferry:  { name: "テムズ川ボート", short: "船" },
     black:  { name: "黒チケット", short: "黒" },
   };
   const TYPE_ORDER = ["train", "subway", "bus", "ferry"];
@@ -1173,45 +1199,131 @@
   function buildBackground() {
     const g = $("gBg");
     el("rect", { x: 0, y: 0, width: 1400, height: 750, class: "bg-land" }, g);
-    el("rect", { x: 0, y: 0, width: 1400, height: 750, fill: "url(#blocks)" }, g);
+
+    // 路地：ゆがんだ格子で古地図の街並みを描く（毎回同じ形になるよう固定シード）
+    let seed = 20251;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const SP = 36, cols = Math.ceil(1400 / SP) + 3, rows = Math.ceil(750 / SP) + 3;
+    const P = [];
+    for (let r = 0; r < rows; r++) {
+      P.push([]);
+      for (let c = 0; c < cols; c++) P[r].push([(c - 1) * SP + (rnd() - 0.5) * 20, (r - 1) * SP + (rnd() - 0.5) * 20]);
+    }
+    const pt = q => q[0].toFixed(1) + "," + q[1].toFixed(1);
+    let d = "";
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      if (c + 1 < cols && rnd() > 0.14) d += `M${pt(P[r][c])}L${pt(P[r][c + 1])}`;
+      if (r + 1 < rows && rnd() > 0.2) d += `M${pt(P[r][c])}L${pt(P[r + 1][c])}`;
+      if (r + 1 < rows && c + 1 < cols && rnd() < 0.07) d += `M${pt(P[r][c])}L${pt(P[r + 1][c + 1])}`;
+    }
+    el("path", { d, class: "bg-street" }, g);
+
+    // 以下は元の座標系で描いて横長に変換する
     const w = el("g", { transform: "matrix(1.45 0 0 0.9 -12.5 30)" }, g);
+    const ns = { "vector-effect": "non-scaling-stroke" };
     const roads = [
-      "M 0,300 C 200,290 400,300 560,330 C 700,355 820,340 990,330",
-      "M 300,0 C 320,160 300,300 310,420 C 320,560 330,680 340,800",
-      "M 0,520 C 180,520 330,500 450,540 C 560,580 620,650 700,800",
-      "M 620,0 C 640,120 650,220 660,330",
+      "M -10,250 C 150,250 350,240 560,262 C 700,276 820,270 1010,262",     // ユーストン・ロード
+      "M -10,378 C 150,372 300,368 470,376 C 600,382 720,392 830,420 C 900,440 950,450 1010,452", // オックスフォード・ストリート〜ホワイトチャペル
+      "M 60,520 C 180,506 300,500 400,500 C 470,500 520,520 560,560",        // ケンジントン〜ピカデリー
+      "M 470,0 C 480,120 470,240 480,380 C 486,470 470,560 470,640 C 470,700 440,760 430,810", // 南北の大通り
+      "M 820,0 C 800,120 780,260 760,420",
     ];
-    for (const d of roads) el("path", { d, class: "bg-road", "vector-effect": "non-scaling-stroke" }, w);
-    el("path", { d: "M 440,800 C 520,770 600,760 660,742 C 705,728 722,700 742,662 C 762,628 820,640 862,620 C 905,600 950,602 1000,590 L 1000,800 Z", class: "bg-water" }, w);
-    el("ellipse", { cx: 800, cy: 604, rx: 52, ry: 36, class: "bg-land" }, w);
-    el("ellipse", { cx: 918, cy: 672, rx: 62, ry: 44, class: "bg-land" }, w);
-    el("path", { d: "M 935,-10 C 915,60 908,110 915,160 C 922,220 892,262 880,320 C 868,380 822,440 815,500 C 812,540 792,560 772,572 C 752,590 742,620 746,662", class: "bg-river", "stroke-width": 20, "vector-effect": "non-scaling-stroke" }, w);
-    el("path", { d: "M 430,212 C 520,238 600,250 680,256 C 760,262 830,300 890,300", class: "bg-river", "stroke-width": 8, "vector-effect": "non-scaling-stroke" }, w);
-    el("ellipse", { cx: 520, cy: 385, rx: 58, ry: 50, class: "bg-moat", "vector-effect": "non-scaling-stroke" }, w);
-    el("ellipse", { cx: 272, cy: 420, rx: 36, ry: 26, class: "bg-park" }, w);
-    el("ellipse", { cx: 118, cy: 482, rx: 40, ry: 38, class: "bg-park" }, w);
-    el("ellipse", { cx: 675, cy: 118, rx: 40, ry: 30, class: "bg-park" }, w);
-    el("ellipse", { cx: 470, cy: 530, rx: 26, ry: 18, class: "bg-park" }, w);
-    const txt = (x, y, s, cls) => { el("text", { x: MX(x), y: MY(y), class: cls, "text-anchor": "middle" }, g).textContent = s; };
-    txt(330, 175, "TOSHIMA", "bg-ward");
-    txt(110, 300, "SHINJUKU", "bg-ward");
-    txt(560, 440, "CHIYODA", "bg-ward");
-    txt(270, 650, "SHIBUYA", "bg-ward");
-    txt(520, 600, "MINATO", "bg-ward");
-    txt(820, 200, "TAITO", "bg-ward");
-    txt(880, 540, "KOTO", "bg-ward");
-    txt(520, 390, "皇居", "bg-place");
-    txt(118, 520, "代々木公園", "bg-place");
-    txt(272, 424, "新宿御苑", "bg-place");
-    txt(655, 98, "上野公園", "bg-place");
-    txt(620, 780, "東 京 湾", "bg-place water");
-    txt(958, 200, "隅田川", "bg-place water");
-    const cx = 1350, cy = 60;
-    el("circle", { cx, cy, r: 26, class: "bg-inkline", "stroke-width": 1.5, opacity: 0.6 }, g);
-    el("path", { d: `M ${cx},${cy - 22} L ${cx + 7},${cy} L ${cx},${cy + 22} L ${cx - 7},${cy} Z`, class: "bg-ink", opacity: 0.7 }, g);
-    el("text", { x: cx, y: cy - 30, "text-anchor": "middle", class: "bg-place" }, g).textContent = "N";
-    el("path", { d: "M 30,730 h 120 M 30,724 v 12 M 90,726 v 8 M 150,724 v 12", class: "bg-inkline", "stroke-width": 2, opacity: 0.6 }, g);
-    el("text", { x: 158, y: 735, class: "bg-place" }, g).textContent = "2 km";
+    for (const rd of roads) el("path", { d: rd, class: "bg-road-edge", ...ns }, w);
+    for (const rd of roads) el("path", { d: rd, class: "bg-road", ...ns }, w);
+
+    // 公園
+    const park = (cx, cy, rx, ry, rot = 0) => el("ellipse", { cx, cy, rx, ry, class: "bg-park", transform: `rotate(${rot} ${cx} ${cy})`, ...ns }, w);
+    park(290, 32, 80, 26, -4);    // ハムステッド・ヒース
+    park(345, 220, 48, 36);       // リージェンツ・パーク
+    park(285, 442, 72, 30, 3);    // ハイド・パーク
+    park(452, 522, 34, 18, 10);   // グリーン・パーク／セント・ジェームズ
+    park(335, 692, 42, 22);       // バタシー・パーク
+    park(880, 192, 34, 24);       // ヴィクトリア・パーク
+    park(965, 775, 52, 26);       // グリニッジ・パーク
+
+    // テムズ川（ドッグ島を回り込む大きな蛇行）
+    const thames = "M -20,658 C 60,664 130,668 200,652 C 280,636 330,626 400,622 C 470,618 520,612 560,628 C 600,644 640,650 700,640 C 760,628 800,630 838,642 C 878,656 866,724 918,744 C 968,762 990,700 1030,652";
+    el("path", { d: thames, class: "bg-river-edge", "stroke-width": 30, ...ns }, w);
+    el("path", { d: thames, class: "bg-river", "stroke-width": 26, ...ns }, w);
+
+    // 地区名・地名（ゆがませないよう変換後の座標で置く）
+    const txt = (x, y, str, cls, extra = {}) => el("text", { x: MX(x), y: MY(y), class: cls, "text-anchor": "middle", ...extra }, g).textContent = str;
+    txt(115, 545, "KENSINGTON", "bg-ward");
+    txt(470, 432, "WESTMINSTER", "bg-ward");
+    txt(425, 128, "CAMDEN", "bg-ward");
+    txt(640, 170, "ISLINGTON", "bg-ward");
+    txt(815, 438, "THE CITY", "bg-ward");
+    txt(720, 735, "SOUTHWARK", "bg-ward");
+    txt(250, 36, "ハムステッド・ヒース", "bg-place");
+    txt(345, 224, "リージェンツ・パーク", "bg-place");
+    txt(285, 446, "ハイド・パーク", "bg-place");
+    txt(335, 697, "バタシー・パーク", "bg-place");
+    txt(965, 780, "グリニッジ", "bg-place");
+    txt(150, 676, "テ ム ズ 川", "bg-place water");
+
+    // 名所のイラスト
+    const lm = (x, y, fn) => { const grp = el("g", { transform: `translate(${MX(x).toFixed(1)} ${MY(y).toFixed(1)})` }, g); fn(grp); };
+    lm(548, 606, q => { // ビッグ・ベンと国会議事堂
+      el("rect", { x: -62, y: -16, width: 54, height: 14, class: "lm" }, q);
+      el("path", { d: "M-62,-16 l0,-4 l6,0 l0,4 M-50,-16 l0,-4 l6,0 l0,4 M-38,-16 l0,-4 l6,0 l0,4 M-26,-16 l0,-4 l6,0 l0,4", class: "lm-line" }, q);
+      el("rect", { x: -6, y: -46, width: 12, height: 44, class: "lm" }, q);
+      el("path", { d: "M-7,-46 L0,-64 L7,-46 Z", class: "lm" }, q);
+      el("circle", { cx: 0, cy: -38, r: 4.5, class: "lm" }, q);
+      el("path", { d: "M0,-38 L0,-41 M0,-38 L2.5,-38", class: "lm-line" }, q);
+      el("text", { x: -24, y: 12, class: "lm-label" }, q).textContent = "Big Ben";
+    });
+    lm(743, 636, q => { // タワー・ブリッジ
+      el("rect", { x: -44, y: -3, width: 88, height: 5, class: "lm" }, q);
+      for (const tx of [-20, 20]) {
+        el("rect", { x: tx - 6, y: -32, width: 12, height: 34, class: "lm" }, q);
+        el("path", { d: `M${tx - 7},-32 L${tx},-42 L${tx + 7},-32 Z`, class: "lm" }, q);
+      }
+      el("rect", { x: -14, y: -29, width: 28, height: 4, class: "lm" }, q);
+      el("path", { d: "M-44,0 Q-32,-14 -26,-16 M44,0 Q32,-14 26,-16", class: "lm-line" }, q);
+      el("text", { x: 0, y: 16, class: "lm-label" }, q).textContent = "Tower Bridge";
+    });
+    lm(632, 486, q => { // セント・ポール大聖堂
+      el("rect", { x: -18, y: -10, width: 36, height: 10, class: "lm" }, q);
+      el("rect", { x: -9, y: -18, width: 18, height: 8, class: "lm" }, q);
+      el("path", { d: "M-10,-18 A10,10 0 0 1 10,-18 Z", class: "lm" }, q);
+      el("rect", { x: -1.8, y: -34, width: 3.6, height: 7, class: "lm" }, q);
+      el("path", { d: "M0,-34 L0,-39 M-2,-37 L2,-37", class: "lm-line" }, q);
+      el("text", { x: 0, y: 12, class: "lm-label" }, q).textContent = "St Paul's";
+    });
+    lm(548, 668, q => { // ロンドン・アイ
+      el("circle", { cx: 0, cy: -26, r: 22, class: "lm", "fill-opacity": 0.35 }, q);
+      let sp = "";
+      for (let a = 0; a < 12; a++) { const t = a * Math.PI / 6; sp += `M0,-26 L${(22 * Math.cos(t)).toFixed(1)},${(-26 + 22 * Math.sin(t)).toFixed(1)}`; }
+      el("path", { d: sp + "M0,-26 L-10,0 M0,-26 L10,0", class: "lm-line" }, q);
+      el("text", { x: 0, y: 12, class: "lm-label" }, q).textContent = "London Eye";
+    });
+    lm(440, 548, q => { // バッキンガム宮殿
+      el("rect", { x: -18, y: -10, width: 36, height: 10, class: "lm" }, q);
+      el("path", { d: "M-6,-10 L0,-15 L6,-10 Z", class: "lm" }, q);
+      el("path", { d: "M0,-15 L0,-24 L6,-22 L0,-20", class: "lm-line" }, q);
+    });
+
+    // 方位記号
+    const cx = 1352, cy = 58;
+    const cg = el("g", { transform: `translate(${cx} ${cy})` }, g);
+    el("circle", { r: 28, class: "bg-inkline", "stroke-width": 1.2 }, cg);
+    el("circle", { r: 22, class: "bg-inkline", "stroke-width": 0.8 }, cg);
+    el("path", { d: "M0,-30 L5,0 L0,30 L-5,0 Z M-30,0 L0,-5 L30,0 L0,5 Z", class: "lm" }, cg);
+    el("path", { d: "M0,-30 L5,0 L-5,0 Z", class: "bg-ink" }, cg);
+    el("text", { y: -34, class: "lm-label", style: "font-size:13px" }, cg).textContent = "N";
+
+    // 表題の飾り枠と縮尺
+    const tg = el("g", { transform: "translate(22 650)" }, g);
+    el("rect", { x: 0, y: 0, width: 214, height: 84, rx: 3, class: "cartouche" }, tg);
+    el("rect", { x: 5, y: 5, width: 204, height: 74, rx: 2, class: "bg-inkline", "stroke-width": 0.8 }, tg);
+    el("text", { x: 107, y: 40, class: "cartouche-title" }, tg).textContent = "LONDON";
+    el("path", { d: "M52,56 h110 M52,52 v8 M107,54 v4 M162,52 v8", class: "bg-inkline", "stroke-width": 1.2 }, tg);
+    el("text", { x: 107, y: 72, class: "cartouche-sub" }, tg).textContent = "Scale of Two Miles";
+
+    // 紙の質感と周辺の焼け
+    el("rect", { x: 0, y: 0, width: 1400, height: 750, filter: "url(#blotch)", "pointer-events": "none" }, g);
+    el("rect", { x: 0, y: 0, width: 1400, height: 750, filter: "url(#paper)", "pointer-events": "none" }, g);
+    el("rect", { x: 0, y: 0, width: 1400, height: 750, fill: "url(#vignette)", "pointer-events": "none" }, g);
   }
 
   function buildMap() {
@@ -1233,7 +1345,18 @@
       });
     }
     STATIONS.forEach(([name, x, y, dx, dy, anchor], i) => {
-      el("circle", { cx: x, cy: y, r: 12, class: "stn" }, gS);
+      // ボードゲーム風の駅マーク：上半分を使える交通手段の色で塗り分け、番号を入れる
+      const R = 15;
+      if (ADJ[i].some(e => e.type === "ferry")) el("circle", { cx: x, cy: y, r: R + 4.5, class: "stn-pier" }, gS);
+      el("circle", { cx: x, cy: y, r: R, class: "stn" }, gS);
+      const ts = DET_TYPES.filter(t => ADJ[i].some(e => e.type === t));
+      ts.forEach((t, k) => {
+        const a0 = Math.PI + Math.PI * k / ts.length, a1 = Math.PI + Math.PI * (k + 1) / ts.length;
+        const pa = `M${x},${y} L${(x + R * Math.cos(a0)).toFixed(2)},${(y + R * Math.sin(a0)).toFixed(2)} A${R},${R} 0 0 1 ${(x + R * Math.cos(a1)).toFixed(2)},${(y + R * Math.sin(a1)).toFixed(2)} Z`;
+        el("path", { d: pa, class: "wedge " + t }, gS);
+      });
+      el("circle", { cx: x, cy: y, r: R, class: "stn-rim" }, gS);
+      el("text", { x, y: y + 11, class: "stn-num" }, gS).textContent = i + 1;
       el("text", { x: x + dx, y: y + dy, "text-anchor": anchor, class: "stn-label", "dominant-baseline": "middle" }, gL).textContent = name;
       const hit = el("circle", { cx: x, cy: y, r: 30, class: "stn-hit" }, gH);
       hit.addEventListener("click", () => onStation(i));
@@ -1243,7 +1366,7 @@
   function buildLegend() {
     const sw = t => `<svg class="sw" viewBox="0 0 38 12" aria-hidden="true"><line x1="3" y1="6" x2="35" y2="6" class="edge ${t} base"></line>${t === "train" || t === "subway" ? `<line x1="3" y1="6" x2="35" y2="6" class="edge ${t} tie"></line>` : ""}</svg>`;
     $("legend").innerHTML =
-      `<span>${sw("train")}電車</span><span>${sw("subway")}地下鉄</span><span>${sw("bus")}バス</span><span>${sw("ferry")}水上バス（黒チケットのみ）</span>` +
+      `<span>${sw("train")}タクシー</span><span>${sw("subway")}地下鉄</span><span>${sw("bus")}バス</span><span>${sw("ferry")}テムズ川ボート（黒チケットのみ）</span>` +
       `<span>${face("x")}怪盗X</span><span>${face("d", 0)}${face("d", 1)}${face("d", 2)}${face("d", 3)}刑事</span>`;
     $("brandChars").innerHTML = face("x") + face("d", 0);
   }
@@ -1433,7 +1556,7 @@
     $("xlog").innerHTML = html;
     $("xinfo").innerHTML = G
       ? `${face("x")}<span>怪盗X（${esc(seatLabel("x"))}）</span><span class="tk black ${G.black ? "" : "zero"}">黒 ${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2× ${G.dbl}</span>`
-      : `<span class="turn-help">怪盗Xの切符：黒チケット ${X_BLACK}枚・2倍移動 ${X_DOUBLE}枚（電車・地下鉄・バスは使い放題）</span>`;
+      : `<span class="turn-help">怪盗Xの切符：黒チケット ${X_BLACK}枚・2倍移動 ${X_DOUBLE}枚（タクシー・地下鉄・バスは使い放題）</span>`;
     const dets = G ? G.det : Array.from({ length: DET_COUNT }, () => ({ t: DET_TICKETS }));
     $("dets").innerHTML = dets.map((d, k) => `
       <div class="det-row ${G && !G.over && G.turn === k ? "active" : ""}">
@@ -1492,12 +1615,12 @@
     return `
       <div class="sheet" role="dialog" aria-label="メニュー">
         <div class="label">怪盗X 対 刑事チーム</div>
-        <h2>夜の東京に消えた怪盗Xを追え</h2>
+        <h2>霧のロンドンに消えた怪盗Xを追え</h2>
         <ul>
           <li>怪盗X 1人 対 刑事 ${DET_COUNT}人。怪盗Xの居場所は秘密で、使った切符だけが公開されます。</li>
           <li>${REVEAL.join("・")}手目の移動後、怪盗Xが姿を現します。</li>
-          <li>刑事の切符は有限（電車${DET_TICKETS.train}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.subway}）。使い切ると動けません。</li>
-          <li>怪盗Xは黒チケット（手段を隠す・水上バスに乗れる）${X_BLACK}枚と、2倍移動 ${X_DOUBLE}枚を持っています。</li>
+          <li>刑事の切符は有限（タクシー${DET_TICKETS.train}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.subway}）。使い切ると動けません。</li>
+          <li>怪盗Xは黒チケット（手段を隠す・テムズ川のボートに乗れる）${X_BLACK}枚と、2倍移動 ${X_DOUBLE}枚を持っています。</li>
           <li>刑事が怪盗Xのいる駅に入れば逮捕。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
         </ul>
         <div class="modes">
