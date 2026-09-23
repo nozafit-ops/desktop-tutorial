@@ -4,80 +4,36 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- ARTIFACT-START -->
-<title>トーキョー・チェイス</title>
+<title>トーキョー・ヤード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <style>
+  /* 夜の東京を舞台にした単一テーマ（ダーク固定） */
   :root {
-    --ground: #E9ECEF;
-    --panel: #FFFFFF;
-    --ink: #1B2230;
-    --muted: #5F6B7A;
-    --rule: #CDD5DF;
-    --land: #EEF0EA;
-    --block: #E1E4DC;
-    --water: #A9D2EA;
-    --water-deep: #8FC2E0;
-    --park: #CBE3BF;
-    --train: #2E9A4E;
-    --subway: #7D4CC0;
-    --bus: #E0801C;
-    --secret: #1B2230;
-    --target: #D7263D;
-    --chaser: #1F3F8F;
-    --agent: #D99A00;
-    --board: #16181D;
-    --board-ink: #FFB547;
-    --station: #FFFFFF;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --ground: #0C1017;
-      --panel: #161C27;
-      --ink: #E6EBF2;
-      --muted: #93A0B2;
-      --rule: #2A3343;
-      --land: #141A24;
-      --block: #1A212D;
-      --water: #12304A;
-      --water-deep: #0F2940;
-      --park: #17301F;
-      --train: #46C06B;
-      --subway: #A67DEA;
-      --bus: #F29A3A;
-      --secret: #E6EBF2;
-      --target: #FF4F65;
-      --chaser: #5F8BF0;
-      --agent: #FFC83D;
-      --board: #07090C;
-      --board-ink: #FFB547;
-      --station: #161C27;
-    }
-  }
-  :root[data-theme="dark"] {
     color-scheme: dark;
-    --ground: #0C1017;
-    --panel: #161C27;
-    --ink: #E6EBF2;
-    --muted: #93A0B2;
-    --rule: #2A3343;
-    --land: #141A24;
-    --block: #1A212D;
-    --water: #12304A;
-    --water-deep: #0F2940;
-    --park: #17301F;
-    --train: #46C06B;
-    --subway: #A67DEA;
-    --bus: #F29A3A;
-    --secret: #E6EBF2;
-    --target: #FF4F65;
-    --chaser: #5F8BF0;
-    --agent: #FFC83D;
-    --board: #07090C;
-    --board-ink: #FFB547;
-    --station: #161C27;
+    --ground: #0A0F1D;
+    --panel: #111A2E;
+    --panel-2: #17223B;
+    --ink: #E9EDF6;
+    --muted: #8D99B4;
+    --rule: #26324D;
+    --accent: #F2C230;
+    --land: #0F172B;
+    --block: #131D35;
+    --road: #1B2744;
+    --water: #0D2B4A;
+    --water-ink: #3F83B8;
+    --park: #10301F;
+    --train: #F2C230;
+    --subway: #E5484D;
+    --bus: #2DB37A;
+    --ferry: #3FA7D6;
+    --black: #05070C;
+    --xdisc: #1D2130;
+    --xrim: #E5484D;
+    --station: #0A0F1D;
+    --good: #2DB37A;
   }
 
   [hidden] { display: none !important; }
@@ -94,7 +50,7 @@
     max-width: 1440px;
     margin: 0 auto;
     padding-inline: 16px;
-    padding-block: 12px 24px;
+    padding-block: 12px 28px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -110,31 +66,41 @@
   }
   .brand { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .brand-chars { display: flex; }
-  .brand-chars svg { width: 38px; height: 38px; }
-  .brand-chars svg + svg { margin-left: -10px; }
+  .brand-chars svg { width: 40px; height: 40px; }
+  .brand-chars svg + svg { margin-left: -12px; }
   h1 {
     font-family: "Dela Gothic One", "Zen Kaku Gothic New", sans-serif;
     font-weight: 400;
-    font-size: clamp(22px, 3.2vw, 30px);
-    letter-spacing: 0.02em;
+    font-size: clamp(22px, 3.2vw, 32px);
+    letter-spacing: 0.04em;
     margin: 0;
     line-height: 1.1;
   }
-  .brand small { color: var(--muted); font-size: 12px; letter-spacing: 0.08em; }
+  h1 em { font-style: normal; color: var(--accent); }
+  .brand small { color: var(--muted); font-size: 12px; letter-spacing: 0.1em; }
+  .status-bar { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
   .flap {
     font-family: "DotGothic16", ui-monospace, monospace;
-    background: var(--board);
-    color: var(--board-ink);
+    background: #05070C;
+    color: var(--accent);
+    border: 1px solid var(--rule);
     border-radius: 6px;
     padding: 6px 12px;
     display: flex;
-    gap: 14px;
+    gap: 12px;
     align-items: baseline;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.06em;
   }
   .flap b { font-weight: 400; font-size: 22px; }
   .flap span { font-size: 12px; opacity: 0.85; }
+  .net {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 6px; padding: 4px 10px;
+  }
+  .net i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .net.on i { background: var(--good); box-shadow: 0 0 8px var(--good); }
 
   /* ---------- legend ---------- */
   .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--muted); align-items: center; }
@@ -142,7 +108,7 @@
   .legend svg.sw { width: 38px; height: 12px; }
   .legend svg.face { width: 22px; height: 22px; }
 
-  /* ---------- layout ---------- */
+  /* ---------- map ---------- */
   .mapwrap {
     position: relative;
     background: var(--land);
@@ -156,12 +122,14 @@
     svg#map { width: 760px; max-width: none; }
   }
 
+  /* ---------- panels ---------- */
   .panels {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.35fr) minmax(280px, 1fr);
     gap: 12px;
     align-items: start;
   }
+  @media (max-width: 1080px) { .panels { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); } }
   .card {
     background: var(--panel);
     border: 1px solid var(--rule);
@@ -169,25 +137,24 @@
     padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     min-width: 0;
   }
   .label {
     font-size: 11px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     color: var(--muted);
     font-weight: 700;
   }
-
-  /* ---------- turn card ---------- */
-  .turn-title { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  .turn-title { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .turn-help { color: var(--muted); font-size: 13px; margin: 0; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   button { font: inherit; color: inherit; cursor: pointer; }
-  button:focus-visible { outline: 2px solid var(--chaser); outline-offset: 2px; }
+  button:disabled { cursor: not-allowed; opacity: 0.45; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .chip {
     border: 1px solid var(--rule);
-    background: var(--ground);
+    background: var(--panel-2);
     border-radius: 999px;
     padding: 4px 10px;
     font-size: 13px;
@@ -195,172 +162,199 @@
     align-items: center;
     gap: 6px;
   }
-  .chip:hover { border-color: var(--ink); }
+  .chip:hover:not(:disabled) { border-color: var(--ink); }
   .dots { display: inline-flex; gap: 3px; }
-  .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
   .dot.train { background: var(--train); }
   .dot.subway { background: var(--subway); }
   .dot.bus { background: var(--bus); border-radius: 50%; }
+  .dot.ferry { background: var(--ferry); border-radius: 50% 0; }
+  .dot.black { background: var(--black); outline: 1px solid var(--ink); }
   .btn {
-    border: 1px solid var(--ink);
-    background: var(--ink);
-    color: var(--panel);
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #111;
     border-radius: 8px;
     padding: 8px 14px;
     font-weight: 700;
   }
-  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
-  .btn.ghost:hover { border-color: var(--ink); }
-  .btn.small { padding: 5px 10px; font-size: 13px; font-weight: 400; }
-  .toggle[aria-pressed="true"] { background: var(--secret); color: var(--panel); border-color: var(--secret); }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--rule); font-weight: 400; }
+  .btn.ghost:hover:not(:disabled) { border-color: var(--ink); }
+  .btn.small { padding: 5px 10px; font-size: 13px; }
+  .toggle[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-  .who { display: inline-flex; align-items: center; gap: 2px; font-weight: 700; font-size: 13px; white-space: nowrap; }
+  .who { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 13px; white-space: nowrap; }
   .who svg { width: 26px; height: 26px; flex: none; }
-  .disc.t { fill: var(--target); }
-  .disc.c { fill: var(--chaser); }
-  .disc.a { fill: var(--agent); }
 
-  /* ---------- ticket board ---------- */
-  .board { display: flex; flex-direction: column; gap: 6px; }
-  .board-row, .board-nums { display: grid; grid-template-columns: 34px repeat(20, minmax(0, 1fr)); gap: 2px; align-items: center; }
-  .board-row .who svg { width: 24px; height: 24px; }
-  .board-row .who { font-size: 11px; }
-  .cell {
-    height: 24px;
-    border-radius: 3px;
-    background: var(--ground);
-    border: 1px solid var(--rule);
-    font-family: "DotGothic16", ui-monospace, monospace;
-    font-size: 11px;
-    display: grid;
-    place-items: center;
-    color: #fff;
+  /* ---------- tickets ---------- */
+  .tk {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 34px; height: 22px; padding: 0 6px; border-radius: 4px;
+    font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums;
+    color: #111;
   }
-  .cell.reveal { border: 1.5px solid var(--target); }
-  .cell.now { box-shadow: 0 0 0 2px var(--ink); }
-  .cell.train { background: var(--train); border-color: var(--train); }
-  .cell.subway { background: var(--subway); border-color: var(--subway); }
-  .cell.bus { background: var(--bus); border-color: var(--bus); }
-  .cell.secret { background: var(--secret); border-color: var(--secret); color: var(--panel); }
-  .cell.reveal.train, .cell.reveal.subway, .cell.reveal.bus, .cell.reveal.secret { border-color: var(--target); }
-  .board-nums { font-size: 9px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
-  .board-nums .rv { color: var(--target); font-weight: 700; }
+  .tk.train { background: var(--train); }
+  .tk.subway { background: var(--subway); color: #fff; }
+  .tk.bus { background: var(--bus); color: #fff; }
+  .tk.black { background: var(--black); color: #fff; border: 1px solid #C9D1E3; }
+  .tk.double { background: #fff; color: #111; }
+  .tk.zero { opacity: 0.3; }
 
-  /* ---------- log ---------- */
-  .log { list-style: none; margin: 0; padding: 0; max-height: 230px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
-  .log li { display: flex; gap: 8px; }
-  .log .r { font-family: "DotGothic16", ui-monospace, monospace; color: var(--muted); min-width: 28px; font-variant-numeric: tabular-nums; }
-  .log li.hot { font-weight: 700; color: var(--target); }
+  /* 怪盗Xの移動記録 */
+  .log-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; }
+  .slot {
+    position: relative;
+    border: 1px solid var(--rule);
+    background: var(--panel-2);
+    border-radius: 5px;
+    height: 50px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: "DotGothic16", ui-monospace, monospace;
+    font-size: 12px;
+    overflow: hidden;
+  }
+  .slot .n { position: absolute; top: 1px; left: 4px; font-size: 9px; color: var(--muted); }
+  .slot.reveal { border-color: var(--xrim); }
+  .slot.reveal .n { color: var(--xrim); }
+  .slot.now { box-shadow: 0 0 0 2px var(--accent); }
+  .slot.train { background: var(--train); color: #111; }
+  .slot.subway { background: var(--subway); color: #fff; }
+  .slot.bus { background: var(--bus); color: #fff; }
+  .slot.black { background: var(--black); color: #fff; }
+  .slot.train .n, .slot.subway .n, .slot.bus .n, .slot.black .n { color: inherit; opacity: 0.75; }
+  .slot .st { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 10px; font-weight: 700; line-height: 1.1; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px; }
+  .slot .dbl { position: absolute; top: 1px; right: 3px; font-size: 9px; }
 
-  /* ---------- map background ---------- */
+  .dets { display: flex; flex-direction: column; gap: 6px; }
+  .det-row { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; }
+  .det-row .nm { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .det-row .nm small { font-weight: 400; color: var(--muted); }
+  .det-row .tks { display: flex; gap: 4px; }
+  .det-row.active .nm { color: var(--accent); }
+  .xrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+
+  /* ---------- log / chat ---------- */
+  .tabs { display: flex; gap: 4px; }
+  .tab { border: 1px solid var(--rule); background: transparent; border-radius: 6px; padding: 3px 10px; font-size: 12px; color: var(--muted); }
+  .tab[aria-selected="true"] { background: var(--panel-2); color: var(--ink); border-color: var(--ink); }
+  .feed { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+  .feed li { display: flex; gap: 8px; }
+  .feed .r { font-family: "DotGothic16", ui-monospace, monospace; color: var(--muted); min-width: 30px; font-variant-numeric: tabular-nums; }
+  .feed li.hot { font-weight: 700; color: var(--accent); }
+  .feed li.chat .who-n { font-weight: 700; }
+  .chat-form { display: flex; gap: 6px; }
+  .chat-form input {
+    flex: 1; min-width: 0;
+    background: var(--panel-2); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; font: inherit;
+  }
+
+  /* ---------- map SVG ---------- */
   .bg-land { fill: var(--land); }
   .bg-block { fill: var(--block); }
   .bg-water { fill: var(--water); }
   .bg-river { fill: none; stroke: var(--water); stroke-linecap: round; stroke-linejoin: round; }
   .bg-park { fill: var(--park); }
   .bg-moat { fill: var(--park); stroke: var(--water); stroke-width: 5; }
-  .bg-road { fill: none; stroke: var(--panel); stroke-width: 7; stroke-linecap: round; opacity: 0.8; }
-  .bg-ward {
-    font-family: "Dela Gothic One", sans-serif;
-    font-size: 34px;
-    letter-spacing: 0.4em;
-    fill: var(--ink);
-    opacity: 0.06;
-    pointer-events: none;
-  }
-  .bg-place { font-size: 13px; fill: var(--muted); font-weight: 700; letter-spacing: 0.15em; pointer-events: none; opacity: 0.9; }
-  .bg-place.water { fill: var(--water-deep); font-style: italic; filter: brightness(0.7); }
-  .bg-ink { fill: var(--ink); }
-  .bg-inkline { stroke: var(--ink); fill: none; }
+  .bg-road { fill: none; stroke: var(--road); stroke-width: 7; stroke-linecap: round; }
+  .bg-ward { font-family: "Dela Gothic One", sans-serif; font-size: 34px; letter-spacing: 0.4em; fill: var(--ink); opacity: 0.05; pointer-events: none; }
+  .bg-place { font-size: 13px; fill: var(--muted); font-weight: 700; letter-spacing: 0.15em; pointer-events: none; opacity: 0.8; }
+  .bg-place.water { fill: var(--water-ink); font-style: italic; }
+  .bg-ink { fill: var(--muted); }
+  .bg-inkline { stroke: var(--muted); fill: none; }
 
-  /* ---------- lines: shape differs per transport ---------- */
   .edge { fill: none; stroke-linecap: round; }
-  /* 電車: JR風の白黒ならぬ「色×白」の枕木模様 */
   .edge.train.base { stroke: var(--train); stroke-width: 8; stroke-linecap: butt; }
-  .edge.train.tie  { stroke: var(--panel); stroke-width: 3.5; stroke-dasharray: 12 12; stroke-linecap: butt; }
-  /* 地下鉄: 中が抜けたチューブ（二重線） */
+  .edge.train.tie  { stroke: var(--land); stroke-width: 3.5; stroke-dasharray: 12 12; stroke-linecap: butt; }
   .edge.subway.base { stroke: var(--subway); stroke-width: 10; }
   .edge.subway.tie  { stroke: var(--land); stroke-width: 3.5; }
-  /* バス: 丸い点の列 */
   .edge.bus.base { stroke: var(--bus); stroke-width: 7; stroke-dasharray: 0 13; }
+  .edge.ferry.base { stroke: var(--ferry); stroke-width: 4; stroke-dasharray: 16 8 3 8; }
 
   .stn { fill: var(--station); stroke: var(--ink); stroke-width: 3; }
   .stn-hit { fill: transparent; }
   .stn-hit.can { cursor: pointer; }
   .stn-label {
     font-family: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    fill: var(--ink);
-    paint-order: stroke;
-    stroke: var(--land);
-    stroke-width: 6px;
-    stroke-linejoin: round;
+    font-size: 18px; font-weight: 700; fill: var(--ink);
+    paint-order: stroke; stroke: var(--land); stroke-width: 6px; stroke-linejoin: round;
     pointer-events: none;
   }
-  .dest { fill: none; stroke: var(--ink); stroke-width: 3.5; pointer-events: none; }
+  .dest { fill: none; stroke: var(--accent); stroke-width: 3.5; pointer-events: none; }
   .dest.pulse { animation: pulse 1.2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-  .poss { fill: var(--target); opacity: 0.18; pointer-events: none; }
-  .lastseen { fill: none; stroke: var(--target); stroke-width: 3; stroke-dasharray: 6 5; pointer-events: none; }
-  .lastseen-label { font-size: 15px; font-weight: 700; fill: var(--target); paint-order: stroke; stroke: var(--land); stroke-width: 5px; pointer-events: none; }
+  .poss { fill: var(--xrim); opacity: 0.22; pointer-events: none; }
+  .lastseen { fill: none; stroke: var(--xrim); stroke-width: 3; stroke-dasharray: 6 5; pointer-events: none; }
+  .lastseen-label { font-size: 15px; font-weight: 700; fill: var(--xrim); paint-order: stroke; stroke: var(--land); stroke-width: 5px; pointer-events: none; }
   .tok { pointer-events: none; }
-  .tok .disc { stroke: var(--panel); stroke-width: 3; }
-  .tok .ring { fill: none; stroke: var(--ink); stroke-width: 3.5; }
+  .tok .disc { stroke: var(--ground); stroke-width: 3; }
+  .tok .disc.x { fill: var(--xdisc); stroke: var(--xrim); }
+  .tok .ring { fill: none; stroke: var(--accent); stroke-width: 3.5; }
   .tok .num { fill: var(--ink); }
-  .tok .num-t { fill: var(--panel); font-size: 12px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
-  .trail { fill: none; stroke: var(--target); stroke-width: 4; stroke-dasharray: 10 7; opacity: 0.85; pointer-events: none; }
+  .tok .num-t { fill: var(--ground); font-size: 12px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .trail { fill: none; stroke: var(--xrim); stroke-width: 4; stroke-dasharray: 10 7; opacity: 0.9; pointer-events: none; }
 
   /* ---------- overlay ---------- */
   .overlay {
     position: absolute;
     inset: 0;
-    background: color-mix(in srgb, var(--ground) 65%, transparent);
+    background: color-mix(in srgb, var(--ground) 70%, transparent);
     display: grid;
     place-items: center;
     padding: 16px;
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(3px);
     overflow-y: auto;
   }
   .sheet {
     background: var(--panel);
     border: 1px solid var(--rule);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 20px 22px;
-    max-width: 560px;
+    max-width: 640px;
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
   }
   .sheet h2 { font-family: "Dela Gothic One", sans-serif; font-weight: 400; font-size: 24px; margin: 0; text-wrap: balance; line-height: 1.25; }
   .sheet p { margin: 0; color: var(--muted); font-size: 13px; }
   .sheet ul { margin: 0; padding-left: 1.2em; font-size: 13px; display: flex; flex-direction: column; gap: 3px; }
-  .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .role {
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mode {
     border: 1px solid var(--rule);
-    background: var(--ground);
-    border-radius: 10px;
-    padding: 12px;
-    text-align: left;
-    display: grid;
-    grid-template-columns: 64px 1fr;
-    gap: 4px 10px;
-    align-items: center;
+    background: var(--panel-2);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 8px;
   }
-  .role:hover { border-color: var(--ink); }
-  .role svg { width: 64px; height: 64px; grid-row: span 2; }
-  .role strong { font-size: 15px; }
-  .role span { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .mode h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  .mode p { font-size: 12px; }
+  .rooms { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+  .room-row {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+    background: var(--panel-2); border: 1px solid var(--rule); border-radius: 10px; padding: 8px 10px;
+  }
+  .code { font-family: "DotGothic16", ui-monospace, monospace; font-size: 18px; color: var(--accent); letter-spacing: 0.12em; }
+  .seats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+  .seat {
+    border: 1px solid var(--rule); background: var(--panel-2); border-radius: 10px; padding: 10px;
+    display: grid; grid-template-columns: 40px 1fr; gap: 2px 10px; align-items: center;
+  }
+  .seat svg { width: 40px; height: 40px; grid-row: span 2; }
+  .seat .role-n { font-size: 12px; color: var(--muted); }
+  .seat .pl { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .seat .acts { grid-column: 1 / -1; display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .seat.mine { border-color: var(--accent); }
+  .note { font-size: 12px; color: var(--muted); border-left: 3px solid var(--rule); padding-left: 8px; }
   .result-chars { display: flex; gap: 4px; }
   .result-chars svg { width: 56px; height: 56px; }
-  @media (max-width: 560px) {
-    .roles { grid-template-columns: 1fr; }
+  @media (max-width: 600px) {
+    .modes { grid-template-columns: 1fr; }
     .overlay { position: fixed; z-index: 10; }
+    .log-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   }
-
   @media (prefers-reduced-motion: reduce) {
     .dest.pulse { animation: none; }
   }
@@ -369,30 +363,31 @@
 </head>
 <body>
 <!-- ARTIFACT-BODY-START -->
-<!-- キャラクター（泥棒・警官）の図柄 -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <clipPath id="clip-chr"><circle r="17.5"></circle></clipPath>
-    <symbol id="chr-thief" viewBox="-20 -20 40 40">
+    <!-- 怪盗X -->
+    <symbol id="chr-x" viewBox="-20 -20 40 40">
       <g clip-path="url(#clip-chr)">
-        <circle cx="11.5" cy="-9" r="6.5" fill="#D9B27A" stroke="#7A5A2E" stroke-width="1"></circle>
-        <path d="M9,-15.2 l2.5,2 l2.5,-2" stroke="#7A5A2E" fill="none" stroke-width="1.3"></path>
-        <text x="11.5" y="-6.2" font-size="7" font-weight="700" text-anchor="middle" fill="#7A5A2E">¥</text>
-        <path d="M-15,20 Q-15,8 0,8 Q15,8 15,20 Z" fill="#FFFFFF"></path>
-        <path d="M-11.5,12 H11.5 M-14,16.5 H14" stroke="#1B2230" stroke-width="2.2"></path>
-        <circle cy="-1" r="9" fill="#F4C9A0"></circle>
-        <path d="M-9.6,-3 A9.6,9.6 0 0 1 9.6,-3 Z" fill="#1B2230"></path>
-        <circle cx="0" cy="-12.6" r="2" fill="#1B2230"></circle>
-        <rect x="-10" y="-5" width="20" height="3" rx="1.5" fill="#3A4254"></rect>
-        <rect x="-9.8" y="-1.2" width="19.6" height="5.2" rx="2.6" fill="#1B2230"></rect>
-        <circle cx="-4" cy="1.4" r="1.5" fill="#FFFFFF"></circle>
-        <circle cx="4" cy="1.4" r="1.5" fill="#FFFFFF"></circle>
-        <path d="M-3.5,5.2 Q0,8.2 3.5,5.2" stroke="#6B3A2A" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+        <path d="M-15,20 Q-15,7 0,7 Q15,7 15,20 Z" fill="#161A24"></path>
+        <path d="M-12,9 L-6,7 L0,15 L6,7 L12,9 L10,20 L-10,20 Z" fill="#2A3040"></path>
+        <path d="M-3.2,8 L0,14 L3.2,8 Z" fill="#FFFFFF"></path>
+        <path d="M-3.4,10.2 L0,11.6 L3.4,10.2 L3.4,13.4 L0,12 L-3.4,13.4 Z" fill="#E5484D"></path>
+        <circle cy="-0.5" r="8.4" fill="#F1C7A0"></circle>
+        <rect x="-9.4" y="-2.8" width="18.8" height="5" rx="2.5" fill="#0B0D13"></rect>
+        <circle cx="-3.8" cy="-0.3" r="1.5" fill="#FFFFFF"></circle>
+        <circle cx="3.8" cy="-0.3" r="1.5" fill="#FFFFFF"></circle>
+        <path d="M-3.5,4.2 Q1,6.6 4,3.8" stroke="#6B3A2A" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+        <ellipse cx="0" cy="-6.6" rx="12.5" ry="2.6" fill="#0B0D13"></ellipse>
+        <rect x="-7.6" y="-19.5" width="15.2" height="13" rx="1.5" fill="#0B0D13"></rect>
+        <rect x="-7.6" y="-10.4" width="15.2" height="3" fill="#E5484D"></rect>
+        <text x="0" y="-12.3" font-size="7.5" font-weight="700" text-anchor="middle" fill="#F2C230">X</text>
       </g>
     </symbol>
-    <symbol id="chr-police" viewBox="-20 -20 40 40">
+    <!-- 刑事 -->
+    <symbol id="chr-d" viewBox="-20 -20 40 40">
       <g clip-path="url(#clip-chr)">
-        <path d="M-15,20 Q-15,9 0,9 Q15,9 15,20 Z" fill="#23408E"></path>
+        <path d="M-15,20 Q-15,9 0,9 Q15,9 15,20 Z" fill="#2B3448"></path>
         <path d="M-4.5,9 L0,14 L4.5,9 Z" fill="#FFFFFF"></path>
         <path d="M-1.3,11.5 h2.6 l0.9,5.5 l-2.2,2 l-2.2,-2 z" fill="#0F1733"></path>
         <circle cx="7.5" cy="14" r="1.9" fill="#F2C230"></circle>
@@ -417,12 +412,15 @@
   <header>
     <div class="brand">
       <div class="brand-chars" id="brandChars"></div>
-      <h1>トーキョー・チェイス</h1>
-      <small>泥棒と警察の 路線図おいかけっこ</small>
+      <h1>トーキョー・<em>ヤード</em></h1>
+      <small>怪盗Xを追え ― 路線図の追跡ゲーム</small>
     </div>
-    <div class="flap" aria-live="polite">
-      <span>ROUND</span><b id="roundNo">--/20</b>
-      <span id="nextReveal">次の公開 --</span>
+    <div class="status-bar">
+      <span class="net" id="net"><i></i><span id="netText">オフライン</span></span>
+      <div class="flap" aria-live="polite">
+        <span>MOVE</span><b id="roundNo">--/18</b>
+        <span id="nextReveal">次の出現 --</span>
+      </div>
     </div>
   </header>
 
@@ -446,22 +444,35 @@
   </div>
 
   <div class="panels">
-    <section class="card" id="turnCard" aria-live="polite"><div class="label">いまの手番</div><p class="turn-help">泥棒か警察かを選ぶとゲームが始まります。</p></section>
+    <section class="card" id="turnCard" aria-live="polite">
+      <div class="label">いまの手番</div>
+      <p class="turn-help">モードを選ぶとゲームが始まります。</p>
+    </section>
 
     <section class="card">
-      <div class="label">移動記録（泥棒の切符）</div>
-      <div class="board" id="board"></div>
+      <div class="label">怪盗Xの移動記録</div>
+      <div class="log-grid" id="xlog"></div>
+      <div class="xrow" id="xinfo"></div>
+      <div class="label">刑事の切符</div>
+      <div class="dets" id="dets"></div>
     </section>
 
     <section class="card">
       <div class="row" style="justify-content: space-between;">
-        <div class="label">ログ</div>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" id="tabLog" aria-selected="true" data-act="tab" data-tab="log">ログ</button>
+          <button class="tab" role="tab" id="tabChat" aria-selected="false" data-act="tab" data-tab="chat" hidden>チャット</button>
+        </div>
         <div class="row">
-          <button class="btn ghost small toggle" id="hintBtn" aria-pressed="true">推理ヒント</button>
-          <button class="btn ghost small" id="newBtn">新しいゲーム</button>
+          <button class="btn ghost small toggle" id="hintBtn" aria-pressed="true" hidden>推理ヒント</button>
+          <button class="btn ghost small" id="menuBtn">メニュー</button>
         </div>
       </div>
-      <ul class="log" id="log"></ul>
+      <ul class="feed" id="feed"></ul>
+      <form class="chat-form" id="chatForm" hidden>
+        <input id="chatInput" maxlength="120" placeholder="メッセージを送る" autocomplete="off">
+        <button class="btn small" type="submit">送信</button>
+      </form>
     </section>
   </div>
 </div>
@@ -470,11 +481,11 @@
 (() => {
   "use strict";
 
-  // ================= マップデータ =================
-  // 座標は元の縦長レイアウトで書き、横長に引き伸ばして使う
+  // ======================================================================
+  // CORE-START  ルールとCPU（DOMに依存しない）
+  // ======================================================================
   const MX = x => 60 + (x - 50) * 1.45;
   const MY = y => 30 + y * 0.9;
-  // [駅名, x, y, ラベルdx, ラベルdy, text-anchor]
   const RAW_STATIONS = [
     ["池袋", 220, 110, 0, -26, "middle"],
     ["大塚", 400, 75, 0, -26, "middle"],
@@ -541,26 +552,32 @@
     ["bus", "八重洲ルート", ["東京","日本橋"]],
     ["bus", "大手町ルート", ["大手町","神田"]],
     ["bus", "赤坂ルート", ["赤坂見附","六本木"]],
+    // 水上バスは怪盗Xが黒チケットでのみ使える
+    ["ferry", "水上バス", ["浅草","月島","浜松町"]],
+    ["ferry", "水上バス", ["月島","豊洲"]],
   ];
 
   const TYPE = {
     train:  { name: "電車",   short: "電" },
     subway: { name: "地下鉄", short: "地" },
     bus:    { name: "バス",   short: "バ" },
-    secret: { name: "シークレット", short: "？" },
+    ferry:  { name: "水上バス", short: "船" },
+    black:  { name: "黒チケット", short: "黒" },
   };
-  const TYPE_ORDER = ["train", "subway", "bus"];
+  const TYPE_ORDER = ["train", "subway", "bus", "ferry"];
+  const DET_TYPES = ["train", "subway", "bus"];
 
-  const MAX_ROUNDS = 20;
-  const REVEAL = [3, 7, 11, 15, 19];
-  const SECRETS = 3;
-  const AI_DELAY = 450;
+  const MAX_MOVES = 18;
+  const REVEAL = [3, 8, 13, 18];
+  const DET_COUNT = 4;
+  const DET_TICKETS = { train: 10, bus: 8, subway: 4 };
+  const X_BLACK = 5;
+  const X_DOUBLE = 3;
 
   const N = STATIONS.length;
   const IDX = Object.fromEntries(STATIONS.map((s, i) => [s[0], i]));
   const NAME = i => STATIONS[i][0];
 
-  // 隣接リスト（同じ区間に複数の交通手段がありうる）
   const edgeTypes = new Map(); // "a-b" -> Map(type -> 路線名[])
   for (const [type, lineName, seq] of LINES) {
     for (let k = 0; k < seq.length - 1; k++) {
@@ -581,21 +598,149 @@
       ADJ[b].push({ to: a, type: t });
     }
   }
-  // 全点間の最短距離（交通手段を問わない）
+  // 刑事が使える路線だけでの最短距離
   const D = Array.from({ length: N }, (_, s) => {
     const d = new Array(N).fill(Infinity);
     d[s] = 0;
     const q = [s];
     while (q.length) {
       const u = q.shift();
-      for (const e of ADJ[u]) if (d[e.to] === Infinity) { d[e.to] = d[u] + 1; q.push(e.to); }
+      for (const e of ADJ[u]) if (e.type !== "ferry" && d[e.to] === Infinity) { d[e.to] = d[u] + 1; q.push(e.to); }
     }
     return d;
   });
 
-  // ================= 状態 =================
-  let S = null;
-  let timer = null;
+  const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  // ゲーム状態 G は公開情報のみ。怪盗Xの現在地は sec（秘密）に分けて持つ。
+  function newGame(detCount = DET_COUNT) {
+    const ids = shuffle([...Array(N).keys()]);
+    const det = ids.slice(0, detCount).map(pos => ({ pos, t: { ...DET_TICKETS } }));
+    const startable = ids.filter(p => det.every(d => D[p][d.pos] >= 2));
+    const xStart = startable[0];
+    const G = {
+      seq: 1, turn: "x", det, xLog: [], black: X_BLACK, dbl: X_DOUBLE, doubling: false,
+      possible: startable.slice().sort((a, b) => a - b), lastSeen: null,
+      over: false, winner: null, reason: "", xPath: null,
+    };
+    return { G, sec: { pos: xStart, path: [xStart] } };
+  }
+
+  function xMoves(G, sec) {
+    const occ = new Set(G.det.map(d => d.pos));
+    const out = [];
+    const blackTo = new Set();
+    for (const e of ADJ[sec.pos]) {
+      if (occ.has(e.to)) continue;
+      if (e.type !== "ferry") out.push({ to: e.to, type: e.type });
+      if (G.black > 0 && !blackTo.has(e.to)) { blackTo.add(e.to); out.push({ to: e.to, type: "black" }); }
+    }
+    return out;
+  }
+  const canDouble = G => G.dbl > 0 && !G.doubling && G.xLog.length <= MAX_MOVES - 2;
+
+  function nextPossible(G, type) {
+    const occ = new Set(G.det.map(d => d.pos));
+    const nx = new Set();
+    for (const s of G.possible) for (const e of ADJ[s]) {
+      if ((type === "black" || e.type === type) && !occ.has(e.to)) nx.add(e.to);
+    }
+    return [...nx].sort((a, b) => a - b);
+  }
+
+  function applyX(G, sec, to, type, useDouble) {
+    sec.pos = to;
+    sec.path.push(to);
+    const n = G.xLog.length + 1;
+    const rev = REVEAL.includes(n);
+    G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0) });
+    if (type === "black") G.black--;
+    G.possible = rev ? [to] : nextPossible(G, type);
+    if (rev) G.lastSeen = { pos: to, n };
+    if (useDouble) { G.dbl--; G.doubling = true; }
+    else { G.doubling = false; G.turn = 0; }
+    G.seq++;
+  }
+
+  function detMoves(G, k) {
+    const d = G.det[k];
+    const occ = G.det.filter((_, j) => j !== k).map(x => x.pos);
+    return ADJ[d.pos].filter(e => e.type !== "ferry" && d.t[e.type] > 0 && !occ.includes(e.to));
+  }
+  const allStuck = G => G.det.every((_, k) => detMoves(G, k).length === 0);
+
+  function advance(G, k) {
+    if (k + 1 < G.det.length) G.turn = k + 1;
+    else if (G.xLog.length >= MAX_MOVES) { G.over = true; G.winner = "x"; G.reason = "escape"; }
+    else G.turn = "x";
+  }
+  function applyD(G, k, to, type) {
+    const d = G.det[k];
+    d.pos = to;
+    d.t[type]--;
+    G.possible = G.possible.filter(p => p !== to);
+    advance(G, k);
+    G.seq++;
+  }
+  function skipD(G, k) { advance(G, k); G.seq++; }
+  function finish(G, winner, reason) { G.over = true; G.winner = winner; G.reason = reason; G.seq++; }
+
+  // ---------------- CPU ----------------
+  function aiX(G, sec) {
+    const moves = xMoves(G, sec);
+    const cpos = G.det.map(d => d.pos);
+    const score = to => {
+      const dmin = Math.min(...cpos.map(c => D[to][c]));
+      const dsum = cpos.reduce((s, c) => s + Math.min(D[to][c], 5), 0);
+      const exits = ADJ[to].filter(e => !cpos.some(c => D[e.to][c] <= 1)).length;
+      let s = Math.min(dmin, 4) * 10 + dsum + exits * 1.5 + Math.random() * 3;
+      if (dmin <= 1) s -= 40;
+      return { s, dmin };
+    };
+    let best = null, bs = -Infinity, bestD = 0;
+    for (const to of new Set(moves.map(m => m.to))) {
+      const r = score(to);
+      if (r.s > bs) { bs = r.s; best = to; bestD = r.dmin; }
+    }
+    const n = G.xLog.length + 1;
+    const nowD = Math.min(...cpos.map(c => D[sec.pos][c]));
+    const useDouble = canDouble(G) && bestD <= 1;
+    const opts = moves.filter(m => m.to === best && m.type !== "black").map(m => m.type);
+    let type = opts[0], size = -1;
+    for (const ty of opts) { const k = nextPossible(G, ty).length; if (k > size) { size = k; type = ty; } }
+    const wantBlack = G.black > 0 && !REVEAL.includes(n) && (
+      !opts.length ||
+      (REVEAL.includes(n - 1) && Math.random() < 0.6) ||
+      (nowD <= 2 && Math.random() < 0.35));
+    if (wantBlack || !type) type = "black";
+    return { to: best, type, useDouble };
+  }
+
+  function aiD(G, k) {
+    const moves = detMoves(G, k);
+    const P = G.possible;
+    const w = 1 / Math.max(1, P.length);
+    let best = null, bs = -Infinity;
+    for (const to of new Set(moves.map(m => m.to))) {
+      let ed = 0;
+      for (const p of P) ed += Math.min(D[to][p], 8) * w;
+      const prob = P.includes(to) ? w : 0;
+      let spread = 0;
+      G.det.forEach((o, j) => { if (j !== k && D[to][o.pos] <= 1) spread -= 1.2; });
+      const types = moves.filter(m => m.to === to).map(m => m.type);
+      const spare = Math.max(...types.map(t => G.det[k].t[t]));
+      const s = prob * 30 - ed * 4 + spread - (spare <= 1 ? 1.5 : 0) + Math.random() * 0.8;
+      if (s > bs) { bs = s; best = to; }
+    }
+    // 残り枚数が多い切符を使う
+    const types = moves.filter(m => m.to === best).map(m => m.type);
+    types.sort((a, b) => G.det[k].t[b] - G.det[k].t[a]);
+    return { to: best, type: types[0] };
+  }
+  // ======================================================================
+  // CORE-END
+  // ======================================================================
 
   const $ = id => document.getElementById(id);
   const SVGNS = "http://www.w3.org/2000/svg";
@@ -605,307 +750,431 @@
     if (parent) parent.appendChild(e);
     return e;
   }
-  const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
-  const tName = i => "泥棒" + (i + 1);
-  const cName = i => "警官" + (i + 1);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const DCOL = ["#4F8DFF", "#FF8A3D", "#B46CFF", "#2FD1C0"];
+  const AI_DELAY = 550;
 
-  // キャラクターのアイコン（HTML用）
-  function face(kind) {
-    const chr = kind === "c" ? "chr-police" : "chr-thief";
-    return `<svg class="face" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" class="disc ${kind}"></circle><use href="#${chr}" x="-20" y="-20" width="40" height="40"></use></svg>`;
-  }
-
-  function newGame(role) {
-    clearTimeout(timer);
-    const ids = shuffle([...Array(N).keys()]);
-    const chaserPos = ids.slice(0, 3);
-    // スタート地点のルール（公開情報）：警官から2駅以上離れている
-    const startable = ids.filter(p => chaserPos.every(c => D[p][c] >= 2));
-    const t1 = startable[0];
-    const t2 = startable.find(p => p !== t1 && D[p][t1] >= 2) ?? startable[1];
-    S = {
-      role,
-      round: 1,
-      queue: [],
-      qi: 0,
-      chasers: chaserPos.map(pos => ({ pos })),
-      targets: [t1, t2].map(pos => ({
-        pos, state: "free", secrets: SECRETS, moves: [], path: [pos],
-        possible: startable.slice(), lastSeen: null,
-      })),
-      log: [],
-      over: false,
-      winner: null,
-      useSecret: false,
-      pending: null,
-      hints: S ? S.hints : true,
-      showResult: false,
-    };
-    buildQueue();
-    addLog(role === "target"
-      ? "あなたは泥棒。20ラウンド逃げ切れば勝ち！"
-      : "あなたは警察。20ラウンド以内に泥棒を2人とも捕まえよう！", true);
-    $("overlay").hidden = true;
-    step();
-  }
-
-  function buildQueue() {
-    const q = [];
-    S.targets.forEach((t, i) => { if (t.state === "free") q.push({ k: "t", i }); });
-    S.targets.forEach((t, i) => { if (t.state === "agent") q.push({ k: "a", i }); });
-    S.chasers.forEach((_, i) => q.push({ k: "c", i }));
-    S.queue = q;
-    S.qi = 0;
-  }
-
-  function addLog(text, hot = false) {
-    S.log.unshift({ r: S.round, text, hot });
-    if (S.log.length > 80) S.log.pop();
-  }
-
-  const isHuman = a => S.role === "target" ? (a.k === "t" || a.k === "a") : a.k === "c";
-  const current = () => S.queue[S.qi];
-  function valid(a) {
-    if (a.k === "t") return S.targets[a.i].state === "free";
-    if (a.k === "a") return S.targets[a.i].state === "agent";
-    return true;
-  }
-  function actorName(a) {
-    if (a.k === "t") return tName(a.i);
-    if (a.k === "a") return tName(a.i) + "（エージェント）";
-    return cName(a.i);
-  }
-
-  function legal(a) {
-    const cpos = S.chasers.map(c => c.pos);
-    if (a.k === "t") {
-      const t = S.targets[a.i];
-      const others = S.targets.filter((o, j) => j !== a.i && o.state === "free").map(o => o.pos);
-      return ADJ[t.pos].filter(e => !cpos.includes(e.to) && !others.includes(e.to));
+  function face(kind, k = 0) {
+    if (kind === "x") {
+      return `<svg class="face" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="#1D2130" stroke="#E5484D" stroke-width="2"></circle><use href="#chr-x" x="-20" y="-20" width="40" height="40"></use></svg>`;
     }
-    if (a.k === "a") {
-      return ADJ[S.targets[a.i].pos].filter(e => !cpos.includes(e.to));
-    }
-    const me = S.chasers[a.i];
-    const otherC = S.chasers.filter((_, j) => j !== a.i).map(c => c.pos);
-    const agents = S.targets.filter(t => t.state === "agent").map(t => t.pos);
-    return ADJ[me.pos].filter(e => !otherC.includes(e.to) && !agents.includes(e.to));
+    return `<svg class="face" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="${DCOL[k % DCOL.length]}"></circle><use href="#chr-d" x="-20" y="-20" width="40" height="40"></use></svg>`;
+  }
+  const dName = k => "刑事" + (k + 1);
+
+  // ======================================================================
+  // アプリ状態
+  // ======================================================================
+  const A = {
+    mode: null,          // "local" | "online"
+    role: null,          // local: "x" | "d"
+    G: null,
+    sec: null,           // 怪盗Xの秘密（自分がXのときだけ）
+    pending: null,       // 同じ駅へ複数の手段があるときの選択
+    useBlack: false,
+    useDouble: false,
+    hints: true,
+    tab: "log",
+    feed: [],            // {n, text, hot}
+    showResult: false,
+    screen: "menu",      // menu | lobby | room | game
+  };
+  const NET = { db: null, user: null, me: null, rooms: [], room: null, code: null, chat: [], unsub: [], names: {}, handledSeq: 0, busy: false, readOnly: false };
+  let timer = null;
+
+  // ---------------- 手番の担当 ----------------
+  function mySeatsD() {
+    if (A.mode === "local") return A.role === "d" ? A.G.det.map((_, k) => k) : [];
+    const s = NET.room?.seats || {};
+    return A.G.det.map((_, k) => k).filter(k => s["d" + k]?.uid === NET.me && !s["d" + k]?.cpu);
+  }
+  const iAmX = () => A.mode === "local" ? A.role === "x" : (NET.room?.seats?.x?.uid === NET.me && !!NET.me);
+  function isMyTurn() {
+    const G = A.G;
+    if (!G || G.over) return false;
+    if (G.turn === "x") return iAmX() && !!A.sec;
+    return mySeatsD().includes(G.turn);
+  }
+  function seatLabel(key) {
+    if (A.mode !== "online") return key === "x" ? (A.role === "x" ? "あなた" : "CPU") : (A.role === "d" ? "あなた" : "CPU");
+    const s = NET.room?.seats?.[key];
+    if (!s) return "空席";
+    if (s.cpu) return "CPU";
+    if (!s.uid) return "空席";
+    if (s.uid === NET.me) return "あなた";
+    return NET.names[s.uid] || "プレイヤー";
   }
 
-  // ================= 進行 =================
-  function step() {
+  // ---------------- ログ（状態の差分から作る） ----------------
+  function describe(prev, G) {
+    const out = [];
+    if (!prev) return out;
+    for (let i = prev.xLog.length; i < G.xLog.length; i++) {
+      const e = G.xLog[i];
+      let s = `怪盗Xが ${TYPE[e.t].name} で移動`;
+      if (e.d === 1) s = "怪盗Xが2倍移動！ " + s;
+      if (iAmX() && A.sec) s += `（→ ${NAME(A.sec.path[i + 1])}）`;
+      out.push({ n: i + 1, text: s });
+      if (e.p !== null) out.push({ n: i + 1, text: `目撃情報！ 怪盗Xは ${NAME(e.p)} にいる`, hot: true });
+    }
+    G.det.forEach((d, k) => {
+      const p = prev.det[k];
+      if (!p) return;
+      if (p.pos !== d.pos) {
+        const used = DET_TYPES.find(t => p.t[t] !== d.t[t]);
+        out.push({ n: G.xLog.length, text: `${dName(k)} → ${NAME(d.pos)}（${used ? TYPE[used].name : ""}）` });
+      }
+    });
+    if (!prev.over && G.over) {
+      const msg = G.winner === "x"
+        ? (G.reason === "stuck" ? "刑事が全員動けなくなった。怪盗Xの勝ち！" : "怪盗Xが逃げ切った！")
+        : (G.reason === "trapped" ? "怪盗Xは囲まれて動けない。刑事の勝ち！" : "怪盗Xを逮捕！ 刑事の勝ち！");
+      out.push({ n: G.xLog.length, text: msg, hot: true });
+    }
+    return out;
+  }
+  function pushFeed(items) {
+    for (const it of items) A.feed.unshift(it);
+    if (A.feed.length > 120) A.feed.length = 120;
+  }
+
+  // ======================================================================
+  // ローカル（CPU対戦）
+  // ======================================================================
+  function startLocal(role) {
+    leaveRoom();
     clearTimeout(timer);
-    while (!S.over) {
-      if (S.qi >= S.queue.length) {
-        endRound();
-        if (S.over) break;
+    const { G, sec } = newGame();
+    A.mode = "local"; A.role = role; A.G = G; A.sec = sec;
+    A.feed = []; A.pending = null; A.useBlack = false; A.useDouble = false; A.showResult = false;
+    A.screen = "game";
+    pushFeed([{ n: 0, text: role === "x" ? "あなたは怪盗X。18手逃げ切れば勝ち！" : "あなたは刑事4人を指揮する。怪盗Xを逮捕せよ！", hot: true }]);
+    localStep();
+  }
+
+  function localApply(fn) {
+    const prev = clone(A.G);
+    fn();
+    // 逮捕判定（ローカルは秘密を知っている）
+    if (!A.G.over && A.G.det.some(d => d.pos === A.sec.pos)) finish(A.G, "d", "caught");
+    pushFeed(describe(prev, A.G));
+  }
+
+  function localStep() {
+    clearTimeout(timer);
+    const G = A.G;
+    while (!G.over) {
+      if (G.turn === "x") {
+        if (!xMoves(G, A.sec).length) { localApply(() => finish(G, "d", "trapped")); continue; }
+        if (A.role === "x") { render(); return; }
+        render();
+        timer = setTimeout(() => {
+          const m = aiX(G, A.sec);
+          localApply(() => applyX(G, A.sec, m.to, m.type, m.useDouble));
+          localStep();
+        }, AI_DELAY);
+        return;
+      }
+      const k = G.turn;
+      if (allStuck(G)) { localApply(() => finish(G, "x", "stuck")); continue; }
+      if (!detMoves(G, k).length) {
+        pushFeed([{ n: G.xLog.length, text: `${dName(k)} は使える切符がないので待機` }]);
+        localApply(() => skipD(G, k));
         continue;
       }
-      const a = current();
-      if (!valid(a)) { S.qi++; continue; }
-      const moves = legal(a);
-      if (!moves.length) {
-        if (a.k === "t") {
-          addLog(`${tName(a.i)} は囲まれて動けない！`, true);
-          capture(a.i);
-        } else {
-          addLog(`${actorName(a)} は動ける駅がないので待機`);
-        }
-        S.qi++;
-        continue;
-      }
-      if (isHuman(a)) { S.pending = null; render(); return; }
+      if (A.role === "d") { render(); return; }
       render();
       timer = setTimeout(() => {
-        const m = aiMove(a, moves);
-        doMove(a, m);
-        S.qi++;
-        step();
+        const m = aiD(G, k);
+        localApply(() => applyD(G, k, m.to, m.type));
+        localStep();
       }, AI_DELAY);
       return;
     }
-    S.showResult = true;
+    A.showResult = true;
     render();
   }
 
-  function endRound() {
-    if (S.round >= MAX_ROUNDS) {
-      S.over = true;
-      S.winner = "target";
-      addLog("逃げ切り成功！泥棒の勝ち", true);
+  // ======================================================================
+  // オンライン（db 共有状態）
+  // ======================================================================
+  const ROOM_TTL = 3 * 60 * 60 * 1000;
+  const roomRef = code => NET.db.doc("rooms/" + code);
+  const secretRef = code => NET.db.doc("data/users/" + NET.me + "/x-" + code);
+
+  async function initNet() {
+    try {
+      if (!window.claude?.use) return;
+      const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+      if (!db || !user) return;
+      const me = await user.id();
+      if (!me) return;
+      NET.db = db; NET.user = user; NET.me = me;
+      const can = await user.can("data.write");
+      NET.readOnly = can === false;
+      $("net").classList.add("on");
+      $("netText").textContent = "オンライン";
+      if (A.screen === "menu") showMenu();
+    } catch (e) { /* オンライン機能なしで続行 */ }
+  }
+
+  async function resolveNames(ids) {
+    if (!NET.user) return;
+    const want = [...new Set(ids.filter(Boolean))].filter(id => !(id in NET.names));
+    if (!want.length) return;
+    try {
+      const ps = await NET.user.profiles(want);
+      let changed = false;
+      for (const id of want) { NET.names[id] = ps[id]?.name || ""; changed = true; }
+      if (changed) { renderOverlay(); render(); }
+    } catch (e) {}
+  }
+
+  function stopSubs() { NET.unsub.forEach(u => { try { u(); } catch (e) {} }); NET.unsub = []; }
+
+  function openLobby() {
+    if (!NET.db) return;
+    leaveRoom();
+    A.screen = "lobby";
+    stopSubs();
+    const q = NET.db.collection("rooms").where("status", "==", "lobby").orderBy("created", "desc").limit(20);
+    NET.unsub.push(q.onSnapshot(snap => {
+      const now = Date.now();
+      NET.rooms = snap.docs.map(d => d.data()).filter(r => r && now - (r.created || 0) < ROOM_TTL);
+      resolveNames(NET.rooms.map(r => r.seats?.x?.uid));
+      if (A.screen === "lobby") renderOverlay();
+    }, () => {}));
+    renderOverlay();
+  }
+
+  function makeCode() {
+    const cs = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    return Array.from({ length: 4 }, () => cs[Math.floor(Math.random() * cs.length)]).join("");
+  }
+  function emptySeats() {
+    const s = { x: { uid: null, cpu: false } };
+    for (let k = 0; k < DET_COUNT; k++) s["d" + k] = { uid: null, cpu: false };
+    return s;
+  }
+
+  async function createRoom() {
+    const code = makeCode();
+    const seats = emptySeats();
+    seats.x.uid = NET.me;
+    try {
+      await roomRef(code).set({ code, created: Date.now(), owner: NET.me, status: "lobby", seats, game: null });
+      enterRoom(code);
+    } catch (e) { toast("ルームを作れませんでした。共有設定で編集できる権限が必要です。"); }
+  }
+
+  function enterRoom(code) {
+    stopSubs();
+    NET.code = code; NET.room = null; NET.chat = []; NET.handledSeq = 0;
+    A.mode = "online"; A.screen = "room"; A.G = null; A.sec = null; A.feed = []; A.showResult = false;
+    NET.unsub.push(roomRef(code).onSnapshot(onRoom, () => {}));
+    NET.unsub.push(NET.db.collection("rooms/" + code + "/chat").orderBy("t", "desc").limit(40).onSnapshot(snap => {
+      NET.chat = snap.docs.map(d => d.data()).reverse();
+      resolveNames(NET.chat.map(c => c.uid));
+      if (A.tab === "chat") renderFeed();
+    }, () => {}));
+    render();
+    renderOverlay();
+  }
+
+  function leaveRoom() {
+    stopSubs();
+    NET.code = null; NET.room = null; NET.chat = [];
+    if (A.mode === "online") { A.mode = null; A.G = null; A.sec = null; }
+  }
+
+  async function onRoom(snap) {
+    if (!snap.exists) { NET.room = null; A.screen = "lobby"; openLobby(); return; }
+    const room = snap.data();
+    const prevG = A.G;
+    NET.room = room;
+    const s = room.seats || {};
+    resolveNames([s.x?.uid, ...Array.from({ length: DET_COUNT }, (_, k) => s["d" + k]?.uid)]);
+
+    if (room.status === "lobby") {
+      A.G = null; A.sec = null; A.screen = "room"; A.showResult = false;
+      render(); renderOverlay();
       return;
     }
-    S.round++;
-    buildQueue();
+    const G = clone(room.game);
+    A.G = G;
+    A.screen = "game";
+    if (iAmX() && !A.sec) {
+      try {
+        const sd = await secretRef(room.code).get();
+        if (sd.exists) A.sec = clone(sd.data());
+      } catch (e) {}
+    }
+    if (prevG && prevG.seq !== G.seq) pushFeed(describe(prevG, G));
+    else if (!prevG) pushFeed([{ n: G.xLog.length, text: "ゲームに接続しました", hot: true }]);
+    if (G.over && !prevG?.over) A.showResult = true;
+    if (!G.over) A.showResult = false;
+    if (A.pending && !isMyTurn()) A.pending = null;
+    render(); renderOverlay();
+    onlineTick();
   }
 
-  function doMove(a, m) {
-    if (a.k === "t") {
-      const t = S.targets[a.i];
-      t.pos = m.to;
-      t.path.push(m.to);
-      if (m.type === "secret") t.secrets--;
-      t.moves[S.round - 1] = m.type;
-      const occ = new Set(S.chasers.map(c => c.pos));
-      const next = new Set();
-      for (const s of t.possible) for (const e of ADJ[s]) {
-        if ((m.type === "secret" || e.type === m.type) && !occ.has(e.to)) next.add(e.to);
+  async function writeGame(G, fields) {
+    const part = {};
+    for (const f of fields) part[f] = G[f];
+    if (G.over) { part.over = true; part.winner = G.winner; part.reason = G.reason; }
+    part.seq = G.seq;
+    const extra = G.over ? { status: "over" } : {};
+    await roomRef(NET.code).update({ game: part, ...extra });
+  }
+  const X_FIELDS = ["xLog", "black", "dbl", "doubling", "possible", "lastSeen", "turn"];
+  const D_FIELDS = ["det", "possible", "turn"];
+
+  // 怪盗Xのクライアントが進行役：逮捕判定・待機・CPU刑事を処理する
+  function onlineTick() {
+    const room = NET.room, G = A.G;
+    if (!room || room.status === "lobby" || !G || NET.busy) return;
+    if (!iAmX() || !A.sec) return;
+    if (G.over) {
+      if (!G.xPath) {
+        NET.busy = true;
+        roomRef(NET.code).update({ game: { xPath: A.sec.path }, status: "over" }).finally(() => { NET.busy = false; });
       }
-      t.possible = [...next];
-      const via = TYPE[m.type].name;
-      if (S.role === "target") addLog(`${tName(a.i)} → ${NAME(m.to)}（${via}）`);
-      else addLog(`${tName(a.i)} が ${via} で移動した`);
-      if (REVEAL.includes(S.round)) {
-        t.possible = [m.to];
-        t.lastSeen = { pos: m.to, round: S.round };
-        addLog(`目撃情報！ ${tName(a.i)} は ${NAME(m.to)} にいる`, true);
-      }
-    } else if (a.k === "a") {
-      S.targets[a.i].pos = m.to;
-      addLog(`${tName(a.i)}（エージェント）→ ${NAME(m.to)}`);
+      return;
+    }
+    if (NET.handledSeq === G.seq) return;
+    const g = clone(G);
+    let fields = null;
+    if (g.det.some(d => d.pos === A.sec.pos)) { finish(g, "d", "caught"); fields = []; }
+    else if (g.turn === "x") {
+      if (!xMoves(g, A.sec).length) { finish(g, "d", "trapped"); fields = []; }
+      else return; // 自分の入力待ち
     } else {
-      const c = S.chasers[a.i];
-      c.pos = m.to;
-      addLog(`${cName(a.i)} → ${NAME(m.to)}`);
-      const hit = S.targets.findIndex(t => t.state === "free" && t.pos === m.to);
-      if (hit >= 0) {
-        addLog(`${cName(a.i)} が ${tName(hit)} を ${NAME(m.to)} で逮捕！`, true);
-        capture(hit);
-      }
-      for (const t of S.targets) {
-        if (t.state === "free") t.possible = t.possible.filter(p => p !== m.to);
-      }
+      const k = g.turn;
+      const seat = room.seats["d" + k] || {};
+      if (allStuck(g)) { finish(g, "x", "stuck"); fields = []; }
+      else if (!detMoves(g, k).length) { skipD(g, k); fields = D_FIELDS; }
+      else if (seat.cpu || !seat.uid) {
+        NET.busy = true;
+        NET.handledSeq = G.seq;
+        clearTimeout(timer);
+        timer = setTimeout(async () => {
+          const m = aiD(g, k);
+          applyD(g, k, m.to, m.type);
+          if (g.det.some(d => d.pos === A.sec.pos)) finish(g, "d", "caught");
+          try { await writeGame(g, D_FIELDS); } catch (e) { NET.handledSeq = 0; }
+          NET.busy = false;
+        }, AI_DELAY);
+        return;
+      } else return; // 人間の刑事の入力待ち
     }
+    NET.busy = true;
+    NET.handledSeq = G.seq;
+    writeGame(g, fields).catch(() => { NET.handledSeq = 0; }).finally(() => { NET.busy = false; });
   }
 
-  function capture(i) {
-    const t = S.targets[i];
-    const othersFree = S.targets.some((o, j) => j !== i && o.state === "free");
-    t.state = othersFree ? "agent" : "caught";
-    t.possible = [t.pos];
-    t.lastSeen = { pos: t.pos, round: S.round };
-    if (othersFree) {
-      addLog(`${tName(i)} はエージェントになった。警官はエージェントのいる駅に入れない`);
-    } else {
-      S.over = true;
-      S.winner = "chaser";
-      addLog("全員逮捕！警察の勝ち", true);
-    }
+  async function sit(key) {
+    const s = NET.room?.seats?.[key];
+    if (!s || (s.uid && s.uid !== NET.me)) return;
+    try { await roomRef(NET.code).update({ seats: { [key]: { uid: NET.me, cpu: false } } }); }
+    catch (e) { toast("席に座れませんでした。"); }
+  }
+  async function standUp(key) {
+    try { await roomRef(NET.code).update({ seats: { [key]: { uid: null, cpu: false } } }); } catch (e) {}
+  }
+  async function toggleCpu(key) {
+    const s = NET.room?.seats?.[key];
+    if (!s) return;
+    try { await roomRef(NET.code).update({ seats: { [key]: { uid: null, cpu: !s.cpu } } }); } catch (e) {}
   }
 
-  // ================= CPU =================
-  function aiMove(a, moves) {
-    if (a.k === "t") return aiTarget(a.i, moves);
-    if (a.k === "a") return aiAgent(a.i, moves);
-    return aiChaser(a.i, moves);
+  async function startOnline() {
+    const room = NET.room;
+    if (!room || !iAmX()) return;
+    const { G, sec } = newGame(DET_COUNT);
+    const seats = clone(room.seats);
+    for (let k = 0; k < DET_COUNT; k++) if (!seats["d" + k].uid) seats["d" + k].cpu = true;
+    try {
+      await secretRef(room.code).set(sec);
+      A.sec = sec;
+      NET.handledSeq = 0;
+      A.feed = [];
+      await roomRef(room.code).set({ ...room, status: "play", seats, game: G, started: Date.now() });
+    } catch (e) { toast("ゲームを始められませんでした。"); }
   }
 
-  function possibleAfter(t, type) {
-    const occ = new Set(S.chasers.map(c => c.pos));
-    const next = new Set();
-    for (const s of t.possible) for (const e of ADJ[s]) {
-      if ((type === "secret" || e.type === type) && !occ.has(e.to)) next.add(e.to);
-    }
-    return next.size;
+  async function backToRoom() {
+    if (!NET.room) return;
+    try { await roomRef(NET.code).update({ status: "lobby", game: null }); } catch (e) {}
   }
 
-  function aiTarget(i, moves) {
-    const t = S.targets[i];
-    const cpos = S.chasers.map(c => c.pos);
-    let best = null, bestScore = -Infinity;
-    for (const to of new Set(moves.map(m => m.to))) {
-      const dmin = Math.min(...cpos.map(c => D[to][c]));
-      const dsum = cpos.reduce((s, c) => s + Math.min(D[to][c], 5), 0);
-      const exits = ADJ[to].filter(e => !cpos.some(c => D[e.to][c] <= 1)).length;
-      let score = Math.min(dmin, 4) * 10 + dsum + exits * 1.5 + Math.random() * 3;
-      if (dmin <= 1) score -= 40;
-      if (score > bestScore) { bestScore = score; best = to; }
-    }
-    // 交通手段の選択：推理されにくい方（候補駅が増える方）を選ぶ
-    const opts = moves.filter(m => m.to === best).map(m => m.type);
-    let type = opts[0], size = -1;
-    for (const ty of opts) { const n = possibleAfter(t, ty); if (n > size) { size = n; type = ty; } }
-    const danger = Math.min(...cpos.map(c => D[t.pos][c])) <= 2;
-    const justRevealed = REVEAL.includes(S.round - 1);
-    if (t.secrets > 0 && !REVEAL.includes(S.round) &&
-        ((justRevealed && Math.random() < 0.7) || (danger && Math.random() < 0.35))) {
-      type = "secret";
-    }
-    return { to: best, type };
+  async function sendChat(text) {
+    if (!NET.code || !text.trim()) return;
+    try { await NET.db.collection("rooms/" + NET.code + "/chat").add({ uid: NET.me, text: text.trim().slice(0, 120), t: Date.now() }); }
+    catch (e) { toast("送信できませんでした。"); }
   }
 
-  function aiAgent(i, moves) {
-    const free = S.targets.find(t => t.state === "free");
-    if (!free) return moves[0];
-    let near = S.chasers[0];
-    for (const c of S.chasers) if (D[c.pos][free.pos] < D[near.pos][free.pos]) near = c;
-    let best = moves[0], bs = Infinity;
-    for (const m of moves) {
-      const s = D[m.to][near.pos] + D[m.to][free.pos] * 0.6 + Math.random() * 0.5;
-      if (s < bs) { bs = s; best = m; }
+  // ======================================================================
+  // 入力
+  // ======================================================================
+  async function commitX(to, type, useDouble) {
+    if (A.mode === "local") {
+      localApply(() => applyX(A.G, A.sec, to, type, useDouble));
+      A.pending = null; A.useBlack = false; A.useDouble = false;
+      localStep();
+      return;
     }
-    return best;
+    const g = clone(A.G), s = clone(A.sec);
+    applyX(g, s, to, type, useDouble);
+    A.pending = null; A.useBlack = false; A.useDouble = false;
+    try {
+      await secretRef(NET.code).set(s);
+      A.sec = s;
+      await writeGame(g, X_FIELDS);
+    } catch (e) { toast("移動を送れませんでした。もう一度試してください。"); }
   }
 
-  function aiChaser(ci, moves) {
-    const free = S.targets.filter(t => t.state === "free");
-    let best = moves[0], bs = -Infinity;
-    const seen = new Set();
-    for (const m of moves) {
-      if (seen.has(m.to)) continue;
-      seen.add(m.to);
-      let prob = 0, ed = 0;
-      free.forEach((t, k) => {
-        const focus = free.length > 1 ? (k === ci % 2 ? 0.7 : 0.3) : 1;
-        const P = t.possible;
-        const w = 1 / P.length;
-        if (P.includes(m.to)) prob += w;
-        let s = 0;
-        for (const p of P) s += Math.min(D[m.to][p], 8);
-        ed += s * w * focus;
-      });
-      let spread = 0;
-      S.chasers.forEach((o, j) => { if (j !== ci && D[m.to][o.pos] <= 1) spread -= 1.5; });
-      const score = prob * 30 - ed * 4 + spread + Math.random() * 0.8;
-      if (score > bs) { bs = score; best = m; }
+  async function commitD(k, to, type) {
+    if (A.mode === "local") {
+      localApply(() => applyD(A.G, k, to, type));
+      A.pending = null;
+      localStep();
+      return;
     }
-    return best;
+    const g = clone(A.G);
+    applyD(g, k, to, type);
+    A.pending = null;
+    try { await writeGame(g, D_FIELDS); } catch (e) { toast("移動を送れませんでした。"); }
   }
 
-  // ================= プレイヤー操作 =================
   function onStation(id) {
-    if (!S || S.over) return;
-    const a = current();
-    if (!a || !isHuman(a)) return;
-    const opts = legal(a).filter(m => m.to === id);
-    if (!opts.length) return;
-    if (a.k === "t") {
-      const t = S.targets[a.i];
-      if (S.useSecret && t.secrets > 0) return commit(a, { to: id, type: "secret" });
-      const types = [...new Set(opts.map(o => o.type))];
-      if (types.length > 1) { S.pending = { to: id, types }; render(); return; }
-      return commit(a, { to: id, type: types[0] });
+    if (!isMyTurn()) return;
+    const G = A.G;
+    if (G.turn === "x") {
+      const opts = xMoves(G, A.sec).filter(m => m.to === id);
+      if (!opts.length) return;
+      const dbl = A.useDouble && canDouble(G);
+      if (A.useBlack && G.black > 0) return commitX(id, "black", dbl);
+      const types = [...new Set(opts.map(o => o.type).filter(t => t !== "black"))];
+      if (!types.length) { A.pending = { to: id, types: ["black"] }; render(); return; }
+      if (types.length > 1) { A.pending = { to: id, types }; render(); return; }
+      return commitX(id, types[0], dbl);
     }
-    commit(a, opts[0]);
+    const k = G.turn;
+    const opts = detMoves(G, k).filter(m => m.to === id);
+    if (!opts.length) return;
+    const types = [...new Set(opts.map(o => o.type))];
+    if (types.length > 1) { A.pending = { to: id, types }; render(); return; }
+    commitD(k, id, types[0]);
   }
 
-  function commit(a, m) {
-    doMove(a, m);
-    S.useSecret = false;
-    S.pending = null;
-    S.qi++;
-    step();
-  }
-
-  // ================= 背景（街の地図） =================
+  // ======================================================================
+  // 描画
+  // ======================================================================
   function buildBackground() {
     const g = $("gBg");
     el("rect", { x: 0, y: 0, width: 1400, height: 750, class: "bg-land" }, g);
     el("rect", { x: 0, y: 0, width: 1400, height: 750, fill: "url(#blocks)" }, g);
-
-    // 元の座標系で描いて横長に変換する
     const w = el("g", { transform: "matrix(1.45 0 0 0.9 -12.5 30)" }, g);
-    // 幹線道路
     const roads = [
       "M 0,300 C 200,290 400,300 560,330 C 700,355 820,340 990,330",
       "M 300,0 C 320,160 300,300 310,420 C 320,560 330,680 340,800",
@@ -913,23 +1182,17 @@
       "M 620,0 C 640,120 650,220 660,330",
     ];
     for (const d of roads) el("path", { d, class: "bg-road", "vector-effect": "non-scaling-stroke" }, w);
-    // 東京湾
     el("path", { d: "M 440,800 C 520,770 600,760 660,742 C 705,728 722,700 742,662 C 762,628 820,640 862,620 C 905,600 950,602 1000,590 L 1000,800 Z", class: "bg-water" }, w);
-    // 埋立地（月島・豊洲）
     el("ellipse", { cx: 800, cy: 604, rx: 52, ry: 36, class: "bg-land" }, w);
     el("ellipse", { cx: 918, cy: 672, rx: 62, ry: 44, class: "bg-land" }, w);
-    // 隅田川・神田川
     el("path", { d: "M 935,-10 C 915,60 908,110 915,160 C 922,220 892,262 880,320 C 868,380 822,440 815,500 C 812,540 792,560 772,572 C 752,590 742,620 746,662", class: "bg-river", "stroke-width": 20, "vector-effect": "non-scaling-stroke" }, w);
     el("path", { d: "M 430,212 C 520,238 600,250 680,256 C 760,262 830,300 890,300", class: "bg-river", "stroke-width": 8, "vector-effect": "non-scaling-stroke" }, w);
-    // 皇居と公園
     el("ellipse", { cx: 520, cy: 385, rx: 58, ry: 50, class: "bg-moat", "vector-effect": "non-scaling-stroke" }, w);
     el("ellipse", { cx: 272, cy: 420, rx: 36, ry: 26, class: "bg-park" }, w);
     el("ellipse", { cx: 118, cy: 482, rx: 40, ry: 38, class: "bg-park" }, w);
     el("ellipse", { cx: 675, cy: 118, rx: 40, ry: 30, class: "bg-park" }, w);
     el("ellipse", { cx: 470, cy: 530, rx: 26, ry: 18, class: "bg-park" }, w);
-
-    // 区名・地名（ゆがませないよう変換後の座標で置く）
-    const txt = (x, y, s, cls) => { const t = el("text", { x: MX(x), y: MY(y), class: cls, "text-anchor": "middle" }, g); t.textContent = s; };
+    const txt = (x, y, s, cls) => { el("text", { x: MX(x), y: MY(y), class: cls, "text-anchor": "middle" }, g).textContent = s; };
     txt(330, 175, "TOSHIMA", "bg-ward");
     txt(110, 300, "SHINJUKU", "bg-ward");
     txt(560, 440, "CHIYODA", "bg-ward");
@@ -943,20 +1206,14 @@
     txt(655, 98, "上野公園", "bg-place");
     txt(620, 780, "東 京 湾", "bg-place water");
     txt(958, 200, "隅田川", "bg-place water");
-
-    // 方位記号
     const cx = 1350, cy = 60;
-    el("circle", { cx, cy, r: 26, class: "bg-inkline", "stroke-width": 1.5, opacity: 0.5 }, g);
-    el("path", { d: `M ${cx},${cy - 22} L ${cx + 7},${cy} L ${cx},${cy + 22} L ${cx - 7},${cy} Z`, class: "bg-ink", opacity: 0.55 }, g);
-    const n = el("text", { x: cx, y: cy - 30, "text-anchor": "middle", class: "bg-place" }, g);
-    n.textContent = "N";
-    // 縮尺
-    el("path", { d: "M 30,730 h 120 M 30,724 v 12 M 90,726 v 8 M 150,724 v 12", class: "bg-inkline", "stroke-width": 2, opacity: 0.5 }, g);
-    const sc = el("text", { x: 158, y: 735, class: "bg-place" }, g);
-    sc.textContent = "2 km";
+    el("circle", { cx, cy, r: 26, class: "bg-inkline", "stroke-width": 1.5, opacity: 0.6 }, g);
+    el("path", { d: `M ${cx},${cy - 22} L ${cx + 7},${cy} L ${cx},${cy + 22} L ${cx - 7},${cy} Z`, class: "bg-ink", opacity: 0.7 }, g);
+    el("text", { x: cx, y: cy - 30, "text-anchor": "middle", class: "bg-place" }, g).textContent = "N";
+    el("path", { d: "M 30,730 h 120 M 30,724 v 12 M 90,726 v 8 M 150,724 v 12", class: "bg-inkline", "stroke-width": 2, opacity: 0.6 }, g);
+    el("text", { x: 158, y: 735, class: "bg-place" }, g).textContent = "2 km";
   }
 
-  // ================= 描画 =================
   function buildMap() {
     buildBackground();
     const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels"), gH = $("gHits");
@@ -972,296 +1229,408 @@
         const grp = el("g", {}, gE);
         el("title", {}, grp).textContent = `${types.get(t).join("・")}（${TYPE[t].name}）`;
         el("line", { ...pts, class: `edge ${t} base` }, grp);
-        if (t !== "bus") el("line", { ...pts, class: `edge ${t} tie` }, grp);
+        if (t === "train" || t === "subway") el("line", { ...pts, class: `edge ${t} tie` }, grp);
       });
     }
     STATIONS.forEach(([name, x, y, dx, dy, anchor], i) => {
       el("circle", { cx: x, cy: y, r: 12, class: "stn" }, gS);
-      const tx = el("text", { x: x + dx, y: y + dy, "text-anchor": anchor, class: "stn-label", "dominant-baseline": "middle" }, gL);
-      tx.textContent = name;
-      const hit = el("circle", { cx: x, cy: y, r: 30, class: "stn-hit", "data-id": i }, gH);
+      el("text", { x: x + dx, y: y + dy, "text-anchor": anchor, class: "stn-label", "dominant-baseline": "middle" }, gL).textContent = name;
+      const hit = el("circle", { cx: x, cy: y, r: 30, class: "stn-hit" }, gH);
       hit.addEventListener("click", () => onStation(i));
     });
   }
 
   function buildLegend() {
-    const sw = (t) => `<svg class="sw" viewBox="0 0 38 12" aria-hidden="true"><line x1="3" y1="6" x2="35" y2="6" class="edge ${t} base"></line>${t !== "bus" ? `<line x1="3" y1="6" x2="35" y2="6" class="edge ${t} tie"></line>` : ""}</svg>`;
+    const sw = t => `<svg class="sw" viewBox="0 0 38 12" aria-hidden="true"><line x1="3" y1="6" x2="35" y2="6" class="edge ${t} base"></line>${t === "train" || t === "subway" ? `<line x1="3" y1="6" x2="35" y2="6" class="edge ${t} tie"></line>` : ""}</svg>`;
     $("legend").innerHTML =
-      `<span>${sw("train")}電車</span><span>${sw("subway")}地下鉄</span><span>${sw("bus")}バス</span>` +
-      `<span>${face("c")}警官（警察）</span><span>${face("t")}泥棒</span><span>${face("a")}エージェント（捕まった泥棒）</span>`;
-    $("brandChars").innerHTML = face("t") + face("c");
+      `<span>${sw("train")}電車</span><span>${sw("subway")}地下鉄</span><span>${sw("bus")}バス</span><span>${sw("ferry")}水上バス（黒チケットのみ）</span>` +
+      `<span>${face("x")}怪盗X</span><span>${face("d", 0)}${face("d", 1)}${face("d", 2)}${face("d", 3)}刑事</span>`;
+    $("brandChars").innerHTML = face("x") + face("d", 0);
   }
 
   function render() {
-    if (!S) return;
     renderHeader();
     renderMapState();
     renderTurn();
     renderBoard();
-    renderLog();
-    renderOverlay();
+    renderFeed();
+    if (A.mode === "local") renderOverlay();
   }
 
   function renderHeader() {
-    $("roundNo").textContent = String(S.round).padStart(2, "0") + "/" + MAX_ROUNDS;
-    const nr = REVEAL.find(r => r >= S.round);
-    $("nextReveal").textContent = S.over ? "ゲーム終了"
-      : nr === undefined ? "目撃情報なし"
-      : nr === S.round ? "このラウンドに目撃情報" : `次の目撃情報 R${nr}`;
+    const G = A.G;
+    $("roundNo").textContent = G ? String(G.xLog.length).padStart(2, "0") + "/" + MAX_MOVES : "--/" + MAX_MOVES;
+    const nx = G ? REVEAL.find(r => r > G.xLog.length) : undefined;
+    $("nextReveal").textContent = !G ? "次の出現 --" : G.over ? "ゲーム終了" : nx === undefined ? "出現なし" : `次の出現 ${nx}手目`;
     const hb = $("hintBtn");
-    hb.hidden = S.role !== "chaser";
-    hb.setAttribute("aria-pressed", String(S.hints));
+    hb.hidden = !G || iAmX();
+    hb.setAttribute("aria-pressed", String(A.hints));
+    $("tabChat").hidden = A.mode !== "online";
+    if (A.mode !== "online" && A.tab === "chat") A.tab = "log";
+    $("tabLog").setAttribute("aria-selected", String(A.tab === "log"));
+    $("tabChat").setAttribute("aria-selected", String(A.tab === "chat"));
+    $("chatForm").hidden = A.tab !== "chat";
+  }
+
+  function xVisiblePos() {
+    const G = A.G;
+    if (!G) return null;
+    if (iAmX() && A.sec) return A.sec.pos;
+    if (G.over && G.xPath) return G.xPath[G.xPath.length - 1];
+    return null;
   }
 
   function renderMapState() {
     const gP = $("gPoss"), gT = $("gTokens"), gD = $("gDest"), gTr = $("gTrail");
     gP.replaceChildren(); gT.replaceChildren(); gD.replaceChildren(); gTr.replaceChildren();
-    const a = S.over ? null : current();
-    const human = a && isHuman(a);
-    const reveal = S.role === "target" || S.over;
+    const hitEls = document.querySelectorAll(".stn-hit");
+    hitEls.forEach(h => h.classList.remove("can"));
+    const G = A.G;
+    if (!G) return;
+    const xPos = xVisiblePos();
 
-    // 推理ヒント（警察側）
-    if (!reveal && S.hints) {
-      const seen = new Set();
-      for (const t of S.targets) if (t.state === "free") for (const p of t.possible) {
-        if (seen.has(p)) continue;
-        seen.add(p);
+    if (!iAmX() && A.hints && !G.over) {
+      for (const p of G.possible) {
         const [, x, y] = STATIONS[p];
         el("circle", { cx: x, cy: y, r: 26, class: "poss" }, gP);
       }
     }
-
-    // ゲーム終了後：泥棒の逃走経路
-    if (S.over) {
-      for (const t of S.targets) {
-        const pts = t.path.map(p => STATIONS[p][1] + "," + STATIONS[p][2]).join(" ");
-        el("polyline", { points: pts, class: "trail" }, gTr);
-      }
+    const path = G.over ? G.xPath : (iAmX() && A.sec ? A.sec.path : null);
+    if (path && path.length > 1) {
+      el("polyline", { points: path.map(p => STATIONS[p][1] + "," + STATIONS[p][2]).join(" "), class: "trail", opacity: G.over ? 0.9 : 0.35 }, gTr);
     }
 
-    // 移動できる駅
-    const hitEls = document.querySelectorAll(".stn-hit");
-    hitEls.forEach(h => h.classList.remove("can"));
-    if (human) {
-      const dests = new Set(legal(a).map(m => m.to));
+    if (isMyTurn()) {
+      const dests = G.turn === "x" ? new Set(xMoves(G, A.sec).map(m => m.to)) : new Set(detMoves(G, G.turn).map(m => m.to));
       for (const d of dests) {
         const [, x, y] = STATIONS[d];
         el("circle", { cx: x, cy: y, r: 21, class: "dest pulse" }, gD);
         hitEls[d].classList.add("can");
       }
-      if (S.pending) {
-        const [, x, y] = STATIONS[S.pending.to];
-        el("circle", { cx: x, cy: y, r: 21, class: "dest", style: "stroke: var(--target); stroke-width: 4.5" }, gD);
+      if (A.pending) {
+        const [, x, y] = STATIONS[A.pending.to];
+        el("circle", { cx: x, cy: y, r: 21, class: "dest", style: "stroke: var(--xrim); stroke-width: 4.5" }, gD);
       }
     }
 
-    // コマ
+    if (xPos === null && G.lastSeen && !G.over) {
+      const [, x, y] = STATIONS[G.lastSeen.pos];
+      el("circle", { cx: x, cy: y, r: 24, class: "lastseen" }, gT);
+      el("text", { x: x + 26, y: y - 24, class: "lastseen-label" }, gT).textContent = `X? ${G.lastSeen.n}手目`;
+    }
+
     const stack = {};
-    const place = (p) => { stack[p] = (stack[p] || 0) + 1; return stack[p] - 1; };
-    const offset = (k) => [[0, 0], [22, -18], [-22, -18], [22, 18]][k] || [0, 0];
-
-    // 最後の目撃位置（警察側）
-    if (!reveal) {
-      S.targets.forEach((t, i) => {
-        if (t.state !== "free" || !t.lastSeen) return;
-        const [, x, y] = STATIONS[t.lastSeen.pos];
-        el("circle", { cx: x, cy: y, r: 22, class: "lastseen" }, gT);
-        const lb = el("text", { x: x + 24, y: y - 22, class: "lastseen-label" }, gT);
-        lb.textContent = `${tName(i)}? R${t.lastSeen.round}`;
-      });
-    }
-
-    S.targets.forEach((t, i) => {
-      if (t.state === "caught") {
-        drawToken(gT, "t", i + 1, t.pos, place(t.pos), offset, false, 0.45);
-        return;
-      }
-      if (t.state === "agent") {
-        drawToken(gT, "a", i + 1, t.pos, place(t.pos), offset, a && a.k === "a" && a.i === i);
-        return;
-      }
-      if (reveal) drawToken(gT, "t", i + 1, t.pos, place(t.pos), offset, a && a.k === "t" && a.i === i);
-    });
-    S.chasers.forEach((c, i) => {
-      drawToken(gT, "c", i + 1, c.pos, place(c.pos), offset, a && a.k === "c" && a.i === i);
-    });
+    const place = p => { stack[p] = (stack[p] || 0) + 1; return stack[p] - 1; };
+    const offset = k => [[0, 0], [22, -18], [-22, -18], [22, 18], [-22, 18]][k] || [0, 0];
+    if (xPos !== null) drawToken(gT, "x", 0, xPos, offset(place(xPos)), G.turn === "x" && !G.over);
+    G.det.forEach((d, k) => drawToken(gT, "d", k, d.pos, offset(place(d.pos)), G.turn === k && !G.over));
   }
 
-  function drawToken(g, kind, num, pos, k, offset, active, opacity = 1) {
+  function drawToken(g, kind, k, pos, [ox, oy], active) {
     const [, sx, sy] = STATIONS[pos];
-    const [ox, oy] = offset(k);
-    const grp = el("g", { class: "tok " + kind, opacity, transform: `translate(${sx + ox} ${sy + oy})` }, g);
+    const grp = el("g", { class: "tok", transform: `translate(${sx + ox} ${sy + oy})` }, g);
     if (active) el("circle", { r: 29, class: "ring" }, grp);
-    el("circle", { r: 23, class: "disc " + kind }, grp);
-    el("use", { href: kind === "c" ? "#chr-police" : "#chr-thief", x: -23, y: -23, width: 46, height: 46 }, grp);
-    el("circle", { cx: 17, cy: 17, r: 9, class: "num" }, grp);
-    el("text", { x: 17, y: 17.5, class: "num-t" }, grp).textContent = num;
+    if (kind === "x") {
+      el("circle", { r: 23, class: "disc x" }, grp);
+      el("use", { href: "#chr-x", x: -23, y: -23, width: 46, height: 46 }, grp);
+    } else {
+      el("circle", { r: 23, class: "disc", fill: DCOL[k % DCOL.length] }, grp);
+      el("use", { href: "#chr-d", x: -23, y: -23, width: 46, height: 46 }, grp);
+      el("circle", { cx: 17, cy: 17, r: 9, class: "num" }, grp);
+      el("text", { x: 17, y: 17.5, class: "num-t" }, grp).textContent = k + 1;
+    }
   }
 
-  function whoBadge(a) {
-    const kind = a.k;
-    return `<span class="who">${face(kind)}${a.i + 1}</span>`;
+  function turnOwnerLabel(G) {
+    if (G.turn === "x") return { html: `${face("x")} 怪盗X`, who: seatLabel("x") };
+    return { html: `${face("d", G.turn)} ${dName(G.turn)}`, who: seatLabel("d" + G.turn) };
   }
 
   function renderTurn() {
     const card = $("turnCard");
-    if (S.over) {
-      const win = (S.winner === S.role);
+    const G = A.G;
+    if (!G) {
+      card.innerHTML = `<div class="label">いまの手番</div><p class="turn-help">${A.screen === "room" ? "ルームでメンバーを待っています。" : "モードを選ぶとゲームが始まります。"}</p>`;
+      return;
+    }
+    if (G.over) {
+      const iWon = iAmX() ? G.winner === "x" : (A.mode === "local" || mySeatsD().length ? G.winner === "d" : null);
       card.innerHTML = `
         <div class="label">結果</div>
-        <div class="turn-title">${win ? "あなたの勝ち！" : "あなたの負け…"}</div>
-        <p class="turn-help">${S.winner === "target" ? "泥棒が逃げ切りました。" : "警察が泥棒を全員逮捕しました。"}地図上の赤い点線が泥棒の逃走経路です。</p>
-        <div class="row"><button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="menu">役割を選び直す</button></div>`;
+        <div class="turn-title">${iWon === null ? (G.winner === "x" ? "怪盗Xの勝ち" : "刑事チームの勝ち") : iWon ? "あなたの勝ち！" : "あなたの負け…"}</div>
+        <p class="turn-help">地図上の赤い点線が怪盗Xの逃走経路です。</p>
+        <div class="row">${resultButtons()}</div>`;
       return;
     }
-    const a = current();
-    if (!isHuman(a)) {
+    const owner = turnOwnerLabel(G);
+    if (!isMyTurn()) {
+      const waitingX = G.turn === "x" && A.mode === "online" && !iAmX();
       card.innerHTML = `
         <div class="label">いまの手番</div>
-        <div class="turn-title">${whoBadge(a)} ${actorName(a)}（CPU）が考え中…</div>
-        <p class="turn-help">${a.k === "t" ? "泥棒がどの交通手段を使ったかは、移動記録に残ります。" : "しばらくお待ちください。"}</p>`;
+        <div class="turn-title"><span class="who">${owner.html}</span><small style="color:var(--muted);font-weight:400">${esc(owner.who)}</small></div>
+        <p class="turn-help">${waitingX ? "怪盗Xが逃げ道を考えています…" : owner.who === "CPU" ? "CPUが考え中…" : "相手の操作を待っています。"}</p>`;
       return;
     }
-    const moves = legal(a);
-    const byDest = new Map();
-    for (const m of moves) {
-      if (!byDest.has(m.to)) byDest.set(m.to, new Set());
-      byDest.get(m.to).add(m.type);
+    let help = "", extra = "", chips = "";
+    if (G.turn === "x") {
+      const moves = xMoves(G, A.sec);
+      const byDest = new Map();
+      for (const m of moves) { if (!byDest.has(m.to)) byDest.set(m.to, new Set()); byDest.get(m.to).add(m.type); }
+      chips = [...byDest.entries()].sort((a, b) => a[0] - b[0]).map(([to, ts]) =>
+        `<button class="chip" data-act="go" data-to="${to}">${NAME(to)}<span class="dots">${[...TYPE_ORDER.filter(t => ts.has(t) || (t === "ferry" && ts.has("black") && ADJ[A.sec.pos].some(e => e.to === to && e.type === "ferry")))].map(t => `<span class="dot ${t}"></span>`).join("")}</span></button>`).join("");
+      help = G.doubling ? "2倍移動の2手目です。続けてもう1駅動いてください。" : "逃げる駅を選んでください。使った切符の種類は刑事に知られます。";
+      extra = `<div class="row">
+        <button class="btn ghost small toggle" data-act="black" aria-pressed="${A.useBlack}" ${G.black ? "" : "disabled"}>黒チケット（残り ${G.black}）</button>
+        <button class="btn ghost small toggle" data-act="double" aria-pressed="${A.useDouble}" ${canDouble(G) ? "" : "disabled"}>2倍移動（残り ${G.dbl}）</button>
+      </div>`;
+    } else {
+      const k = G.turn;
+      const moves = detMoves(G, k);
+      const byDest = new Map();
+      for (const m of moves) { if (!byDest.has(m.to)) byDest.set(m.to, new Set()); byDest.get(m.to).add(m.type); }
+      chips = [...byDest.entries()].sort((a, b) => a[0] - b[0]).map(([to, ts]) =>
+        `<button class="chip" data-act="go" data-to="${to}">${NAME(to)}<span class="dots">${DET_TYPES.filter(t => ts.has(t)).map(t => `<span class="dot ${t}"></span>`).join("")}</span></button>`).join("");
+      help = "怪盗Xのいる駅に入れば逮捕。赤くにじんだ駅はXがいるかもしれない場所です。切符には限りがあります。";
     }
-    let help;
-    if (a.k === "t") help = "移動する駅を地図か下のボタンで選んでください。使った交通手段は警察に知られます。";
-    else if (a.k === "a") help = "エージェントの姿は見えていますが、警官はこの駅に入れません。仲間の逃げ道を守りましょう。";
-    else help = "泥棒のいる駅に入れば逮捕。赤くにじんだ駅は泥棒がいるかもしれない場所です。";
-
-    let extra = "";
-    if (a.k === "t") {
-      const t = S.targets[a.i];
-      extra += `<div class="row">
-        <button class="btn ghost small toggle" data-act="secret" aria-pressed="${S.useSecret}" ${t.secrets ? "" : "disabled"}>
-          シークレット切符を使う（残り ${t.secrets}）</button></div>`;
-      if (S.pending) {
-        extra += `<div class="label">${NAME(S.pending.to)} へ行く手段</div><div class="chips">` +
-          S.pending.types.map(ty => `<button class="chip" data-act="via" data-type="${ty}"><span class="dot ${ty}"></span>${TYPE[ty].name}で行く</button>`).join("") +
-          `</div>`;
-      }
+    if (A.pending) {
+      extra += `<div class="label">${NAME(A.pending.to)} へ使う切符</div><div class="chips">` +
+        A.pending.types.map(ty => `<button class="chip" data-act="via" data-type="${ty}"><span class="dot ${ty}"></span>${TYPE[ty].name}</button>`).join("") + `</div>`;
     }
-    const chips = [...byDest.entries()].sort((x, y) => x[0] - y[0]).map(([to, types]) =>
-      `<button class="chip" data-act="go" data-to="${to}">${NAME(to)}<span class="dots">${TYPE_ORDER.filter(t => types.has(t)).map(t => `<span class="dot ${t}"></span>`).join("")}</span></button>`
-    ).join("");
-
     card.innerHTML = `
       <div class="label">あなたの番</div>
-      <div class="turn-title">${whoBadge(a)} ${actorName(a)} を動かす</div>
+      <div class="turn-title"><span class="who">${owner.html}</span> を動かす</div>
       <p class="turn-help">${help}</p>
       <div class="chips">${chips}</div>
       ${extra}`;
   }
 
-  function renderBoard() {
-    const reveal = S.role === "target" || S.over;
-    let html = `<div class="board-nums"><span></span>` +
-      Array.from({ length: MAX_ROUNDS }, (_, r) => `<span class="${REVEAL.includes(r + 1) ? "rv" : ""}">${r + 1}</span>`).join("") + `</div>`;
-    S.targets.forEach((t, i) => {
-      html += `<div class="board-row"><span class="who">${face(t.state === "agent" ? "a" : "t")}${i + 1}</span>`;
-      for (let r = 0; r < MAX_ROUNDS; r++) {
-        const mv = t.moves[r];
-        const cls = ["cell"];
-        if (mv) cls.push(mv);
-        if (REVEAL.includes(r + 1)) cls.push("reveal");
-        if (!S.over && r + 1 === S.round) cls.push("now");
-        let title = `ラウンド${r + 1}`;
-        if (mv) title += `：${TYPE[mv].name}`;
-        if (mv && (reveal || REVEAL.includes(r + 1))) title += `（${NAME(t.path[t.moves.slice(0, r + 1).filter(Boolean).length])}）`;
-        html += `<span class="${cls.join(" ")}" title="${title}">${mv ? TYPE[mv].short : ""}</span>`;
-      }
-      html += `</div>`;
-    });
-    $("board").innerHTML = html;
+  function resultButtons() {
+    if (A.mode === "local") return `<button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="menu">メニュー</button>`;
+    return iAmX()
+      ? `<button class="btn" data-act="toRoom">ルームに戻る</button><button class="btn ghost" data-act="lobby">ロビーへ</button>`
+      : `<button class="btn ghost" data-act="lobby">ロビーへ</button>`;
   }
 
-  function renderLog() {
-    $("log").innerHTML = S.log.map(l =>
-      `<li class="${l.hot ? "hot" : ""}"><span class="r">R${String(l.r).padStart(2, "0")}</span><span>${l.text}</span></li>`
-    ).join("");
+  function renderBoard() {
+    const G = A.G;
+    const showPos = G && ((iAmX() && A.sec) || (G.over && G.xPath));
+    const path = G ? (iAmX() && A.sec ? A.sec.path : G.xPath) : null;
+    let html = "";
+    for (let i = 0; i < MAX_MOVES; i++) {
+      const e = G?.xLog[i];
+      const cls = ["slot"];
+      if (e) cls.push(e.t);
+      if (REVEAL.includes(i + 1)) cls.push("reveal");
+      if (G && !G.over && i === G.xLog.length && G.turn === "x") cls.push("now");
+      let st = "";
+      if (e && e.p !== null) st = NAME(e.p);
+      else if (e && showPos && path) st = NAME(path[i + 1]);
+      html += `<div class="${cls.join(" ")}" title="${i + 1}手目${e ? "：" + TYPE[e.t].name : ""}${st ? "（" + st + "）" : ""}">
+        <span class="n">${i + 1}</span>${e?.d ? `<span class="dbl">2×</span>` : ""}
+        <span>${e ? TYPE[e.t].short : REVEAL.includes(i + 1) ? "？" : ""}</span>
+        ${st ? `<span class="st">${st}</span>` : ""}</div>`;
+    }
+    $("xlog").innerHTML = html;
+    $("xinfo").innerHTML = G
+      ? `${face("x")}<span>怪盗X（${esc(seatLabel("x"))}）</span><span class="tk black ${G.black ? "" : "zero"}">黒 ${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2× ${G.dbl}</span>`
+      : `<span class="turn-help">怪盗Xの切符：黒チケット ${X_BLACK}枚・2倍移動 ${X_DOUBLE}枚（電車・地下鉄・バスは使い放題）</span>`;
+    const dets = G ? G.det : Array.from({ length: DET_COUNT }, () => ({ t: DET_TICKETS }));
+    $("dets").innerHTML = dets.map((d, k) => `
+      <div class="det-row ${G && !G.over && G.turn === k ? "active" : ""}">
+        ${face("d", k)}
+        <span class="nm">${dName(k)} <small>${esc(G ? seatLabel("d" + k) : "")}</small></span>
+        <span class="tks">${DET_TYPES.map(t => `<span class="tk ${t} ${d.t[t] ? "" : "zero"}">${TYPE[t].short} ${d.t[t]}</span>`).join("")}</span>
+      </div>`).join("");
+  }
+
+  function renderFeed() {
+    const f = $("feed");
+    if (A.tab === "chat" && A.mode === "online") {
+      f.innerHTML = NET.chat.length ? NET.chat.slice().reverse().map(c =>
+        `<li class="chat"><span class="who-n" style="color:${c.uid === NET.me ? "var(--accent)" : "var(--ink)"}">${esc(c.uid === NET.me ? "あなた" : (NET.names[c.uid] || "プレイヤー"))}</span><span>${esc(c.text)}</span></li>`).join("")
+        : `<li><span class="turn-help">まだメッセージはありません。</span></li>`;
+      return;
+    }
+    f.innerHTML = A.feed.map(l =>
+      `<li class="${l.hot ? "hot" : ""}"><span class="r">${String(l.n).padStart(2, "0")}手</span><span>${esc(l.text)}</span></li>`).join("");
+  }
+
+  // ---------------- オーバーレイ ----------------
+  function showMenu() {
+    if (A.mode === "online") leaveRoom();
+    clearTimeout(timer);
+    A.screen = "menu";
+    renderOverlay();
+    render();
   }
 
   function renderOverlay() {
     const ov = $("overlay");
-    if (!S.over || !S.showResult) { ov.hidden = true; return; }
-    const win = S.winner === S.role;
-    ov.hidden = false;
-    ov.innerHTML = `
-      <div class="sheet" role="dialog" aria-label="結果">
-        <div class="result-chars">${S.winner === "target" ? face("t") + face("t") : face("c") + face("c") + face("c")}</div>
-        <div class="label">ROUND ${S.round} で決着</div>
-        <h2>${win ? "作戦成功！" : "作戦失敗…"}</h2>
-        <p>${S.winner === "target" ? "泥棒が最後まで逃げ切りました。" : "警察が泥棒を全員逮捕しました。"}</p>
-        <div class="row">
-          <button class="btn" data-act="again">もう一度</button>
-          <button class="btn ghost" data-act="close">逃走経路を見る</button>
-          <button class="btn ghost" data-act="menu">役割を選び直す</button>
-        </div>
-      </div>`;
+    const G = A.G;
+    if (A.screen === "menu") { ov.hidden = false; ov.innerHTML = menuHTML(); return; }
+    if (A.screen === "lobby") { ov.hidden = false; ov.innerHTML = lobbyHTML(); return; }
+    if (A.screen === "room") { ov.hidden = false; ov.innerHTML = roomHTML(); return; }
+    if (G && G.over && A.showResult) {
+      ov.hidden = false;
+      const xWin = G.winner === "x";
+      const reason = { escape: "最後まで逃げ切りました。", stuck: "刑事が全員、動ける切符を失いました。", caught: "刑事が怪盗Xのいる駅に踏み込みました。", trapped: "怪盗Xは四方を囲まれて動けなくなりました。" }[G.reason] || "";
+      ov.innerHTML = `
+        <div class="sheet" role="dialog" aria-label="結果">
+          <div class="result-chars">${xWin ? face("x") : [0, 1, 2, 3].map(k => face("d", k)).join("")}</div>
+          <div class="label">${G.xLog.length}手目で決着</div>
+          <h2>${xWin ? "怪盗Xの逃走成功" : "怪盗X、逮捕！"}</h2>
+          <p>${reason}</p>
+          <div class="row">${resultButtons()}<button class="btn ghost" data-act="close">逃走経路を見る</button></div>
+        </div>`;
+      return;
+    }
+    ov.hidden = true;
   }
 
-  function showStart() {
-    const ov = $("overlay");
-    ov.hidden = false;
-    ov.innerHTML = `
-      <div class="sheet" role="dialog" aria-label="ゲーム開始">
-        <div class="label">路線図 おいかけっこ</div>
-        <h2>東京を逃げ切るか、追い詰めるか</h2>
+  function menuHTML() {
+    const online = !!NET.db;
+    return `
+      <div class="sheet" role="dialog" aria-label="メニュー">
+        <div class="label">怪盗X 対 刑事チーム</div>
+        <h2>夜の東京に消えた怪盗Xを追え</h2>
         <ul>
-          <li>泥棒2人、警官3人。1ラウンドにつき全員が1駅ずつ動きます。</li>
-          <li>泥棒の居場所は秘密。使った交通手段（電車・地下鉄・バス）だけが警察に伝わります。</li>
-          <li>ラウンド ${REVEAL.join("・")} の移動後は「目撃情報」で居場所がばれます。</li>
-          <li>捕まった泥棒は「エージェント」になり、警官の通り道をふさげます。</li>
-          <li>泥棒は交通手段を隠せる「シークレット切符」を${SECRETS}枚持っています。</li>
+          <li>怪盗X 1人 対 刑事 ${DET_COUNT}人。怪盗Xの居場所は秘密で、使った切符だけが公開されます。</li>
+          <li>${REVEAL.join("・")}手目の移動後、怪盗Xが姿を現します。</li>
+          <li>刑事の切符は有限（電車${DET_TICKETS.train}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.subway}）。使い切ると動けません。</li>
+          <li>怪盗Xは黒チケット（手段を隠す・水上バスに乗れる）${X_BLACK}枚と、2倍移動 ${X_DOUBLE}枚を持っています。</li>
+          <li>刑事が怪盗Xのいる駅に入れば逮捕。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
         </ul>
-        <div class="roles">
-          <button class="role" data-act="start" data-role="target">
-            ${face("t")}
-            <strong>泥棒で遊ぶ</strong>
-            <span>2人を操作して、${MAX_ROUNDS}ラウンド逃げ切る。</span>
-          </button>
-          <button class="role" data-act="start" data-role="chaser">
-            ${face("c")}
-            <strong>警察で遊ぶ</strong>
-            <span>警官3人を操作して、切符の記録から居場所を推理する。</span>
-          </button>
+        <div class="modes">
+          <div class="mode">
+            <h3>ひとりで遊ぶ</h3>
+            <p>CPUを相手にすぐ遊べます。</p>
+            <div class="row">
+              <button class="btn" data-act="local" data-role="x">怪盗Xで</button>
+              <button class="btn ghost" data-act="local" data-role="d">刑事で</button>
+            </div>
+          </div>
+          <div class="mode">
+            <h3>オンライン対戦</h3>
+            <p>${online ? "ルームを作って友だちと対戦。空いた刑事の席はCPUが担当します。" : "claude.ai でこのページを開き、サインインしていると使えます。"}</p>
+            <div class="row"><button class="btn" data-act="lobby" ${online ? "" : "disabled"}>ロビーへ</button></div>
+          </div>
         </div>
       </div>`;
   }
 
-  // ================= イベント =================
-  document.addEventListener("click", (ev) => {
+  function lobbyHTML() {
+    const rows = NET.rooms.map(r => {
+      const s = r.seats || {};
+      const filled = Object.keys(s).filter(k => s[k]?.uid).length;
+      const host = s.x?.uid ? (s.x.uid === NET.me ? "あなた" : (NET.names[s.x.uid] || "プレイヤー")) : "空席";
+      return `<div class="room-row"><span class="code">${esc(r.code)}</span>
+        <span><b>${esc(host)}</b> が怪盗X<br><small style="color:var(--muted)">参加 ${filled}/${DET_COUNT + 1}人</small></span>
+        <button class="btn small" data-act="join" data-code="${esc(r.code)}">参加</button></div>`;
+    }).join("");
+    return `
+      <div class="sheet" role="dialog" aria-label="ロビー">
+        <div class="label">オンライン ロビー</div>
+        <h2>ルームを選んで参加</h2>
+        <div class="rooms">${rows || `<p>募集中のルームはありません。ルームを作って友だちを呼びましょう。</p>`}</div>
+        <div class="row">
+          <button class="btn" data-act="create" ${NET.readOnly ? "disabled" : ""}>ルームを作る（怪盗Xになる）</button>
+          <button class="btn ghost" data-act="menu">戻る</button>
+        </div>
+        ${NET.readOnly ? `<p class="note">このページを閲覧のみの権限で開いているため、ルームを作ったり参加したりできません。</p>` : ""}
+        <p class="note">友だちを誘うときは、このページの共有メニューから「編集可」で招待してください。</p>
+      </div>`;
+  }
+
+  function roomHTML() {
+    const r = NET.room;
+    if (!r) return `<div class="sheet"><p>ルームに接続しています…</p></div>`;
+    const s = r.seats || {};
+    const seat = (key, label, fc) => {
+      const v = s[key] || {};
+      const mine = v.uid === NET.me;
+      const who = v.cpu ? "CPU" : v.uid ? (mine ? "あなた" : (NET.names[v.uid] || "プレイヤー")) : "空席";
+      let acts = "";
+      if (!v.uid && !v.cpu) acts += `<button class="btn small" data-act="sit" data-seat="${key}">座る</button>`;
+      if (mine && key !== "x") acts += `<button class="btn ghost small" data-act="stand" data-seat="${key}">席を立つ</button>`;
+      if (key !== "x" && iAmX() && !v.uid) acts += `<button class="btn ghost small toggle" aria-pressed="${!!v.cpu}" data-act="cpu" data-seat="${key}">CPU</button>`;
+      return `<div class="seat ${mine ? "mine" : ""}">${fc}<span class="role-n">${label}</span><span class="pl">${esc(who)}</span>${acts ? `<div class="acts">${acts}</div>` : ""}</div>`;
+    };
+    let seats = seat("x", "怪盗X", face("x"));
+    for (let k = 0; k < DET_COUNT; k++) seats += seat("d" + k, dName(k), face("d", k));
+    const canStart = iAmX();
+    return `
+      <div class="sheet" role="dialog" aria-label="ルーム">
+        <div class="row" style="justify-content:space-between"><div class="label">ルーム</div><span class="code">${esc(r.code)}</span></div>
+        <h2>メンバーを待っています</h2>
+        <div class="seats">${seats}</div>
+        <p class="note">${canStart ? "準備ができたら開始してください。空いている刑事の席はCPUが担当します。" : "怪盗Xの人がゲームを開始します。好きな刑事の席に座ってください（複数の席に座ってもOK）。"}</p>
+        <div class="row">
+          ${canStart ? `<button class="btn" data-act="start">ゲーム開始</button>` : ""}
+          <button class="btn ghost" data-act="lobby">ルームを出る</button>
+        </div>
+      </div>`;
+  }
+
+  let toastTimer = null;
+  function toast(msg) {
+    pushFeed([{ n: A.G ? A.G.xLog.length : 0, text: msg, hot: true }]);
+    renderFeed();
+    clearTimeout(toastTimer);
+  }
+
+  // ======================================================================
+  // イベント
+  // ======================================================================
+  document.addEventListener("click", ev => {
     const b = ev.target.closest("[data-act]");
-    if (!b) return;
+    if (!b || b.disabled) return;
     const act = b.dataset.act;
-    if (act === "start") return newGame(b.dataset.role);
-    if (!S) return;
-    if (act === "again") return newGame(S.role);
-    if (act === "menu") { clearTimeout(timer); return showStart(); }
-    if (act === "close") { S.showResult = false; return render(); }
-    if (act === "go") return onStation(Number(b.dataset.to));
-    if (act === "secret") { S.useSecret = !S.useSecret; S.pending = null; return render(); }
-    if (act === "via" && S.pending) return commit(current(), { to: S.pending.to, type: b.dataset.type });
+    switch (act) {
+      case "local": return startLocal(b.dataset.role);
+      case "again": return startLocal(A.role);
+      case "menu": return showMenu();
+      case "lobby": return openLobby();
+      case "create": return createRoom();
+      case "join": return enterRoom(b.dataset.code);
+      case "sit": return sit(b.dataset.seat);
+      case "stand": return standUp(b.dataset.seat);
+      case "cpu": return toggleCpu(b.dataset.seat);
+      case "start": return startOnline();
+      case "toRoom": return backToRoom();
+      case "close": A.showResult = false; renderOverlay(); return;
+      case "tab": A.tab = b.dataset.tab; render(); return;
+      case "go": return onStation(Number(b.dataset.to));
+      case "black": A.useBlack = !A.useBlack; A.pending = null; render(); return;
+      case "double": A.useDouble = !A.useDouble; render(); return;
+      case "via": {
+        if (!A.pending || !isMyTurn()) return;
+        const { to } = A.pending, type = b.dataset.type;
+        if (A.G.turn === "x") return commitX(to, type, A.useDouble && canDouble(A.G));
+        return commitD(A.G.turn, to, type);
+      }
+    }
   });
-  $("newBtn").addEventListener("click", () => { clearTimeout(timer); showStart(); });
-  $("hintBtn").addEventListener("click", () => { if (S) { S.hints = !S.hints; render(); } });
+  $("menuBtn").addEventListener("click", showMenu);
+  $("hintBtn").addEventListener("click", () => { A.hints = !A.hints; render(); });
+  $("chatForm").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const inp = $("chatInput");
+    sendChat(inp.value);
+    inp.value = "";
+  });
 
   function boot(data) {
     buildMap();
     buildLegend();
-    if (data && data.S) {
-      S = data.S;
-      step();
-      if (S.over) render();
+    if (data && data.A && data.A.mode === "local" && data.A.G) {
+      Object.assign(A, data.A);
+      localStep();
     } else {
-      showStart();
+      showMenu();
     }
+    initNet();
   }
-  try { window.claude?.hot?.snapshot?.(() => ({ S })); } catch (e) {}
+  try { window.claude?.hot?.snapshot?.(() => ({ A: A.mode === "local" ? A : null })); } catch (e) {}
   if (window.claude?.hot?.ready) window.claude.hot.ready(boot);
   else boot(window.claude?.hot?.data ?? {});
 })();
