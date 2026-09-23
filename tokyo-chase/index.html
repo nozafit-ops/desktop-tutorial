@@ -118,6 +118,22 @@
   .xcard .who { display: flex; flex-direction: column; min-width: 0; }
   .xcard b { font-size: 15px; line-height: 1.2; }
   .xcard small { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .expo { display: inline-flex; align-items: center; gap: 5px; margin-top: 3px; padding: 2px 8px 2px 6px; border-radius: 999px; font-size: 11px; font-weight: 900; white-space: nowrap; }
+  .expo i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+  .expo.found { background: rgba(229, 72, 77, 0.2); color: #FF6B6B; animation: blink 1s ease-in-out infinite; }
+  .expo.near { background: rgba(242, 153, 58, 0.2); color: #F5A524; }
+  .expo.lost { background: rgba(95, 191, 122, 0.18); color: #6FD08C; }
+  @keyframes blink { 50% { opacity: 0.55; } }
+  .bubble { pointer-events: none; transform-box: fill-box; transform-origin: 50% 100%; }
+  .bubble.pop { animation: pop 0.35s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { from { transform: scale(0.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .bubble .bb { stroke: #3B2C1E; stroke-width: 2.5; }
+  .bubble.q .bb { fill: #FBF5E4; }
+  .bubble.ex .bb { fill: #E5484D; }
+  .bubble text { font-family: Georgia, serif; font-weight: 900; font-size: 30px; text-anchor: middle; }
+  .bubble.q text { fill: #3B2C1E; }
+  .bubble.ex text { fill: #fff; }
+  @media (prefers-reduced-motion: reduce) { .bubble.pop, .expo.found { animation: none; } }
   .xcard .chipsx { display: flex; gap: 4px; margin-top: 2px; }
   .portrait { width: 46px; height: 46px; border-radius: 50%; flex: none; display: block; overflow: visible; }
   .portrait.sm { width: 36px; height: 36px; }
@@ -792,6 +808,33 @@
     if (!prev.over && G.over) pushFeed(G.xLog.length, G.winner === "x" ? "怪盗Xの勝ち！" : "怪盗Xを逮捕！ 刑事の勝ち！", true);
   }
 
+  // 刑事側から見た怪盗Xの見つかり具合（公開情報だけで決まる）
+  function exposure(G) {
+    const n = G.possible.length;
+    if (n <= 1) return { level: "found", n, label: "発見されている", help: "刑事に居場所がばれています" };
+    if (n <= 4) return { level: "near", n, label: `追われている・候補${n}駅`, help: "刑事は候補をかなり絞り込んでいます" };
+    return { level: "lost", n, label: `見失われている・候補${n}駅`, help: "刑事はまだ居場所をつかめていません" };
+  }
+  // 刑事ごとの吹き出し："!" は怪盗Xを捕捉している、"?" は見失っている
+  function detBubble(G, k) {
+    const e = exposure(G);
+    if (e.level === "found") return "!";
+    const near = Math.min(...G.possible.map(p => D[G.det[k].pos][p]));
+    return e.level === "near" && near <= 2 ? "!" : "?";
+  }
+  let lastExpo = null;
+  function noteExposure() {
+    const G = A.G;
+    if (!G || G.over) { lastExpo = null; return; }
+    const lv = exposure(G).level;
+    if (lastExpo && lv !== lastExpo) {
+      if (lv === "found") toast("刑事が怪盗Xを発見！");
+      else if (lv === "lost") toast("刑事は怪盗Xを見失った");
+      else if (lastExpo === "lost") toast("刑事が怪盗Xに迫っている");
+    }
+    lastExpo = lv;
+  }
+
   function save() {
     try {
       if (!A.G || A.G.over) localStorage.removeItem(SAVE_KEY);
@@ -1211,7 +1254,12 @@
       el("ellipse", { cx: 0, cy: 6, rx: 34, ry: 13, class: "ring", visibility: "hidden" }, g);
       const u = el("use", { href: kind === "x" ? "#pawn-x" : "#pawn", x: -30, y: -70, width: 60, height: 80 }, g);
       u.style.color = kind === "x" ? "#2A2530" : DCOL[k];
-      if (kind === "d") el("text", { x: 0, y: -18, class: "pawn-num" }, g).textContent = k + 1;
+      if (kind === "d") {
+        el("text", { x: 0, y: -18, class: "pawn-num" }, g).textContent = k + 1;
+        const b = el("g", { class: "bubble q", transform: "translate(22 -78)" }, g);
+        el("path", { class: "bb", d: "M-20,-44 h40 a8,8 0 0 1 8,8 v28 a8,8 0 0 1 -8,8 h-12 l-12,12 l2,-12 h-18 a8,8 0 0 1 -8,-8 v-28 a8,8 0 0 1 8,-8 Z" }, b);
+        el("text", { x: 0, y: -13 }, b).textContent = "?";
+      }
       return g;
     };
     mk("tokX", "x", 0);
@@ -1227,6 +1275,7 @@
   // 描画（HUD）
   // ======================================================================
   function render() {
+    noteExposure();
     renderMap();
     renderTop();
     renderPrompt();
@@ -1282,6 +1331,16 @@
       const [dx, dy] = off(d.pos);
       placeToken(t, d.pos, dx, dy);
       t.querySelector(".ring").setAttribute("visibility", G.turn === k && !G.over ? "visible" : "hidden");
+      const b = t.querySelector(".bubble");
+      if (b) {
+        const mark = G.over ? "" : detBubble(G, k);
+        b.style.display = mark ? "" : "none";
+        const tx_ = b.querySelector("text");
+        if (tx_.textContent !== mark) {
+          tx_.textContent = mark;
+          b.setAttribute("class", "bubble pop " + (mark === "!" ? "ex" : "q"));
+        }
+      }
       hot(d.pos);
     });
   }
@@ -1290,8 +1349,10 @@
     const G = A.G;
     if (!G) { $("xcard").innerHTML = ""; $("dets").innerHTML = ""; return; }
     const nx = REVEAL.find(r => r > G.xLog.length);
+    const ex = exposure(G);
     $("xcard").innerHTML = `${portrait("x")}<span class="who"><b>怪盗X</b>
       <small class="nx">${G.over ? "ゲーム終了" : nx ? `次の出現 ${nx}手目` : "出現なし"}</small>
+      ${G.over ? "" : `<span class="expo ${ex.level}" title="${ex.help}"><i></i>${ex.label}</span>`}
       <span class="chipsx"><span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
     $("xcard").classList.toggle("active", G.turn === "x");
     $("dets").innerHTML = G.det.map((d, k) => `
@@ -1315,7 +1376,7 @@
     if (humanTurn()) {
       t1 = `${name} の番`;
       t2 = G.turn === "x"
-        ? (G.doubling ? "2倍移動の2手目。もう1駅進んでください" : "光っている駅をタップして逃げる先を選ぶ")
+        ? (G.doubling ? "2倍移動の2手目。もう1駅進んでください" : `${exposure(G).help}。光っている駅をタップして逃げる`)
         : "光っている駅をタップ。怪盗Xのいる駅に入れば逮捕";
     } else {
       t1 = `${name} が考え中…`;
@@ -1410,6 +1471,7 @@
           <div class="field"><label>刑事の人数</label><div class="seg">${[3, 4, 5].map(n => `<button data-act="dets" data-n="${n}" aria-pressed="${A.detCount === n}">${n}人</button>`).join("")}</div></div>
           <p class="c" style="font-size:12px;margin-top:-6px">3人が標準。刑事を増やすほど怪盗Xは苦しくなります</p>
           <button class="btn ghost wide" data-act="rules">遊び方</button>
+          <div class="row"><button class="btn ghost" data-act="exportBg" data-fmt="png">背景画像を保存（PNG）</button><button class="btn ghost" data-act="exportBg" data-fmt="svg">元データ（SVG）</button></div>
         </div>`;
       return;
     }
@@ -1423,6 +1485,7 @@
         <li>怪盗Xの居場所は秘密。刑事にわかるのは下の記録に残る <b>切符の種類</b> だけ。${REVEAL.join("・")}手目の後だけ姿を現します。</li>
         <li>刑事の切符は有限（タクシー${DET_TICKETS.taxi}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.tube}・水上バス${DET_TICKETS.boat}・ヘリ${DET_TICKETS.heli}）。</li>
         <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
+        <li>刑事の駒の吹き出しは、刑事がどこまで怪盗Xをつかんでいるかの合図です。<b>？</b>は見失っている、<b>！</b>は捕捉している。怪盗Xの札には「見失われている／追われている／発見されている」が表示されます。</li>
         <li>刑事が怪盗Xのいる駅に入れば <b>逮捕</b>。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
         <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは下の「ヘリで飛ぶ」ボタンから。</li>
       </ol><button class="btn wide" data-act="title">戻る</button></div>`;
@@ -1465,6 +1528,39 @@
     </svg>`;
   }
 
+  // 盤面の背景画像（路線・駅なし）を書き出す
+  async function exportBackground(fmt) {
+    const svg = backgroundSVG();
+    let blob;
+    try {
+      if (fmt === "svg") blob = new Blob([svg], { type: "image/svg+xml" });
+      else {
+        toast("背景画像を書き出しています…");
+        const im = new Image();
+        im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+        await im.decode();
+        const k = 1.5;
+        const c = document.createElement("canvas");
+        c.width = W * k; c.height = H * k;
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        blob = await new Promise(r => c.toBlob(r, "image/png"));
+      }
+    } catch (e) { toast("画像を作れませんでした"); return; }
+    const filename = `london-chase-background.${fmt}`;
+    let dl = null;
+    try { dl = await window.claude?.use?.("downloads"); } catch (e) { dl = null; }
+    if (dl) {
+      try { await dl.save({ filename, data: blob }); toast(`${filename} を保存しました`); }
+      catch (e) { if (e?.code !== "declined") toast("保存できませんでした"); }
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  window.londonChaseBackgroundSVG = () => backgroundSVG();
+
   function toast(msg) {
     const t = document.createElement("div");
     t.className = "toast";
@@ -1488,6 +1584,7 @@
       case "title": clearTimeout(timer); A.screen = "title"; A.sel = null; renderScreen(); renderSheet(); return;
       case "menu": clearTimeout(timer); save(); A.screen = "title"; A.sel = null; renderScreen(); renderSheet(); return;
       case "rules": A.screen = "rules"; renderScreen(); return;
+      case "exportBg": exportBackground(b.dataset.fmt); return;
       case "dets": A.detCount = Number(b.dataset.n); renderScreen(); return;
       case "result": A.screen = "result"; renderScreen(); return;
       case "closeResult": A.screen = "game"; renderScreen(); fitView(); return;
