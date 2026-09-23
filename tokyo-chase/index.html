@@ -27,6 +27,7 @@
     --bus: #16935B;
     --tube: #D2362C;
     --ferry: #2F7FB0;
+    --heli: #7C3AED;
     --black: #0B0906;
     --xrim: #C0271F;
     --good: #5FBF7A;
@@ -63,8 +64,13 @@
   .edge.tube { stroke: var(--tube); stroke-width: 13; }
   .edge.tube.casing { stroke: #6E1510; stroke-width: 16; opacity: 0.55; }
   .edge.tube.dash { stroke: #FFE9E3; stroke-width: 3.5; stroke-dasharray: 12 12; stroke-linecap: butt; }
-  .boat-lane { fill: none; stroke: var(--ferry); stroke-width: 4; stroke-dasharray: 16 10; opacity: 0.9; }
-  .pier { fill: none; stroke: var(--ferry); stroke-width: 4; stroke-dasharray: 5 5; }
+  .edge.boat { stroke: var(--ferry); stroke-width: 7; stroke-dasharray: 18 10; }
+  .edge.boat.casing { stroke: #FBF5E4; stroke-width: 11; stroke-dasharray: none; opacity: 0.8; }
+  .wedge.boat { fill: var(--ferry); }
+  .helipad { fill: rgba(124, 58, 237, 0.16); stroke: var(--heli); stroke-width: 4; stroke-dasharray: 10 6; }
+  .heli-h { font-family: Georgia, serif; font-weight: 700; font-size: 26px; fill: #fff; paint-order: stroke; stroke: var(--heli); stroke-width: 9px; stroke-linejoin: round; text-anchor: middle; pointer-events: none; }
+  .pawn-num { font-weight: 900; font-size: 15px; fill: #fff; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,0.55); stroke-width: 3px; }
+  .tok .ring { fill: none; stroke: #FFF6D8; stroke-width: 5; }
   .stn-base { fill: var(--paper); }
   .stn-rim { fill: none; stroke: var(--map-ink); stroke-width: 3; }
   .wedge.taxi { fill: var(--taxi); }
@@ -89,10 +95,7 @@
   .lastseen-label { font-weight: 900; font-size: 20px; fill: var(--xrim); paint-order: stroke; stroke: var(--paper); stroke-width: 6px; text-anchor: middle; }
   .trail { fill: none; stroke: var(--xrim); stroke-width: 6; stroke-dasharray: 14 9; opacity: 0.9; }
   .tok { transition: transform 0.55s cubic-bezier(.3,.7,.2,1); pointer-events: none; }
-  .tok .ring { fill: none; stroke: #FFF6D8; stroke-width: 5; }
-  .tok .ring2 { fill: none; stroke: var(--map-ink); stroke-width: 2; }
-  .tok .num { fill: var(--map-ink); stroke: var(--paper); stroke-width: 2; }
-  .tok .num-t { fill: var(--paper); font-size: 14px; font-weight: 900; text-anchor: middle; dominant-baseline: central; }
+
   @media (prefers-reduced-motion: reduce) { .tok { transition: none; } .dest.pulse, .dest-outer.pulse { animation: none; } }
 
   /* ---------------- HUD ---------------- */
@@ -116,7 +119,7 @@
   .xcard b { font-size: 15px; line-height: 1.2; }
   .xcard small { color: var(--muted); font-size: 11px; white-space: nowrap; }
   .xcard .chipsx { display: flex; gap: 4px; margin-top: 2px; }
-  .portrait { width: 46px; height: 46px; border-radius: 50%; flex: none; display: block; overflow: hidden; }
+  .portrait { width: 46px; height: 46px; border-radius: 50%; flex: none; display: block; overflow: visible; }
   .portrait.sm { width: 36px; height: 36px; }
   .portrait.lg { width: 84px; height: 84px; }
   .portrait img { width: 100%; height: 100%; object-fit: cover; }
@@ -132,6 +135,8 @@
   .tk.taxi { background: var(--taxi); }
   .tk.bus { background: var(--bus); color: #fff; }
   .tk.tube { background: var(--tube); color: #fff; }
+  .tk.boat { background: var(--ferry); color: #fff; }
+  .tk.heli { background: var(--heli); color: #fff; }
   .tk.black { background: var(--black); color: #fff; border: 1px solid #8A7A60; }
   .tk.double { background: var(--paper); color: #1A140C; }
   .tk.zero { opacity: 0.3; }
@@ -149,6 +154,7 @@
   .prompt .t2 { color: var(--muted); font-size: 12px; line-height: 1.4; }
   .pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--hud-2); color: var(--muted); white-space: nowrap; }
   .pill.gold { background: var(--gold); color: #1A140C; }
+  .btn.heli-btn { background: var(--heli); color: #fff; }
   .btn {
     min-height: 44px; padding: 0 16px; border-radius: 12px; font-weight: 900; font-size: 15px;
     background: var(--gold); color: #1A140C; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -172,8 +178,10 @@
   .slot.bus { background: var(--bus); }
   .slot.tube { background: var(--tube); }
   .slot.black { background: var(--black); }
+  .slot.boat { background: var(--ferry); }
+  .slot.heli { background: var(--heli); }
   .slot.taxi .n { color: rgba(0,0,0,0.55); }
-  .slot.bus .n, .slot.tube .n, .slot.black .n { color: rgba(255,255,255,0.7); }
+  .slot.bus .n, .slot.tube .n, .slot.black .n, .slot.boat .n, .slot.heli .n { color: rgba(255,255,255,0.7); }
   .slot .st { font-size: 10px; line-height: 1; margin-top: 2px; }
   .slot .dbl { position: absolute; bottom: 2px; right: 3px; font-size: 8px; }
 
@@ -202,6 +210,8 @@
   .ticket.taxi { background: var(--taxi); color: #1A140C; }
   .ticket.bus { background: var(--bus); color: #fff; }
   .ticket.tube { background: var(--tube); color: #fff; }
+  .ticket.boat { background: var(--ferry); color: #fff; }
+  .ticket.heli { background: var(--heli); color: #fff; }
   .ticket.black { background: var(--black); color: #fff; box-shadow: inset 0 0 0 2px #8A7A60, 0 4px 0 rgba(0,0,0,0.35); }
   .ticket:active:not(:disabled) { transform: translateY(2px); }
   .opt-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--hud-2); border-radius: 12px; padding: 8px 12px; }
@@ -278,39 +288,31 @@
 <!-- ARTIFACT-BODY-START -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <clipPath id="clip-chr"><circle r="19"></circle></clipPath>
-    <symbol id="chr-x" viewBox="-20 -20 40 40">
-      <circle r="20" fill="#241C16"></circle>
-      <g clip-path="url(#clip-chr)">
-        <path d="M-15,20 Q-15,7 0,7 Q15,7 15,20 Z" fill="#161A24"></path>
-        <path d="M-12,9 L-6,7 L0,15 L6,7 L12,9 L10,20 L-10,20 Z" fill="#2A3040"></path>
-        <path d="M-3.2,8 L0,14 L3.2,8 Z" fill="#FFFFFF"></path>
-        <path d="M-3.4,10.2 L0,11.6 L3.4,10.2 L3.4,13.4 L0,12 L-3.4,13.4 Z" fill="#C0271F"></path>
-        <circle cy="-0.5" r="8.4" fill="#F1C7A0"></circle>
-        <rect x="-9.4" y="-2.8" width="18.8" height="5" rx="2.5" fill="#0B0D13"></rect>
-        <circle cx="-3.8" cy="-0.3" r="1.5" fill="#FFFFFF"></circle>
-        <circle cx="3.8" cy="-0.3" r="1.5" fill="#FFFFFF"></circle>
-        <path d="M-3.5,4.2 Q1,6.6 4,3.8" stroke="#6B3A2A" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
-        <ellipse cx="0" cy="-6.6" rx="12.5" ry="2.6" fill="#0B0D13"></ellipse>
-        <rect x="-7.6" y="-19.5" width="15.2" height="13" rx="1.5" fill="#0B0D13"></rect>
-        <rect x="-7.6" y="-10.4" width="15.2" height="3" fill="#C0271F"></rect>
-        <text x="0" y="-12.3" font-size="7.5" font-weight="700" text-anchor="middle" fill="#E3B341">X</text>
-      </g>
+    <linearGradient id="pawnShade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000" stop-opacity="0.35"></stop>
+      <stop offset="0.28" stop-color="#fff" stop-opacity="0.45"></stop>
+      <stop offset="0.45" stop-color="#fff" stop-opacity="0.08"></stop>
+      <stop offset="1" stop-color="#000" stop-opacity="0.45"></stop>
+    </linearGradient>
+    <radialGradient id="pawnHead" cx="0.35" cy="0.3" r="0.75">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.75"></stop>
+      <stop offset="0.35" stop-color="#fff" stop-opacity="0.1"></stop>
+      <stop offset="1" stop-color="#000" stop-opacity="0.45"></stop>
+    </radialGradient>
+    <!-- ボードゲームの駒（色は color で指定） -->
+    <symbol id="pawn" viewBox="-30 -70 60 80">
+      <ellipse cy="3" rx="25" ry="7" fill="#000" opacity="0.35"></ellipse>
+      <path d="M-22,-3 A22,7 0 0 0 22,-3 L22,-8 C22,-12 14,-14 11,-15 C8,-24 6,-32 6,-39 L-6,-39 C-6,-32 -8,-24 -11,-15 C-14,-14 -22,-12 -22,-8 Z" fill="currentColor"></path>
+      <path d="M-22,-3 A22,7 0 0 0 22,-3 L22,-8 C22,-12 14,-14 11,-15 C8,-24 6,-32 6,-39 L-6,-39 C-6,-32 -8,-24 -11,-15 C-14,-14 -22,-12 -22,-8 Z" fill="url(#pawnShade)" stroke="#000" stroke-opacity="0.55" stroke-width="1.4"></path>
+      <ellipse cy="-40" rx="11.5" ry="4" fill="currentColor"></ellipse>
+      <ellipse cy="-40" rx="11.5" ry="4" fill="url(#pawnShade)" stroke="#000" stroke-opacity="0.55" stroke-width="1.2"></ellipse>
+      <circle cy="-54" r="12.5" fill="currentColor"></circle>
+      <circle cy="-54" r="12.5" fill="url(#pawnHead)" stroke="#000" stroke-opacity="0.55" stroke-width="1.2"></circle>
     </symbol>
-    <symbol id="chr-d" viewBox="-20 -20 40 40">
-      <g clip-path="url(#clip-chr)">
-        <path d="M-15,20 Q-15,9 0,9 Q15,9 15,20 Z" fill="#3A3226"></path>
-        <path d="M-4.5,9 L0,14 L4.5,9 Z" fill="#FFFFFF"></path>
-        <path d="M-1.3,11.5 h2.6 l0.9,5.5 l-2.2,2 l-2.2,-2 z" fill="#1B1611"></path>
-        <circle cy="0.5" r="8.6" fill="#F4C9A0"></circle>
-        <ellipse cx="0" cy="-5.4" rx="12" ry="2.4" fill="#1B1611"></ellipse>
-        <path d="M-8,-5.6 Q-8.4,-17 0,-17 Q8.4,-17 8,-5.6 Z" fill="#1B1611"></path>
-        <rect x="-8.2" y="-8.4" width="16.4" height="2.4" fill="#5A4A36"></rect>
-        <circle cx="-3.3" cy="1.4" r="1.3" fill="#1B2230"></circle>
-        <circle cx="3.3" cy="1.4" r="1.3" fill="#1B2230"></circle>
-        <path d="M-5.2,-1.6 h3.2 M2,-1.6 h3.2" stroke="#1B2230" stroke-width="1.1" stroke-linecap="round"></path>
-        <path d="M-4.2,4.4 Q-2,3.4 0,4.2 Q2,3.4 4.2,4.4" stroke="#6B4A2A" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
-      </g>
+    <symbol id="pawn-x" viewBox="-30 -70 60 80">
+      <use href="#pawn" x="-30" y="-70" width="60" height="80"></use>
+      <ellipse cy="-40" rx="11.5" ry="4" fill="#C0271F" stroke="#000" stroke-opacity="0.5" stroke-width="1"></ellipse>
+      <text x="0" y="-19" font-family="Georgia, serif" font-weight="700" font-size="17" text-anchor="middle" fill="#E3B341">X</text>
     </symbol>
   </defs>
 </svg>
@@ -319,7 +321,6 @@
   <svg id="map" aria-label="ロンドンの盤面。ドラッグで移動、ピンチやホイールで拡大できます">
     <g id="world">
       <image id="bgimg" x="0" y="0" width="3000" height="1900" preserveAspectRatio="none"></image>
-      <g id="gBoat"></g>
       <g id="gEdges"></g>
       <g id="gPoss"></g>
       <g id="gTrail"></g>
@@ -372,181 +373,150 @@
   // ======================================================================
   const W = 3000, H = 1900;
   const STATIONS = [
-    ["ハムステッド", 912.5, 382.2],
-    ["ハイゲート", 1210.5, 110.0],
-    ["アーチウェイ", 1299.2, 252.8],
-    ["フィンズベリー・パーク", 1561.2, 268.1],
-    ["ストーク・ニューイントン", 1855.5, 273.8],
-    ["ケンティッシュ・タウン", 1246.6, 434.3],
-    ["カムデン・タウン", 1215.9, 586.1],
-    ["ベルサイズ・パーク", 1025.7, 451.8],
-    ["スイス・コテージ", 923.7, 556.0],
-    ["キルバーン", 679.9, 527.9],
-    ["セント・ジョンズ・ウッド", 918.1, 674.2],
-    ["メイダ・ヴェール", 814.9, 754.7],
-    ["ホロウェイ", 1505.9, 409.1],
-    ["ハイベリー", 1596.6, 497.4],
-    ["ダルストン", 1860.6, 517.1],
-    ["ハックニー", 2027.8, 548.2],
-    ["ハックニー・ウィック", 2269.6, 592.7],
-    ["ストラトフォード", 2428.7, 629.9],
-    ["ハガーストン", 1864.6, 617.8],
-    ["エンジェル", 1593.0, 684.5],
-    ["キングス・クロス", 1405.7, 696.2],
-    ["ユーストン", 1297.9, 735.6],
-    ["リージェンツ・パーク", 1156.1, 818.7],
-    ["ベイカー・ストリート", 1052.9, 841.4],
-    ["パディントン", 883.1, 969.8],
-    ["ラドブローク・グローブ", 604.7, 953.8],
-    ["ホワイト・シティ", 503.7, 1032.0],
-    ["ノッティング・ヒル", 710.2, 1068.3],
-    ["シェパーズ・ブッシュ", 542.8, 1139.3],
-    ["ハマースミス", 508.9, 1309.4],
-    ["ケンジントン", 744.7, 1199.3],
-    ["アールズ・コート", 743.7, 1333.6],
-    ["サウス・ケンジントン", 903.3, 1313.7],
-    ["ナイツブリッジ", 1010.3, 1201.6],
-    ["マーブル・アーチ", 1028.4, 992.2],
-    ["ボンド・ストリート", 1114.6, 976.2],
-    ["オックスフォード・サーカス", 1195.4, 951.4],
-    ["トッテナム・コート・ロード", 1317.0, 917.3],
-    ["ホルボーン", 1455.2, 901.2],
-    ["ラッセル・スクエア", 1399.8, 810.6],
-    ["ファリンドン", 1615.1, 866.8],
-    ["バービカン", 1688.5, 872.4],
-    ["オールド・ストリート", 1778.9, 788.7],
-    ["ショーディッチ", 1889.3, 844.7],
-    ["リバプール・ストリート", 1834.1, 927.1],
-    ["バンク", 1782.5, 998.6],
-    ["セント・ポール", 1702.0, 971.4],
-    ["ブラックフライアーズ", 1643.4, 1017.9],
-    ["テンプル", 1536.0, 1024.3],
-    ["コヴェント・ガーデン", 1402.7, 978.3],
-    ["レスター・スクエア", 1346.9, 1011.2],
-    ["ピカデリー・サーカス", 1267.1, 1050.2],
-    ["グリーン・パーク", 1175.3, 1115.3],
-    ["ハイド・パーク・コーナー", 1082.3, 1185.2],
-    ["ヴィクトリア", 1169.2, 1299.4],
-    ["セント・ジェームズ・パーク", 1287.1, 1261.6],
-    ["ウェストミンスター", 1387.5, 1239.2],
-    ["チャリング・クロス", 1400.5, 1089.7],
-    ["ピムリコ", 1298.9, 1404.1],
-    ["スローン・スクエア", 1060.0, 1354.5],
-    ["チェルシー", 906.7, 1429.0],
-    ["フラム・ブロードウェイ", 743.4, 1501.1],
-    ["パトニー・ブリッジ", 647.6, 1657.6],
-    ["ワンズワース", 826.4, 1771.5],
-    ["バタシー", 1214.4, 1556.6],
-    ["クラパム・ジャンクション", 973.4, 1742.6],
-    ["クラパム・コモン", 1266.4, 1790.0],
-    ["ストックウェル", 1413.6, 1658.1],
-    ["ヴォクソール", 1389.6, 1470.5],
-    ["ケニントン", 1604.0, 1427.2],
-    ["ブリクストン", 1492.3, 1779.5],
-    ["ランベス・ノース", 1555.1, 1261.6],
-    ["ウォータールー", 1543.2, 1190.1],
-    ["サザーク", 1628.4, 1164.3],
-    ["ロンドン・ブリッジ", 1803.2, 1137.6],
-    ["バラ", 1729.6, 1211.3],
-    ["エレファント&キャッスル", 1665.1, 1330.4],
-    ["バーモンジー", 1989.5, 1247.7],
-    ["ロザーハイズ", 2102.5, 1233.2],
-    ["タワー・ヒル", 1887.3, 1060.2],
-    ["オールドゲート・イースト", 1921.8, 973.9],
-    ["ホワイトチャペル", 2008.7, 911.4],
-    ["ベスナル・グリーン", 2052.6, 802.5],
-    ["マイル・エンド", 2222.4, 841.5],
-    ["ボウ", 2341.5, 823.0],
-    ["シャドウェル", 2046.0, 1032.6],
-    ["ワッピング", 2046.4, 1120.6],
-    ["ライムハウス", 2180.3, 1026.0],
-    ["カナリー・ワーフ", 2326.1, 1126.9],
-    ["アイランド・ガーデンズ", 2390.8, 1374.4],
-    ["グリニッジ", 2348.2, 1506.5],
-    ["デプトフォード", 2264.6, 1505.1],
-    ["ニュー・クロス", 2212.8, 1542.1],
-    ["ペッカム", 1909.8, 1656.3],
-    ["キャンバーウェル", 1704.4, 1621.6],
-    ["ノース・グリニッジ", 2496.3, 1192.9],
+    ["スイス・コテージ", 1003.2, 349.5],
+    ["キングス・クロス", 1925.6, 214.6],
+    ["クラパム・コモン", 253.6, 962.8],
+    ["ハイゲート", 287.0, 246.0],
+    ["ウィンブルドン", 1287.1, 1512.2],
+    ["テムズミード", 1859.4, 1720.1],
+    ["ユーストン", 1717.4, 772.3],
+    ["ラッセル・スクエア", 2843.0, 170.1],
+    ["トッテナム・コート・ロード", 2510.9, 588.1],
+    ["フィンズベリー・パーク", 496.8, 292.6],
+    ["ルイシャム", 959.9, 1493.7],
+    ["ロンドン・ブリッジ", 599.6, 1090.4],
+    ["パディントン", 1891.7, 730.5],
+    ["ハックニー", 1634.6, 198.0],
+    ["ペッカム", 975.9, 1097.2],
+    ["サリー・キーズ", 778.4, 1078.0],
+    ["シデナム", 1571.1, 1595.2],
+    ["シェパーズ・ブッシュ", 2147.0, 585.3],
+    ["ウォータールー", 518.6, 931.0],
+    ["ストックウェル", 200.6, 1239.3],
+    ["オックスフォード・サーカス", 2246.1, 1075.6],
+    ["アールズ・コート", 2050.7, 1112.3],
+    ["ナイン・エルムズ", 2458.7, 1714.9],
+    ["キュー", 1427.0, 1232.3],
+    ["エルサム", 1177.9, 1240.1],
+    ["ケニントン", 256.3, 1411.4],
+    ["ロザーハイズ", 875.1, 804.3],
+    ["リッチモンド", 1101.7, 1610.8],
+    ["ファリンドン", 2790.8, 349.6],
+    ["エンジェル", 1751.3, 541.9],
+    ["ワンズワース", 101.5, 810.6],
+    ["テンプル", 2777.7, 1277.6],
+    ["ブリクストン", 382.0, 1181.0],
+    ["ケンティッシュ・タウン", 678.7, 369.2],
+    ["クラパム・ジャンクション", 376.1, 715.4],
+    ["ヴォクソール", 161.9, 1593.9],
+    ["サウス・ケンジントン", 2427.4, 367.7],
+    ["リバプール・ストリート", 2524.6, 1287.5],
+    ["バーモンジー", 561.1, 1417.7],
+    ["ベルサイズ・パーク", 1092.7, 139.8],
+    ["グリニッジ", 820.9, 1281.1],
+    ["バンク", 2787.4, 859.2],
+    ["ベクスリー", 2732.4, 1789.4],
+    ["ホルボーン", 2460.0, 914.7],
+    ["ノース・グリニッジ", 1931.4, 1465.4],
+    ["ホワイト・シティ", 2133.9, 382.4],
+    ["アーチウェイ", 459.4, 114.5],
+    ["カナダ・ウォーター", 459.6, 1655.2],
+    ["キャンバーウェル", 1087.7, 878.0],
+    ["ホロウェイ", 1331.2, 404.9],
+    ["フォレスト・ヒル", 1656.3, 1438.9],
+    ["ラドブローク・グローブ", 1817.3, 959.6],
+    ["ヌンヘッド", 2061.8, 1597.6],
+    ["オールド・ストリート", 2746.9, 536.5],
+    ["ダリッジ", 709.2, 1728.3],
+    ["ベイカー・ストリート", 2126.5, 123.5],
+    ["エレファント&キャッスル", 271.3, 1784.3],
+    ["ハックニー・ウィック", 1575.9, 500.1],
+    ["ストーク・ニューイントン", 796.3, 116.4],
+    ["ハーン・ヒル", 2029.4, 1779.8],
+    ["メイダ・ヴェール", 1469.8, 95.7],
+    ["コヴェント・ガーデン", 2906.6, 1103.4],
+    ["ウーリッジ", 895.5, 1699.2],
+    ["ケンジントン", 2155.2, 865.5],
+    ["ナイツブリッジ", 2551.6, 127.5],
+    ["サザーク", 634.3, 716.5],
+    ["セント・ジョンズ・ウッド", 1180.0, 521.8],
+    ["ノッティング・ヒル", 2295.9, 225.9],
+    ["トゥーティング", 1206.9, 1797.0],
+    ["リージェンツ・パーク", 1927.6, 439.9],
+    ["ブラックヒース", 1204.7, 1036.2],
+    ["ウォルワース", 2239.4, 1771.9],
+    ["ノーウッド", 1471.3, 1766.3],
+    ["セント・ポール", 2655.7, 1142.2],
+    ["ハムステッド", 120.2, 171.6],
+    ["ブラックフライアーズ", 2899.1, 680.4],
+    ["パトニー", 101.0, 613.7],
+    ["バービカン", 2464.9, 1098.3],
+    ["バラム", 1456.0, 1453.5],
+    ["バタシー", 106.9, 1086.2],
+    ["ストレタム", 1655.1, 1220.7],
+    ["マーブル・アーチ", 2273.1, 713.5],
+    ["ニュー・クロス", 751.6, 1452.4],
+    ["カムデン・タウン", 859.9, 456.5],
+    ["キルバーン", 1285.4, 198.5],
+    ["ショーディッチ", 2644.3, 748.1],
+    ["ハガーストン", 1759.3, 338.8],
+    ["ボンド・ストリート", 2603.9, 300.2],
+    ["チャールトン", 1667.5, 1758.6],
+    ["ブロックリー", 1003.2, 1277.0],
+    ["バラ", 712.4, 890.1],
+    ["モーデン", 2909.4, 1745.2],
+    ["ランベス", 94.5, 1762.5],
+    ["ハイベリー", 1500.8, 320.9],
+    ["デプトフォード", 549.1, 1809.2],
+    ["ダルストン", 1403.3, 577.9],
+    ["ストラトフォード", 1780.2, 93.1],
+    ["キャットフォード", 1804.6, 1327.4],
+    ["ハマースミス", 2325.1, 515.1],
+    ["バーンズ", 1128.0, 1425.1],
+    ["レスター・スクエア", 2883.1, 1428.0],
+    ["ミルウォール", 1344.0, 762.8],
+    ["カビット・タウン", 1439.5, 831.8],
+    ["アイランド・ガーデンズ", 1534.9, 900.8],
+    ["イール・パイ", 2264.3, 1441.4],
+    ["ボートハウス", 2364.6, 1474.0],
   ];
-  const TAXI = [[0, 7], [0, 8], [0, 9], [1, 2], [2, 3], [2, 5], [2, 12], [3, 4], [3, 12], [4, 14], [5, 6], [5, 7], [5, 12], [6, 7], [6, 21], [7, 8], [8, 9], [8, 10], [9, 11], [10, 11], [10, 23], [11, 24], [11, 25], [12, 13], [13, 14], [13, 19], [14, 15], [14, 18], [15, 16], [15, 18], [15, 82], [16, 17], [16, 83], [16, 84], [17, 84], [18, 19], [18, 42], [18, 82], [19, 20], [19, 40], [19, 42], [20, 21], [20, 39], [21, 22], [21, 37], [21, 39], [22, 23], [22, 36], [23, 34], [23, 35], [24, 27], [24, 34], [25, 26], [25, 27], [26, 28], [27, 28], [27, 30], [28, 29], [28, 30], [29, 30], [29, 31], [30, 31], [30, 32], [31, 32], [31, 60], [31, 61], [32, 33], [32, 59], [32, 60], [33, 34], [33, 53], [33, 59], [34, 35], [34, 53], [35, 36], [35, 52], [36, 37], [36, 51], [36, 52], [37, 38], [37, 39], [37, 49], [37, 50], [38, 39], [38, 40], [38, 48], [38, 49], [40, 41], [40, 47], [40, 48], [41, 42], [41, 44], [41, 46], [42, 43], [42, 44], [43, 44], [43, 80], [43, 81], [43, 82], [44, 45], [44, 80], [45, 46], [45, 74], [45, 79], [46, 47], [47, 48], [47, 73], [48, 49], [48, 57], [48, 72], [48, 73], [49, 50], [49, 57], [50, 51], [50, 57], [51, 52], [51, 55], [52, 53], [52, 54], [52, 55], [53, 54], [53, 59], [54, 55], [54, 58], [54, 59], [55, 56], [55, 58], [56, 57], [56, 71], [56, 72], [57, 72], [58, 64], [58, 68], [59, 60], [59, 64], [60, 61], [61, 62], [62, 63], [63, 65], [64, 66], [64, 67], [64, 68], [65, 66], [66, 67], [66, 70], [67, 68], [67, 70], [67, 94], [68, 69], [68, 71], [69, 71], [69, 76], [69, 94], [70, 94], [71, 72], [71, 76], [72, 73], [73, 75], [73, 76], [74, 75], [74, 77], [74, 79], [75, 76], [77, 78], [77, 79], [77, 86], [78, 86], [78, 88], [79, 80], [79, 85], [79, 86], [80, 81], [80, 85], [81, 82], [81, 85], [82, 83], [83, 84], [83, 87], [85, 86], [85, 87], [87, 88], [88, 89], [88, 95], [89, 90], [89, 95], [90, 91], [91, 92], [93, 94]];
-  const THAMES = [[280, 1392], [420, 1392], [510, 1380], [560, 1470], [590, 1600], [640, 1710], [760, 1725], [860, 1650], [950, 1545], [1070, 1490], [1200, 1470], [1310, 1450], [1400, 1415], [1452, 1340], [1462, 1240], [1478, 1150], [1530, 1098], [1640, 1088], [1760, 1092], [1880, 1108], [1990, 1172], [2085, 1178], [2165, 1110], [2235, 1112], [2255, 1250], [2285, 1385], [2345, 1452], [2420, 1440], [2450, 1330], [2445, 1195], [2455, 1080], [2515, 1050], [2585, 1140], [2610, 1290], [2700, 1390], [2800, 1420]];
-
+  const TAXI = [[0, 39], [0, 58], [0, 66], [0, 83], [1, 45], [1, 55], [1, 69], [1, 86], [1, 96], [2, 18], [2, 30], [2, 32], [2, 34], [2, 79], [3, 9], [3, 46], [3, 74], [4, 27], [4, 68], [4, 72], [4, 78], [4, 99], [5, 44], [5, 52], [5, 59], [5, 88], [6, 12], [6, 29], [6, 51], [7, 28], [7, 64], [8, 36], [8, 53], [8, 81], [8, 85], [8, 98], [9, 33], [9, 46], [10, 27], [10, 40], [10, 62], [10, 82], [10, 89], [10, 99], [11, 15], [11, 18], [11, 32], [11, 38], [11, 90], [12, 17], [12, 29], [12, 51], [12, 63], [12, 69], [13, 60], [13, 86], [13, 93], [13, 96], [14, 15], [14, 24], [14, 26], [14, 40], [14, 48], [14, 70], [14, 89], [15, 40], [15, 90], [16, 50], [16, 72], [16, 78], [16, 88], [17, 45], [17, 69], [17, 81], [17, 98], [18, 32], [18, 34], [18, 65], [18, 90], [19, 25], [19, 32], [19, 79], [20, 21], [20, 43], [20, 63], [20, 77], [21, 51], [21, 63], [22, 42], [22, 71], [23, 24], [23, 70], [23, 78], [23, 80], [24, 70], [24, 89], [24, 99], [25, 32], [25, 35], [25, 38], [25, 47], [26, 48], [26, 65], [26, 90], [27, 62], [27, 68], [27, 99], [28, 53], [28, 87], [29, 57], [29, 69], [29, 86], [30, 34], [30, 76], [30, 79], [31, 37], [31, 61], [31, 73], [31, 100], [32, 38], [33, 58], [33, 83], [34, 65], [34, 76], [35, 47], [35, 56], [35, 92], [36, 45], [36, 67], [36, 87], [36, 98], [37, 73], [37, 77], [38, 47], [38, 82], [39, 58], [39, 84], [40, 82], [40, 89], [41, 61], [41, 73], [41, 75], [41, 85], [42, 91], [43, 63], [43, 77], [43, 81], [43, 85], [44, 52], [44, 97], [45, 55], [45, 67], [45, 69], [45, 98], [47, 56], [47, 94], [48, 70], [49, 57], [49, 66], [49, 84], [49, 93], [49, 95], [50, 78], [50, 80], [50, 97], [51, 80], [52, 59], [52, 71], [53, 75], [53, 85], [54, 62], [54, 82], [54, 94], [55, 67], [56, 92], [56, 94], [57, 86], [57, 93], [57, 95], [59, 71], [60, 84], [60, 93], [61, 73], [62, 82], [63, 81], [64, 67], [64, 87], [65, 90], [66, 95], [68, 72], [69, 86], [72, 88], [73, 77], [75, 85], [80, 97], [81, 98], [84, 93], [86, 93], [86, 96], [89, 99], [101, 102], [102, 103], [104, 105]];
+  const TUBE = [["サークル線（外周）", [41, 37, 52, 5, 27, 82, 32, 2, 34, 33, 84, 86, 98, 85, 41]], ["セントラル線", [34, 90, 70, 6, 51, 20, 73]], ["ノーザン線", [84, 49, 95, 6, 80, 50, 5]], ["ジュビリー線", [55, 69, 6, 23, 99, 62]]];
+  const BUS = [[20, 21], [97, 78, 24, 14, 15, 26, 66, 95, 29, 12, 63], [9, 83, 66], [70, 80, 97, 52, 22], [13, 93, 57, 6], [23, 78, 72], [53, 98, 12, 6], [70, 14, 38, 25], [3, 58, 39], [87, 85, 61], [2, 25, 54], [59, 22, 91], [84, 96, 67], [62, 68, 88]];
+  const BOAT = [65, 66, 101, 102, 103, 51, 97, 104, 105, 37, 100];
+  const HELI = [3, 87, 47, 42, 93, 102];
+  const RIVER = [[-176.5, 236.2, 120.0], [-127.6, 275.1, 120.0], [-77.8, 312.0, 120.0], [-27.0, 346.7, 120.0], [25.1, 379.0, 120.0], [78.4, 408.6, 120.0], [133.0, 435.4, 120.0], [188.9, 459.4, 120.0], [246.2, 480.7, 120.0], [304.6, 499.4, 120.0], [364.2, 515.8, 120.0], [424.8, 530.0, 120.0], [486.2, 542.4, 120.0], [548.3, 553.4, 120.0], [610.9, 563.4, 120.0], [673.7, 572.8, 120.0], [736.5, 582.2, 120.0], [799.2, 592.0, 120.0], [861.5, 602.6, 120.0], [923.1, 614.5, 120.0], [984.0, 628.0, 120.1], [1044.0, 643.6, 120.8], [1102.8, 661.5, 123.5], [1160.4, 681.9, 132.4], [1216.8, 705.0, 155.2], [1271.9, 730.8, 200.1], [1325.6, 759.5, 266.0], [1378.1, 790.9, 333.0], [1429.3, 824.8, 368.9], [1479.5, 861.0, 352.8], [1528.7, 899.3, 294.4], [1577.1, 939.3, 224.6], [1624.9, 980.6, 170.3], [1672.2, 1022.7, 139.3], [1719.4, 1065.3, 126.0], [1766.5, 1107.9, 121.5], [1813.9, 1150.0, 120.3], [1861.8, 1191.1, 120.1], [1910.3, 1230.8, 120.4], [1959.6, 1268.8, 122.0], [2010.0, 1304.7, 127.7], [2061.4, 1338.2, 143.8], [2114.1, 1369.1, 179.2], [2168.0, 1397.3, 238.0], [2223.3, 1422.8, 308.1], [2279.9, 1445.4, 360.2], [2337.7, 1465.4, 365.6], [2396.8, 1482.9, 321.1], [2456.9, 1498.1, 251.8], [2517.9, 1511.4, 189.2], [2579.7, 1523.0, 149.1], [2642.0, 1533.4, 129.8], [2704.7, 1543.1, 122.6], [2767.6, 1552.5, 120.6], [2830.4, 1562.0, 120.1], [2892.9, 1572.1, 120.0], [2954.9, 1583.3, 120.0], [3016.2, 1596.0, 120.0], [3076.6, 1610.5, 120.0], [3136.0, 1627.2, 120.0], [3194.3, 1646.3, 120.0]];
+  const ISLANDS = [[1439.5, 831.8, 190, 78, 35.9], [2314.5, 1457.7, 170, 70, 18.0]];
+  const BRIDGES = [[35.7, 385.1], [486.2, 542.4], [971.9, 625.1], [1813.9, 1150.0], [2755.0, 1550.6], [3088.6, 1613.7]];
   const N = STATIONS.length;
-  const IDX = Object.fromEntries(STATIONS.map((s, i) => [s[0], i]));
   const NAME = i => STATIONS[i][0];
   const NO = i => i + 1;
-
-  const TUBE = [
-    ["セントラル線", ["ホワイト・シティ","シェパーズ・ブッシュ","ノッティング・ヒル","マーブル・アーチ","ボンド・ストリート","オックスフォード・サーカス","トッテナム・コート・ロード","ホルボーン","セント・ポール","バンク","リバプール・ストリート","ベスナル・グリーン","マイル・エンド","ストラトフォード"]],
-    ["ノーザン線", ["ハムステッド","ベルサイズ・パーク","カムデン・タウン","ユーストン","トッテナム・コート・ロード","レスター・スクエア","チャリング・クロス","ウォータールー","ケニントン"]],
-    ["ノーザン線", ["ハイゲート","アーチウェイ","ケンティッシュ・タウン","カムデン・タウン"]],
-    ["ノーザン線", ["キングス・クロス","エンジェル","オールド・ストリート","バンク","ロンドン・ブリッジ","バラ","エレファント&キャッスル","ケニントン","ストックウェル","クラパム・コモン"]],
-    ["ノーザン線", ["ケニントン","バタシー"]],
-    ["ピカデリー線", ["フィンズベリー・パーク","ホロウェイ","キングス・クロス","ラッセル・スクエア","ホルボーン","コヴェント・ガーデン","レスター・スクエア","ピカデリー・サーカス","グリーン・パーク","ハイド・パーク・コーナー","ナイツブリッジ","サウス・ケンジントン","アールズ・コート","ハマースミス"]],
-    ["ヴィクトリア線", ["フィンズベリー・パーク","ハイベリー","キングス・クロス","ユーストン","オックスフォード・サーカス","グリーン・パーク","ヴィクトリア","ピムリコ","ヴォクソール","ストックウェル","ブリクストン"]],
-    ["ジュビリー線", ["キルバーン","スイス・コテージ","セント・ジョンズ・ウッド","ベイカー・ストリート","ボンド・ストリート","グリーン・パーク","ウェストミンスター","ウォータールー","サザーク","ロンドン・ブリッジ","バーモンジー","カナリー・ワーフ","ノース・グリニッジ","ストラトフォード"]],
-    ["ディストリクト線", ["アールズ・コート","サウス・ケンジントン","スローン・スクエア","ヴィクトリア","セント・ジェームズ・パーク","ウェストミンスター","チャリング・クロス","テンプル","ブラックフライアーズ","タワー・ヒル","オールドゲート・イースト","ホワイトチャペル","マイル・エンド","ボウ"]],
-    ["ディストリクト線", ["アールズ・コート","フラム・ブロードウェイ","パトニー・ブリッジ"]],
-    ["ハマースミス&シティ線", ["ハマースミス","シェパーズ・ブッシュ","ラドブローク・グローブ","パディントン"]],
-    ["サークル線", ["アールズ・コート","ケンジントン","ノッティング・ヒル","パディントン","ベイカー・ストリート","キングス・クロス","ファリンドン","バービカン","リバプール・ストリート","オールドゲート・イースト"]],
-    ["ベーカールー線", ["メイダ・ヴェール","パディントン","ベイカー・ストリート","リージェンツ・パーク","オックスフォード・サーカス","ピカデリー・サーカス","チャリング・クロス","ウォータールー","ランベス・ノース","エレファント&キャッスル"]],
-    ["DLR", ["バンク","シャドウェル","ライムハウス","カナリー・ワーフ","アイランド・ガーデンズ","グリニッジ","デプトフォード"]],
-    ["DLR", ["ストラトフォード","ボウ"]],
-    ["オーバーグラウンド", ["キルバーン","ハムステッド","ケンティッシュ・タウン","ホロウェイ","ハイベリー","ダルストン","ハックニー","ハックニー・ウィック","ストラトフォード"]],
-    ["オーバーグラウンド", ["ダルストン","ハガーストン","ショーディッチ","ホワイトチャペル","シャドウェル","ワッピング","ロザーハイズ","ニュー・クロス"]],
-    ["オーバーグラウンド", ["ワンズワース","クラパム・ジャンクション","クラパム・コモン","キャンバーウェル","ペッカム","ニュー・クロス"]],
-  ];
-  const BUS = [
-    ["9番", ["ハマースミス","ケンジントン","ナイツブリッジ","ハイド・パーク・コーナー","ピカデリー・サーカス","チャリング・クロス"]],
-    ["11番", ["フラム・ブロードウェイ","チェルシー","スローン・スクエア","ヴィクトリア","ウェストミンスター","チャリング・クロス","セント・ポール","バンク","リバプール・ストリート"]],
-    ["24番", ["ハムステッド","カムデン・タウン","ユーストン","トッテナム・コート・ロード","レスター・スクエア","ウェストミンスター","ヴィクトリア","ピムリコ"]],
-    ["38番", ["ヴィクトリア","ピカデリー・サーカス","ホルボーン","エンジェル","ダルストン","ハックニー"]],
-    ["73番", ["ストーク・ニューイントン","エンジェル","キングス・クロス","ユーストン","オックスフォード・サーカス"]],
-    ["25番", ["オックスフォード・サーカス","ホルボーン","バンク","オールドゲート・イースト","ホワイトチャペル","マイル・エンド","ボウ","ストラトフォード"]],
-    ["15番", ["カナリー・ワーフ","ライムハウス","タワー・ヒル","セント・ポール","テンプル","チャリング・クロス"]],
-    ["36番", ["パディントン","マーブル・アーチ","ハイド・パーク・コーナー","ヴィクトリア","ヴォクソール","ケニントン","キャンバーウェル","ペッカム","ニュー・クロス"]],
-    ["381番", ["ウォータールー","サザーク","ロンドン・ブリッジ","バーモンジー","ロザーハイズ"]],
-    ["188番", ["ノース・グリニッジ","グリニッジ","デプトフォード","ニュー・クロス"]],
-    ["35番", ["クラパム・ジャンクション","バタシー","ヴォクソール","ケニントン","エレファント&キャッスル","ロンドン・ブリッジ","リバプール・ストリート"]],
-    ["31番", ["カムデン・タウン","スイス・コテージ","キルバーン","メイダ・ヴェール","ノッティング・ヒル","アールズ・コート"]],
-    ["390番", ["ハイゲート","アーチウェイ","ホロウェイ","キングス・クロス","ラッセル・スクエア"]],
-    ["22番", ["パトニー・ブリッジ","フラム・ブロードウェイ","チェルシー","スローン・スクエア","ナイツブリッジ","ハイド・パーク・コーナー","グリーン・パーク","ピカデリー・サーカス"]],
-    ["49番", ["クラパム・ジャンクション","チェルシー","サウス・ケンジントン","ケンジントン","ノッティング・ヒル","ホワイト・シティ"]],
-    ["26番", ["ハックニー・ウィック","ハックニー","ベスナル・グリーン","ショーディッチ","リバプール・ストリート","バンク","セント・ポール","ブラックフライアーズ","ウォータールー"]],
-    ["D3番", ["マイル・エンド","ライムハウス","カナリー・ワーフ","アイランド・ガーデンズ"]],
-    ["55番", ["トッテナム・コート・ロード","ホルボーン","ファリンドン","オールド・ストリート","ショーディッチ","ベスナル・グリーン"]],
-    ["12番", ["オックスフォード・サーカス","ピカデリー・サーカス","ウェストミンスター","ランベス・ノース","エレファント&キャッスル","キャンバーウェル","ペッカム"]],
-    ["2番", ["ベイカー・ストリート","マーブル・アーチ","ハイド・パーク・コーナー","ヴィクトリア","ヴォクソール","ストックウェル","ブリクストン"]],
-    ["88番", ["カムデン・タウン","リージェンツ・パーク","オックスフォード・サーカス","ピカデリー・サーカス","ウェストミンスター","ヴォクソール","クラパム・コモン"]],
-    ["37番", ["パトニー・ブリッジ","ワンズワース","クラパム・ジャンクション","クラパム・コモン","ブリクストン","ペッカム"]],
-    ["94番", ["シェパーズ・ブッシュ","ノッティング・ヒル","マーブル・アーチ","ボンド・ストリート"]],
-    ["205番", ["パディントン","ベイカー・ストリート","ユーストン","キングス・クロス","エンジェル","オールド・ストリート","リバプール・ストリート","オールドゲート・イースト","ホワイトチャペル","マイル・エンド","ボウ"]],
-    ["108番", ["ストラトフォード","ボウ","ノース・グリニッジ"]],
-    ["46番", ["ハムステッド","スイス・コテージ","セント・ジョンズ・ウッド","メイダ・ヴェール","パディントン"]],
-    ["214番", ["ハイゲート","ケンティッシュ・タウン","カムデン・タウン"]],
-    ["76番", ["ストーク・ニューイントン","ダルストン","ハガーストン","ショーディッチ"]],
-    ["190番", ["ハマースミス","フラム・ブロードウェイ"]],
-    ["100番", ["タワー・ヒル","ワッピング","シャドウェル"]],
-    ["1番", ["エレファント&キャッスル","バラ","バーモンジー","ロザーハイズ"]],
-    ["236番", ["フィンズベリー・パーク","ストーク・ニューイントン","ハイベリー"]],
-  ];
-  // テムズ川のボート：怪盗Xが黒チケットでのみ使える
-  const PIERS = ["パトニー・ブリッジ","チェルシー","バタシー","ウェストミンスター","チャリング・クロス","ブラックフライアーズ","ロンドン・ブリッジ","タワー・ヒル","ロザーハイズ","カナリー・ワーフ","グリニッジ","ノース・グリニッジ"];
+  const HELI_SET = new Set(HELI);
+  const ISLAND_ST = new Set(STATIONS.map((_, i) => i).filter(i => {
+    return ISLANDS.some(([cx, cy, rx, ry, ang]) => {
+      const a = -ang * Math.PI / 180, x = STATIONS[i][1] - cx, y = STATIONS[i][2] - cy;
+      const xr = x * Math.cos(a) - y * Math.sin(a), yr = x * Math.sin(a) + y * Math.cos(a);
+      return (xr / rx) ** 2 + (yr / ry) ** 2 <= 1;
+    });
+  }));
 
   const TYPE = {
     taxi:  { name: "タクシー", en: "Taxi", short: "タ" },
     bus:   { name: "バス", en: "Bus", short: "バ" },
     tube:  { name: "地下鉄", en: "Underground", short: "地" },
-    ferry: { name: "ボート", en: "Boat", short: "船" },
+    boat:  { name: "水上バス", en: "River Bus", short: "船" },
+    heli:  { name: "ヘリ", en: "Helicopter", short: "H" },
     black: { name: "黒チケット", en: "Black", short: "黒" },
   };
-  const DET_TYPES = ["taxi", "bus", "tube"];
+  const DET_TYPES = ["taxi", "bus", "tube", "boat", "heli"];
+  const MOVE_TYPES = ["taxi", "bus", "tube", "boat"];
 
   const MAX_MOVES = 24;
   const REVEAL = [3, 8, 13, 18, 24];
-  const DET_TICKETS = { taxi: 12, bus: 9, tube: 5 };
+  const DET_TICKETS = { taxi: 12, bus: 9, tube: 5, boat: 3, heli: 1 };
   const X_DOUBLE = 2;
+  const X_HELI = 2;
+  const DEFAULT_DETS = 3;
 
   // 区間ごとの交通手段
   const edgeTypes = new Map(); // "a-b" -> Map(type -> 路線名[])
@@ -558,62 +528,71 @@
     if (!m.has(type)) m.set(type, []);
     if (line && !m.get(type).includes(line)) m.get(type).push(line);
   }
-  const id = n => { const i = IDX[n]; if (i === undefined) throw new Error("unknown station " + n); return i; };
   for (const [a, b] of TAXI) addEdge(a, b, "taxi", "タクシー");
-  for (const [line, seq] of TUBE) for (let k = 0; k < seq.length - 1; k++) addEdge(id(seq[k]), id(seq[k + 1]), "tube", line);
-  for (const [line, seq] of BUS) for (let k = 0; k < seq.length - 1; k++) addEdge(id(seq[k]), id(seq[k + 1]), "bus", "バス " + line);
-  for (let k = 0; k < PIERS.length - 1; k++) addEdge(id(PIERS[k]), id(PIERS[k + 1]), "ferry", "テムズ川ボート");
+  for (const [line, seq] of TUBE) for (let k = 0; k < seq.length - 1; k++) addEdge(seq[k], seq[k + 1], "tube", line);
+  BUS.forEach((seq, r) => { for (let k = 0; k < seq.length - 1; k++) addEdge(seq[k], seq[k + 1], "bus", `バス ${r + 1}番`); });
+  for (let k = 0; k < BOAT.length - 1; k++) addEdge(BOAT[k], BOAT[k + 1], "boat", "テムズ水上バス");
 
   const ADJ = Array.from({ length: N }, () => []);
   for (const [key, types] of edgeTypes) {
     const [a, b] = key.split("-").map(Number);
     for (const t of types.keys()) { ADJ[a].push({ to: b, type: t }); ADJ[b].push({ to: a, type: t }); }
   }
+  // ヘリを除いた最短手数
   const D = Array.from({ length: N }, (_, s) => {
     const d = new Array(N).fill(Infinity);
     d[s] = 0;
     const q = [s];
     while (q.length) {
       const u = q.shift();
-      for (const e of ADJ[u]) if (e.type !== "ferry" && d[e.to] === Infinity) { d[e.to] = d[u] + 1; q.push(e.to); }
+      for (const e of ADJ[u]) if (d[e.to] === Infinity) { d[e.to] = d[u] + 1; q.push(e.to); }
     }
     return d;
   });
+  const dd = (a, b) => Math.min(D[a][b], 9);
 
   const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
   const clone = o => JSON.parse(JSON.stringify(o));
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
   function newGame(detCount) {
-    const ids = shuffle([...Array(N).keys()]);
+    const ids = shuffle([...Array(N).keys()]).filter(p => !ISLAND_ST.has(p));
     const det = [];
     for (const p of ids) {
       if (det.length >= detCount) break;
-      if (det.every(d => D[p][d.pos] >= 2)) det.push({ pos: p, t: { ...DET_TICKETS } });
+      if (det.every(d => D[p][d.pos] >= 3)) det.push({ pos: p, t: { ...DET_TICKETS } });
     }
     const startable = ids.filter(p => det.every(d => D[p][d.pos] >= 2));
     const xStart = startable[0];
     const G = {
-      seq: 1, turn: "x", det, xLog: [], black: detCount, dbl: X_DOUBLE, doubling: false,
+      seq: 1, turn: "x", det, xLog: [], black: detCount, dbl: X_DOUBLE, heli: X_HELI, doubling: false,
       possible: startable.slice().sort((a, b) => a - b), lastSeen: null,
       over: false, winner: null, reason: "",
     };
     return { G, sec: { pos: xStart, path: [xStart] } };
   }
 
+  // 怪盗Xの手：{to, type}。ヘリは to = -1（着陸地点はランダム）
   function xMoves(G, sec) {
     const occ = new Set(G.det.map(d => d.pos));
     const out = [], blackTo = new Set();
     for (const e of ADJ[sec.pos]) {
       if (occ.has(e.to)) continue;
-      if (e.type !== "ferry") out.push({ to: e.to, type: e.type });
+      out.push({ to: e.to, type: e.type });
       if (G.black > 0 && !blackTo.has(e.to)) { blackTo.add(e.to); out.push({ to: e.to, type: "black" }); }
     }
+    if (G.heli > 0 && HELI_SET.has(sec.pos) && heliTargets(G, sec.pos, true).length) out.push({ to: -1, type: "heli" });
     return out;
+  }
+  function heliTargets(G, from, forX, k = -1) {
+    const occ = new Set(G.det.filter((_, j) => j !== k).map(d => d.pos));
+    return HELI.filter(h => h !== from && !(forX && occ.has(h)) && !(!forX && occ.has(h)));
   }
   const canDouble = G => G.dbl > 0 && !G.doubling && G.xLog.length <= MAX_MOVES - 2;
 
   function nextPossible(G, type) {
     const occ = new Set(G.det.map(d => d.pos));
+    if (type === "heli") return HELI.filter(h => !occ.has(h));
     const nx = new Set();
     for (const s of G.possible) for (const e of ADJ[s]) {
       if ((type === "black" || e.type === type) && !occ.has(e.to)) nx.add(e.to);
@@ -622,6 +601,7 @@
   }
 
   function applyX(G, sec, to, type, useDouble) {
+    if (type === "heli") { to = pick(heliTargets(G, sec.pos, true)); G.heli--; }
     sec.pos = to;
     sec.path.push(to);
     const n = G.xLog.length + 1;
@@ -633,12 +613,15 @@
     if (useDouble) { G.dbl--; G.doubling = true; }
     else { G.doubling = false; G.turn = 0; }
     G.seq++;
+    return to;
   }
 
   function detMoves(G, k) {
     const d = G.det[k];
     const occ = G.det.filter((_, j) => j !== k).map(x => x.pos);
-    return ADJ[d.pos].filter(e => e.type !== "ferry" && d.t[e.type] > 0 && !occ.includes(e.to));
+    const out = ADJ[d.pos].filter(e => d.t[e.type] > 0 && !occ.includes(e.to));
+    if (d.t.heli > 0 && HELI_SET.has(d.pos) && heliTargets(G, d.pos, false, k).length) out.push({ to: -1, type: "heli" });
+    return out;
   }
   const allStuck = G => G.det.every((_, k) => detMoves(G, k).length === 0);
 
@@ -649,39 +632,48 @@
   }
   function applyD(G, k, to, type) {
     const d = G.det[k];
+    if (type === "heli") to = pick(heliTargets(G, d.pos, false, k));
     d.pos = to;
     d.t[type]--;
     G.possible = G.possible.filter(p => p !== to);
     advance(G, k);
     G.seq++;
+    return to;
   }
   function skipD(G, k) { advance(G, k); G.seq++; }
   function finish(G, winner, reason) { G.over = true; G.winner = winner; G.reason = reason; G.seq++; }
 
+  // ---------------- CPU ----------------
+  function xSafety(G, to) {
+    const cpos = G.det.map(d => d.pos);
+    const dmin = Math.min(...cpos.map(c => D[to][c]));
+    const dsum = cpos.reduce((s, c) => s + Math.min(D[to][c], 5), 0);
+    const exits = ADJ[to].filter(e => !cpos.some(c => D[e.to][c] <= 1)).length;
+    let s = Math.min(dmin, 4) * 10 + dsum + exits * 1.5;
+    if (dmin <= 1) s -= 40;
+    return { s, dmin };
+  }
   function aiX(G, sec) {
     const moves = xMoves(G, sec);
-    const cpos = G.det.map(d => d.pos);
-    const score = to => {
-      const dmin = Math.min(...cpos.map(c => D[to][c]));
-      const dsum = cpos.reduce((s, c) => s + Math.min(D[to][c], 5), 0);
-      const exits = ADJ[to].filter(e => e.type !== "ferry" && !cpos.some(c => D[e.to][c] <= 1)).length;
-      let s = Math.min(dmin, 4) * 10 + dsum + exits * 1.5 + Math.random() * 3;
-      if (dmin <= 1) s -= 40;
-      return { s, dmin };
-    };
     let best = null, bs = -Infinity, bestD = 0;
-    for (const to of new Set(moves.map(m => m.to))) {
-      const r = score(to);
-      if (r.s > bs) { bs = r.s; best = to; bestD = r.dmin; }
+    for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) {
+      const r = xSafety(G, to);
+      const s = r.s + Math.random() * 3;
+      if (s > bs) { bs = s; best = to; bestD = r.dmin; }
+    }
+    // 追い詰められたらヘリでランダムに逃げる
+    if (moves.some(m => m.type === "heli")) {
+      const lands = heliTargets(G, sec.pos, true);
+      const hs = lands.reduce((s, h) => s + xSafety(G, h).s, 0) / lands.length;
+      if (best === null || (bestD <= 1 && hs > bs - 5) || hs > bs + 12) return { to: -1, type: "heli", useDouble: false };
     }
     const n = G.xLog.length + 1;
-    const nowD = Math.min(...cpos.map(c => D[sec.pos][c]));
+    const nowD = Math.min(...G.det.map(d => D[sec.pos][d.pos]));
     const useDouble = canDouble(G) && bestD <= 1;
     const opts = moves.filter(m => m.to === best && m.type !== "black").map(m => m.type);
     let type = opts[0], size = -1;
     for (const ty of opts) { const k = nextPossible(G, ty).length; if (k > size) { size = k; type = ty; } }
     const wantBlack = G.black > 0 && !REVEAL.includes(n) && (
-      !opts.length ||
       (REVEAL.includes(n - 1) && Math.random() < 0.6) ||
       (nowD <= 2 && Math.random() < 0.35));
     if (wantBlack || !type) type = "black";
@@ -692,17 +684,25 @@
     const moves = detMoves(G, k);
     const P = G.possible;
     const w = 1 / Math.max(1, P.length);
-    let best = null, bs = -Infinity;
-    for (const to of new Set(moves.map(m => m.to))) {
+    const scoreAt = to => {
       let ed = 0;
-      for (const p of P) ed += Math.min(D[to][p], 8) * w;
+      for (const p of P) ed += dd(to, p) * w;
       const prob = P.includes(to) ? w : 0;
       let spread = 0;
       G.det.forEach((o, j) => { if (j !== k && D[to][o.pos] <= 1) spread -= 1.2; });
+      return prob * 30 - ed * 4 + spread;
+    };
+    let best = null, bs = -Infinity;
+    for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) {
       const types = moves.filter(m => m.to === to).map(m => m.type);
       const spare = Math.max(...types.map(t => G.det[k].t[t]));
-      const s = prob * 30 - ed * 4 + spread - (spare <= 1 ? 1.5 : 0) + Math.random() * 0.8;
+      const s = scoreAt(to) - (spare <= 1 ? 1.5 : 0) + Math.random() * 0.8;
       if (s > bs) { bs = s; best = to; }
+    }
+    if (moves.some(m => m.type === "heli")) {
+      const lands = heliTargets(G, G.det[k].pos, false, k);
+      const hs = lands.reduce((s, h) => s + scoreAt(h), 0) / lands.length;
+      if (best === null || hs > bs + 6) return { to: -1, type: "heli" };
     }
     const types = moves.filter(m => m.to === best).map(m => m.type);
     types.sort((a, b) => G.det[k].t[b] - G.det[k].t[a]);
@@ -732,10 +732,9 @@
   function portrait(kind, k = 0, cls = "") {
     const src = kind === "x" ? ART.x : ART.d[k];
     if (src) return `<span class="portrait ${cls}"><img src="${src}" alt=""></span>`;
-    const ring = kind === "x" ? "#C0271F" : DCOL[k];
-    const inner = kind === "x" ? `<use href="#chr-x" x="-20" y="-20" width="40" height="40"></use>` :
-      `<circle r="20" fill="${ring}"></circle><use href="#chr-d" x="-20" y="-20" width="40" height="40"></use>`;
-    return `<svg class="portrait ${cls}" viewBox="-22 -22 44 44" aria-hidden="true"><circle r="21.5" fill="none" stroke="${ring}" stroke-width="3"></circle>${inner}</svg>`;
+    const color = kind === "x" ? "#2A2530" : DCOL[k];
+    const bg = kind === "x" ? "rgba(192,39,31,0.28)" : "rgba(255,255,255,0.08)";
+    return `<svg class="portrait ${cls}" viewBox="-34 -72 68 80" aria-hidden="true"><circle cx="0" cy="-32" r="33" fill="${bg}"></circle><use href="${kind === "x" ? "#pawn-x" : "#pawn"}" x="-30" y="-70" width="60" height="80" style="color:${color}"></use>${kind === "d" ? `<text x="0" y="-18" class="pawn-num">${k + 1}</text>` : ""}</svg>`;
   }
 
   // ======================================================================
@@ -743,7 +742,7 @@
   // ======================================================================
   const A = {
     role: null,        // "x" | "d" | "pass"
-    detCount: 5,
+    detCount: DEFAULT_DETS,
     G: null,
     sec: null,
     feed: [],
@@ -872,13 +871,17 @@
   function commitX(to, type) {
     const dbl = A.useDouble && canDouble(A.G);
     A.sel = null; A.useDouble = false;
-    apply(() => applyX(A.G, A.sec, to, type, dbl));
+    let landed = to;
+    apply(() => { landed = applyX(A.G, A.sec, to, type, dbl); });
+    if (type === "heli") toast(`ヘリで ${NO(landed)} ${NAME(landed)} に着陸`);
     if (A.role === "pass" && !A.G.over && A.G.turn !== "x") A.cover = "d";
     step();
   }
   function commitD(k, to, type) {
     A.sel = null;
-    apply(() => applyD(A.G, k, to, type));
+    let landed = to;
+    apply(() => { landed = applyD(A.G, k, to, type); });
+    if (type === "heli") toast(`${dName(k)} はヘリで ${NO(landed)} ${NAME(landed)} に着陸`);
     step();
   }
 
@@ -1033,9 +1036,20 @@
     return d;
   }
   const P = i => STATIONS[i].slice(1, 3);
-  const avg = (...ids) => [ids.reduce((s, i) => s + STATIONS[i][1], 0) / ids.length, ids.reduce((s, i) => s + STATIONS[i][2], 0) / ids.length];
 
   // 背景（古地図）を SVG で組み立て、ビットマップにして敷く
+  function riverPolygon() {
+    const L = [], R = [];
+    for (let i = 0; i < RIVER.length; i++) {
+      const [x, y, w] = RIVER[i];
+      const a = RIVER[Math.max(0, i - 1)], b = RIVER[Math.min(RIVER.length - 1, i + 1)];
+      const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len, ny = dx / len;
+      L.push([x + nx * w / 2, y + ny * w / 2]);
+      R.push([x - nx * w / 2, y - ny * w / 2]);
+    }
+    return smoothPath(L) + " L" + smoothPath(R.reverse()).slice(1) + " Z";
+  }
   function backgroundSVG() {
     let seed = 1895;
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -1046,9 +1060,10 @@
       <filter id="blotch" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.004" numOctaves="3" seed="9"/><feColorMatrix type="matrix" values="0 0 0 0 0.5  0 0 0 0 0.36  0 0 0 0 0.16  0 0 0 0.45 -0.12"/></filter>
       <radialGradient id="vig" cx="50%" cy="50%" r="72%"><stop offset="62%" stop-color="#5A3B16" stop-opacity="0"/><stop offset="100%" stop-color="#5A3B16" stop-opacity="0.5"/></radialGradient>
       <pattern id="trees" width="26" height="22" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="4.5" fill="#8FA464"/><circle cx="19" cy="17" r="4" fill="#8FA464"/></pattern>
+      <pattern id="waves" width="40" height="18" patternUnits="userSpaceOnUse"><path d="M2,10 q8,-7 16,0 t16,0" fill="none" stroke="#7FA7AE" stroke-width="1.6" opacity="0.6"/></pattern>
     </defs>`);
     o.push(`<rect width="${W}" height="${H}" fill="#E8DAB8"/>`);
-    // 路地
+    // 路地と街区
     const SP = 30, cols = Math.ceil(W / SP) + 3, rows = Math.ceil(H / SP) + 3, G = [];
     for (let r = 0; r < rows; r++) { G.push([]); for (let c = 0; c < cols; c++) G[r].push([(c - 1) * SP + (rnd() - 0.5) * 18, (r - 1) * SP + (rnd() - 0.5) * 18]); }
     const pt = q => q[0].toFixed(0) + "," + q[1].toFixed(0);
@@ -1057,58 +1072,68 @@
       if (rnd() > 0.12) d += `M${pt(G[r][c])}L${pt(G[r][c + 1])}`;
       if (rnd() > 0.18) d += `M${pt(G[r][c])}L${pt(G[r + 1][c])}`;
       if (rnd() < 0.55) {
-        const a = G[r][c], b = G[r][c + 1], cc = G[r + 1][c + 1], dd = G[r + 1][c];
-        const sh = q => [(q[0] * 0.8 + (a[0] + b[0] + cc[0] + dd[0]) / 4 * 0.2), (q[1] * 0.8 + (a[1] + b[1] + cc[1] + dd[1]) / 4 * 0.2)];
-        blocks += `M${pt(sh(a))}L${pt(sh(b))}L${pt(sh(cc))}L${pt(sh(dd))}Z`;
+        const a = G[r][c], b = G[r][c + 1], cc = G[r + 1][c + 1], e = G[r + 1][c];
+        const m = [(a[0] + b[0] + cc[0] + e[0]) / 4, (a[1] + b[1] + cc[1] + e[1]) / 4];
+        const sh = q => [q[0] * 0.8 + m[0] * 0.2, q[1] * 0.8 + m[1] * 0.2];
+        blocks += `M${pt(sh(a))}L${pt(sh(b))}L${pt(sh(cc))}L${pt(sh(e))}Z`;
       }
     }
     o.push(`<path d="${blocks}" fill="#DCCBA4" opacity="0.8"/>`);
     o.push(`<path d="${d}" stroke="#C8B48A" stroke-width="1.6" fill="none"/>`);
-    // 大通り（主なバス路線に沿わせる）
-    for (const [, seq] of BUS.slice(0, 12)) {
-      const pts = seq.map(n => P(IDX[n]));
-      o.push(`<path d="${smoothPath(pts)}" stroke="#BCA67A" stroke-width="15" fill="none" stroke-linecap="round" opacity="0.55"/>`);
+    // 大通り（バス路線に沿わせる）
+    for (const seq of BUS) {
+      const pts = seq.map(P);
+      o.push(`<path d="${smoothPath(pts)}" stroke="#BCA67A" stroke-width="16" fill="none" stroke-linecap="round" opacity="0.55"/>`);
       o.push(`<path d="${smoothPath(pts)}" stroke="#F2E8CF" stroke-width="10" fill="none" stroke-linecap="round"/>`);
     }
-    // 公園
-    const park = (c, rx, ry, rot = 0) => `<g transform="translate(${c[0].toFixed(0)} ${c[1].toFixed(0)}) rotate(${rot})"><ellipse rx="${rx}" ry="${ry}" fill="#B9C68E" stroke="#6E7F3E" stroke-width="2.5"/><ellipse rx="${rx - 6}" ry="${ry - 6}" fill="url(#trees)" opacity="0.7"/></g>`;
-    o.push(park([990, 1110], 175, 62, 8));                  // ハイド・パーク
-    o.push(park(avg(22, 23), 80, 70));                       // リージェンツ・パーク
-    o.push(park([1060, 250], 150, 80, -6));                  // ハムステッド・ヒース
-    o.push(park(avg(52, 53, 55), 52, 30, 12));               // グリーン・パーク
-    o.push(park([1110, 1600], 70, 42, -10));                 // バタシー・パーク
-    o.push(park([2180, 690], 85, 48));                       // ヴィクトリア・パーク
-    o.push(park([2470, 1650], 90, 60));                      // グリニッジ・パーク
-    o.push(park([1180, 1850], 110, 45));                     // クラパム・コモン
-    o.push(park([650, 1180], 40, 38));                       // ホランド・パーク
-    // テムズ川
-    const th = smoothPath(THAMES);
-    o.push(`<path d="${th}" stroke="#6E9AA3" stroke-width="64" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
-    o.push(`<path d="${th}" stroke="#A7C8CB" stroke-width="56" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
-    o.push(`<path d="${th}" stroke="#BDD6D6" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.6"/>`);
+    // 公園（駅から離れた空き地に置く）
+    const parkAt = (x, y, rx, ry, rot) => `<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) rotate(${rot})"><ellipse rx="${rx}" ry="${ry}" fill="#B9C68E" stroke="#6E7F3E" stroke-width="2.5"/><ellipse rx="${rx - 6}" ry="${ry - 6}" fill="url(#trees)" opacity="0.7"/></g>`;
+    let parks = 0;
+    for (let tries = 0; tries < 400 && parks < 9; tries++) {
+      const x = 150 + rnd() * (W - 300), y = 150 + rnd() * (H - 300);
+      const near = STATIONS.some(s => Math.hypot(s[1] - x, s[2] - y) < 120);
+      const wet = RIVER.some(([rx, ry, w]) => Math.hypot(rx - x, ry - y) < w / 2 + 120);
+      if (!near && !wet) { o.push(parkAt(x, y, 70 + rnd() * 50, 40 + rnd() * 25, (rnd() - 0.5) * 40)); parks++; }
+    }
+    // テムズ川（斜め）と島
+    const rp = riverPolygon();
+    o.push(`<path d="${rp}" fill="#A7C8CB" stroke="#6E9AA3" stroke-width="5"/>`);
+    o.push(`<path d="${rp}" fill="url(#waves)"/>`);
+    for (const [cx, cy, rx, ry, ang] of ISLANDS) {
+      o.push(`<g transform="translate(${cx} ${cy}) rotate(${ang})"><ellipse rx="${rx + 10}" ry="${ry + 10}" fill="#D9CFA8" stroke="#6E9AA3" stroke-width="4"/><ellipse rx="${rx}" ry="${ry}" fill="#E8DAB8" stroke="#A89468" stroke-width="2"/><ellipse rx="${rx * 0.55}" ry="${ry * 0.45}" fill="url(#trees)" opacity="0.6"/></g>`);
+    }
+    // 橋
+    for (const [bx, by] of BRIDGES) {
+      let best = 0, bd = Infinity;
+      RIVER.forEach(([x, y], i) => { const q = Math.hypot(x - bx, y - by); if (q < bd) { bd = q; best = i; } });
+      const a = RIVER[Math.max(0, best - 1)], b = RIVER[Math.min(RIVER.length - 1, best + 1)];
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI + 90;
+      const w = RIVER[best][2] + 60;
+      o.push(`<g transform="translate(${bx} ${by}) rotate(${ang.toFixed(1)})"><rect x="${-w / 2}" y="-11" width="${w}" height="22" fill="#CDB98C" stroke="#3B2C1E" stroke-width="2.5"/>${Array.from({ length: Math.floor(w / 26) }, (_, i) => `<path d="M${-w / 2 + 13 + i * 26},-11 v22" stroke="#3B2C1E" stroke-width="1" opacity="0.5"/>`).join("")}</g>`);
+    }
     // 地区名
-    const ward = (x, y, s, rot = 0) => `<text x="${x}" y="${y}" transform="rotate(${rot} ${x} ${y})" font-family="IM Fell English SC, Georgia, serif" font-size="48" letter-spacing="14" fill="#5A4428" opacity="0.2" text-anchor="middle">${s}</text>`;
-    o.push(ward(1330, 1175, "WESTMINSTER"), ward(1760, 890, "THE CITY"), ward(1150, 540, "CAMDEN"), ward(1700, 600, "ISLINGTON"),
-      ward(760, 1260, "KENSINGTON", -6), ward(1850, 1330, "SOUTHWARK"), ward(1500, 1540, "LAMBETH"), ward(2150, 930, "TOWER HAMLETS"),
-      ward(2000, 450, "HACKNEY"), ward(2380, 1560, "GREENWICH"), ward(950, 1650, "BATTERSEA"), ward(700, 820, "PADDINGTON"));
-    o.push(`<text x="1660" y="1112" font-family="IM Fell English SC, Georgia, serif" font-size="30" letter-spacing="30" fill="#4E7880" font-style="italic" text-anchor="middle">RIVER  THAMES</text>`);
-    // 名所
+    const ward = (x, y, s) => `<text x="${x}" y="${y}" font-family="IM Fell English SC, Georgia, serif" font-size="46" letter-spacing="14" fill="#5A4428" opacity="0.18" text-anchor="middle">${s}</text>`;
+    o.push(ward(2250, 330, "NORTH BANK"), ward(700, 1500, "SOUTH BANK"), ward(1900, 700, "THE CITY"), ward(1200, 1200, "SOUTHWARK"),
+      ward(2600, 1000, "TOWER HAMLETS"), ward(400, 900, "BATTERSEA"), ward(1450, 250, "CAMDEN"), ward(1700, 1500, "GREENWICH"));
+    const mid = RIVER[18];
+    o.push(`<text x="${mid[0]}" y="${mid[1]}" transform="rotate(26 ${mid[0]} ${mid[1]})" font-family="IM Fell English SC, Georgia, serif" font-size="34" letter-spacing="30" fill="#4E7880" text-anchor="middle" dy="12">RIVER THAMES</text>`);
+    // 名所（駅の近く）
     const ink = `stroke="#3B2C1E" stroke-width="2.2" stroke-linejoin="round"`, fill = `fill="#D9C79E"`;
-    const lm = (x, y, sc, body) => `<g transform="translate(${x} ${y}) scale(${sc})">${body}</g>`;
-    o.push(lm(1425, 1300, 1.6, `<rect x="-62" y="-16" width="54" height="14" ${fill} ${ink}/><rect x="-6" y="-46" width="12" height="44" ${fill} ${ink}/><path d="M-7,-46 L0,-64 L7,-46 Z" ${fill} ${ink}/><circle cy="-38" r="4.5" fill="#F7EFD9" ${ink}/>`));   // ビッグ・ベン
-    o.push(lm(1880, 1108, 1.8, `<rect x="-44" y="-3" width="88" height="5" ${fill} ${ink}/><rect x="-26" y="-32" width="12" height="34" ${fill} ${ink}/><rect x="14" y="-32" width="12" height="34" ${fill} ${ink}/><path d="M-27,-32 L-20,-42 L-13,-32 Z M13,-32 L20,-42 L27,-32 Z" ${fill} ${ink}/><rect x="-14" y="-29" width="28" height="4" ${fill} ${ink}/>`)); // タワー・ブリッジ
-    o.push(lm(1735, 940, 1.6, `<rect x="-18" y="-10" width="36" height="10" ${fill} ${ink}/><rect x="-9" y="-18" width="18" height="8" ${fill} ${ink}/><path d="M-10,-18 A10,10 0 0 1 10,-18 Z" ${fill} ${ink}/><rect x="-1.8" y="-34" width="3.6" height="7" ${fill} ${ink}/>`)); // セント・ポール
-    o.push(lm(1500, 1225, 1.5, `<circle cy="-26" r="22" fill="none" ${ink}/>` + Array.from({ length: 12 }, (_, a) => `<path d="M0,-26 L${(22 * Math.cos(a * Math.PI / 6)).toFixed(1)},${(-26 + 22 * Math.sin(a * Math.PI / 6)).toFixed(1)}" ${ink}/>`).join("") + `<path d="M0,-26 L-10,0 M0,-26 L10,0" ${ink}/>`)); // ロンドン・アイ
-    o.push(lm(1130, 1190, 1.5, `<rect x="-22" y="-12" width="44" height="12" ${fill} ${ink}/><path d="M-7,-12 L0,-18 L7,-12 Z" ${fill} ${ink}/><path d="M0,-18 L0,-28 L7,-26 L0,-23" fill="#C0271F" ${ink}/>`)); // バッキンガム宮殿
-    o.push(lm(1300, 1540, 1.5, `<rect x="-26" y="-18" width="52" height="18" ${fill} ${ink}/>` + [-22, -10, 10, 22].map(x => `<rect x="${x - 3}" y="-40" width="6" height="22" fill="#F2E8CF" ${ink}/>`).join(""))); // バタシー発電所
-    o.push(lm(1850, 1180, 1.6, `<path d="M-10,0 L0,-60 L10,0 Z" fill="#CFE0E2" ${ink}/>`)); // ザ・シャード
-    o.push(lm(2380, 1170, 1.5, `<rect x="-9" y="-50" width="18" height="50" ${fill} ${ink}/><path d="M-9,-50 L0,-60 L9,-50 Z" ${fill} ${ink}/><rect x="-26" y="-28" width="12" height="28" ${fill} ${ink}/><rect x="14" y="-34" width="12" height="34" ${fill} ${ink}/>`)); // カナリー・ワーフ
-    o.push(lm(2560, 1240, 1.5, `<path d="M-30,0 A30,20 0 0 1 30,0 Z" fill="#F2E8CF" ${ink}/>` + [-24, -12, 0, 12, 24].map(x => `<path d="M${x},-12 L${x * 1.25},-30" ${ink}/>`).join(""))); // O2
-    o.push(lm(2330, 1580, 1.5, `<path d="M-26,0 L26,0 L20,8 L-20,8 Z" ${fill} ${ink}/><path d="M-12,0 L-12,-30 M0,0 L0,-36 M12,0 L12,-30" ${ink}/><path d="M-12,-26 L12,-26" ${ink}/>`)); // カティーサーク
+    const near = (name, dx, dy) => { const i = STATIONS.findIndex(s => s[0] === name); return i < 0 ? null : [STATIONS[i][1] + dx, STATIONS[i][2] + dy]; };
+    const lm = (at, sc, body) => at ? `<g transform="translate(${at[0].toFixed(0)} ${at[1].toFixed(0)}) scale(${sc})">${body}</g>` : "";
+    o.push(lm(near("ウェストミンスター", 70, 20), 1.6, `<rect x="-62" y="-16" width="54" height="14" ${fill} ${ink}/><rect x="-6" y="-46" width="12" height="44" ${fill} ${ink}/><path d="M-7,-46 L0,-64 L7,-46 Z" ${fill} ${ink}/><circle cy="-38" r="4.5" fill="#F7EFD9" ${ink}/>`));
+    o.push(lm(near("セント・ポール", -70, -20), 1.6, `<rect x="-18" y="-10" width="36" height="10" ${fill} ${ink}/><rect x="-9" y="-18" width="18" height="8" ${fill} ${ink}/><path d="M-10,-18 A10,10 0 0 1 10,-18 Z" ${fill} ${ink}/><rect x="-1.8" y="-34" width="3.6" height="7" ${fill} ${ink}/>`));
+    o.push(lm(near("ウォータールー", -80, -10), 1.4, `<circle cy="-26" r="22" fill="none" ${ink}/>` + Array.from({ length: 12 }, (_, a) => `<path d="M0,-26 L${(22 * Math.cos(a * Math.PI / 6)).toFixed(1)},${(-26 + 22 * Math.sin(a * Math.PI / 6)).toFixed(1)}" ${ink}/>`).join("") + `<path d="M0,-26 L-10,0 M0,-26 L10,0" ${ink}/>`));
+    o.push(lm(near("グリーン・パーク", 60, 50), 1.5, `<rect x="-22" y="-12" width="44" height="12" ${fill} ${ink}/><path d="M-7,-12 L0,-18 L7,-12 Z" ${fill} ${ink}/><path d="M0,-18 L0,-28 L7,-26 L0,-23" fill="#C0271F" ${ink}/>`));
+    o.push(lm(near("バタシー", 70, 10), 1.5, `<rect x="-26" y="-18" width="52" height="18" ${fill} ${ink}/>` + [-22, -10, 10, 22].map(x => `<rect x="${x - 3}" y="-40" width="6" height="22" fill="#F2E8CF" ${ink}/>`).join("")));
+    o.push(lm(near("ロンドン・ブリッジ", 60, -10), 1.6, `<path d="M-10,0 L0,-60 L10,0 Z" fill="#CFE0E2" ${ink}/>`));
+    o.push(lm(near("カナリー・ワーフ", -60, 10), 1.5, `<rect x="-9" y="-50" width="18" height="50" ${fill} ${ink}/><path d="M-9,-50 L0,-60 L9,-50 Z" ${fill} ${ink}/><rect x="-26" y="-28" width="12" height="28" ${fill} ${ink}/><rect x="14" y="-34" width="12" height="34" ${fill} ${ink}/>`));
+    o.push(lm(near("ノース・グリニッジ", 70, 0), 1.5, `<path d="M-30,0 A30,20 0 0 1 30,0 Z" fill="#F2E8CF" ${ink}/>` + [-24, -12, 0, 12, 24].map(x => `<path d="M${x},-12 L${x * 1.25},-30" ${ink}/>`).join("")));
+    const tb = BRIDGES[3];
+    if (tb) o.push(lm(tb, 1.4, `<rect x="-26" y="-32" width="12" height="34" ${fill} ${ink}/><rect x="14" y="-32" width="12" height="34" ${fill} ${ink}/><path d="M-27,-32 L-20,-42 L-13,-32 Z M13,-32 L20,-42 L27,-32 Z" ${fill} ${ink}/><rect x="-14" y="-29" width="28" height="4" ${fill} ${ink}/>`));
     // 方位記号と表題
-    o.push(`<g transform="translate(2840 170)"><circle r="78" fill="#F2E8CF" stroke="#3B2C1E" stroke-width="3"/><circle r="64" fill="none" stroke="#3B2C1E" stroke-width="1.5"/><path d="M0,-86 L14,0 L0,86 L-14,0 Z M-86,0 L0,-14 L86,0 L0,14 Z" fill="#D9C79E" stroke="#3B2C1E" stroke-width="2"/><path d="M0,-86 L14,0 L-14,0 Z" fill="#3B2C1E"/><text y="-96" font-family="Georgia, serif" font-size="30" fill="#3B2C1E" text-anchor="middle">N</text></g>`);
-    o.push(`<g transform="translate(90 1640)"><rect width="440" height="190" rx="6" fill="#F4EBD3" stroke="#3B2C1E" stroke-width="3"/><rect x="10" y="10" width="420" height="170" rx="4" fill="none" stroke="#3B2C1E" stroke-width="1.5"/><text x="220" y="92" font-family="IM Fell English SC, Georgia, serif" font-size="76" letter-spacing="12" fill="#3B2C1E" text-anchor="middle">LONDON</text><path d="M110,122 h220 M110,114 v16 M220,117 v10 M330,114 v16" stroke="#3B2C1E" stroke-width="2.5"/><text x="220" y="160" font-family="IM Fell English SC, Georgia, serif" font-size="24" fill="#3B2C1E" text-anchor="middle">Scale of Two Miles · MDCCCXCV</text></g>`);
-    // 紙の質感
+    o.push(`<g transform="translate(2860 1760)"><circle r="70" fill="#F2E8CF" stroke="#3B2C1E" stroke-width="3"/><circle r="56" fill="none" stroke="#3B2C1E" stroke-width="1.5"/><path d="M0,-78 L13,0 L0,78 L-13,0 Z M-78,0 L0,-13 L78,0 L0,13 Z" fill="#D9C79E" stroke="#3B2C1E" stroke-width="2"/><path d="M0,-78 L13,0 L-13,0 Z" fill="#3B2C1E"/><text y="-86" font-family="Georgia, serif" font-size="28" fill="#3B2C1E" text-anchor="middle">N</text></g>`);
+    o.push(`<g transform="translate(60 1700)"><rect width="400" height="160" rx="6" fill="#F4EBD3" stroke="#3B2C1E" stroke-width="3"/><rect x="10" y="10" width="380" height="140" rx="4" fill="none" stroke="#3B2C1E" stroke-width="1.5"/><text x="200" y="82" font-family="IM Fell English SC, Georgia, serif" font-size="68" letter-spacing="12" fill="#3B2C1E" text-anchor="middle">LONDON</text><text x="200" y="124" font-family="IM Fell English SC, Georgia, serif" font-size="22" fill="#3B2C1E" text-anchor="middle">A Chase upon the Thames · MDCCCXCV</text></g>`);
     o.push(`<rect width="${W}" height="${H}" filter="url(#blotch)"/>`);
     o.push(`<rect width="${W}" height="${H}" filter="url(#grain)"/>`);
     o.push(`<rect width="${W}" height="${H}" fill="url(#vig)"/>`);
@@ -1137,19 +1162,17 @@
   }
 
   function buildBoard() {
-    const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels"), gB = $("gBoat");
-    // テムズ川のボート航路と乗り場
-    el("path", { d: smoothPath(THAMES.slice(3, 33)), class: "boat-lane" }, gB);
-    // 路線：地下鉄 → バス → タクシーの順に重ねる
-    const layers = { tube: el("g", {}, gE), bus: el("g", {}, gE), taxi: el("g", {}, gE) };
+    const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels");
+    // 路線：水上バス → 地下鉄 → バス → タクシーの順に重ねる
+    const layers = { boat: el("g", {}, gE), tube: el("g", {}, gE), bus: el("g", {}, gE), taxi: el("g", {}, gE) };
     for (const [key, types] of edgeTypes) {
       const [a, b] = key.split("-").map(Number);
       const [x1, y1] = P(a), [x2, y2] = P(b);
       const len = Math.hypot(x2 - x1, y2 - y1);
       const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
-      const list = ["tube", "bus", "taxi"].filter(t => types.has(t));
+      const list = ["boat", "tube", "bus", "taxi"].filter(t => types.has(t));
       list.forEach((t, k) => {
-        const off = (k - (list.length - 1) / 2) * 13;
+        const off = (k - (list.length - 1) / 2) * 14;
         const pts = { x1: x1 + nx * off, y1: y1 + ny * off, x2: x2 + nx * off, y2: y2 + ny * off };
         const g = el("g", {}, layers[t]);
         el("title", {}, g).textContent = types.get(t).join("・");
@@ -1158,37 +1181,37 @@
         if (t === "tube") el("line", { ...pts, class: "edge tube dash" }, g);
       });
     }
-    // 駅：上半分を使える交通手段で塗り分け、下半分に番号
-    const R = 21;
+    // 駅：上半分を使える交通手段で塗り分け、下半分に番号。ヘリポートは H マーク
+    const R = 22;
     STATIONS.forEach(([name, x, y], i) => {
       const g = el("g", {}, gS);
-      if (ADJ[i].some(e => e.type === "ferry")) el("circle", { cx: x, cy: y, r: R + 6, class: "pier" }, g);
+      if (HELI_SET.has(i)) {
+        el("circle", { cx: x, cy: y, r: R + 16, class: "helipad" }, g);
+        el("text", { x: x + R + 10, y: y - R - 4, class: "heli-h" }, g).textContent = "H";
+      }
       el("circle", { cx: x, cy: y, r: R, class: "stn-base" }, g);
-      const ts = DET_TYPES.filter(t => ADJ[i].some(e => e.type === t));
+      const ts = MOVE_TYPES.filter(t => ADJ[i].some(e => e.type === t));
       ts.forEach((t, k) => {
         const a0 = Math.PI + Math.PI * k / ts.length, a1 = Math.PI + Math.PI * (k + 1) / ts.length;
         el("path", { d: `M${x},${y} L${(x + R * Math.cos(a0)).toFixed(2)},${(y + R * Math.sin(a0)).toFixed(2)} A${R},${R} 0 0 1 ${(x + R * Math.cos(a1)).toFixed(2)},${(y + R * Math.sin(a1)).toFixed(2)} Z`, class: "wedge " + t }, g);
       });
       el("path", { d: `M${x - R},${y} H${x + R}`, stroke: "#3B2C1E", "stroke-width": 1.5 }, g);
       el("circle", { cx: x, cy: y, r: R, class: "stn-rim" }, g);
-      el("text", { x, y: y + 15, class: "stn-num" }, g).textContent = NO(i);
-      el("text", { x, y: y + R + 22, class: "stn-label", id: "lbl" + i }, gL).textContent = name;
+      el("text", { x, y: y + 16, class: "stn-num" }, g).textContent = NO(i);
+      el("text", { x, y: y + R + 24, class: "stn-label", id: "lbl" + i }, gL).textContent = name;
     });
   }
 
+  // 駒（ボードゲームのポーン）
   function buildTokens() {
     const gT = $("gTokens");
     gT.replaceChildren();
     const mk = (id, kind, k) => {
       const g = el("g", { class: "tok", id }, gT);
-      el("circle", { r: 34, class: "ring", visibility: "hidden" }, g);
-      el("circle", { r: 27, fill: kind === "x" ? "#C0271F" : DCOL[k], stroke: "#FBF5E4", "stroke-width": 3 }, g);
-      el("use", { href: kind === "x" ? "#chr-x" : "#chr-d", x: -23, y: -23, width: 46, height: 46 }, g);
-      el("circle", { r: 27, class: "ring2" }, g);
-      if (kind === "d") {
-        el("circle", { cx: 20, cy: 20, r: 11, class: "num" }, g);
-        el("text", { x: 20, y: 20.5, class: "num-t" }, g).textContent = k + 1;
-      }
+      el("ellipse", { cx: 0, cy: 6, rx: 34, ry: 13, class: "ring", visibility: "hidden" }, g);
+      const u = el("use", { href: kind === "x" ? "#pawn-x" : "#pawn", x: -30, y: -70, width: 60, height: 80 }, g);
+      u.style.color = kind === "x" ? "#2A2530" : DCOL[k];
+      if (kind === "d") el("text", { x: 0, y: -18, class: "pawn-num" }, g).textContent = k + 1;
       return g;
     };
     mk("tokX", "x", 0);
@@ -1197,7 +1220,7 @@
 
   function placeToken(g, pos, dx = 0, dy = 0) {
     const [x, y] = P(pos);
-    g.style.transform = `translate(${x + dx}px, ${y + dy}px)`;
+    g.style.transform = `translate(${x + dx}px, ${y + dy + 8}px)`;
   }
 
   // ======================================================================
@@ -1230,14 +1253,14 @@
 
     if (humanTurn()) {
       const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
-      for (const to of new Set(moves.map(m => m.to))) {
+      for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) {
         const [x, y] = P(to);
         el("circle", { cx: x, cy: y, r: 31, class: "dest pulse" }, gD);
         el("circle", { cx: x, cy: y, r: 35, class: "dest-outer pulse" }, gD);
         hot(to);
       }
     }
-    if (A.sel !== null) { const [x, y] = P(A.sel); el("circle", { cx: x, cy: y, r: 36, class: "sel" }, gM); hot(A.sel); }
+    if (A.sel !== null && A.sel >= 0) { const [x, y] = P(A.sel); el("circle", { cx: x, cy: y, r: 36, class: "sel" }, gM); hot(A.sel); }
     if (!showX && G.lastSeen && !G.over) {
       const [x, y] = P(G.lastSeen.pos);
       el("circle", { cx: x, cy: y, r: 40, class: "lastseen" }, gM);
@@ -1246,7 +1269,7 @@
 
     // コマ（同じ駅に重なったら少しずらす）
     const stack = {};
-    const off = p => { const k = stack[p] = (stack[p] || 0) + 1; return [[0, 0], [26, -22], [-26, -22], [26, 22], [-26, 22], [0, 30]][k - 1] || [0, 0]; };
+    const off = p => { const k = stack[p] = (stack[p] || 0) + 1; return [[0, 0], [30, -8], [-30, -8], [22, 22], [-22, 22], [0, 28]][k - 1] || [0, 0]; };
     const tx = $("tokX");
     if (tx) {
       tx.style.display = showX ? "" : "none";
@@ -1269,12 +1292,12 @@
     const nx = REVEAL.find(r => r > G.xLog.length);
     $("xcard").innerHTML = `${portrait("x")}<span class="who"><b>怪盗X</b>
       <small class="nx">${G.over ? "ゲーム終了" : nx ? `次の出現 ${nx}手目` : "出現なし"}</small>
-      <span class="chipsx"><span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span></span></span>`;
+      <span class="chipsx"><span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
     $("xcard").classList.toggle("active", G.turn === "x");
     $("dets").innerHTML = G.det.map((d, k) => `
-      <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="focusD" data-k="${k}" aria-label="${dName(k)}：タクシー${d.t.taxi}・バス${d.t.bus}・地下鉄${d.t.tube}">
+      <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="focusD" data-k="${k}" aria-label="${dName(k)}：${DET_TYPES.map(t => TYPE[t].name + d.t[t]).join("・")}">
         ${portrait("d", k, "sm")}
-        <span class="tks"><span class="tk taxi ${d.t.taxi ? "" : "zero"}">${d.t.taxi}</span><span class="tk bus ${d.t.bus ? "" : "zero"}">${d.t.bus}</span><span class="tk tube ${d.t.tube ? "" : "zero"}">${d.t.tube}</span></span>
+        <span class="tks">${DET_TYPES.map(t => `<span class="tk ${t} ${d.t[t] ? "" : "zero"}">${t === "heli" ? "H" + d.t[t] : d.t[t]}</span>`).join("")}</span>
       </button>`).join("");
   }
 
@@ -1298,7 +1321,12 @@
       t1 = `${name} が考え中…`;
       t2 = G.turn === "x" ? "怪盗Xの切符は下の記録に残ります" : "CPUの刑事が動いています";
     }
-    el_.innerHTML = `${who}<div class="txt"><div class="t1">${t1}</div><div class="t2">${t2}</div></div>${move}`;
+    let heliBtn = "";
+    if (humanTurn()) {
+      const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+      if (moves.some(m => m.type === "heli")) heliBtn = `<button class="btn heli-btn" data-act="heli">ヘリで飛ぶ</button>`;
+    }
+    el_.innerHTML = `${who}<div class="txt"><div class="t1">${t1}</div><div class="t2">${t2}</div></div>${heliBtn || move}`;
   }
 
   function renderLog() {
@@ -1332,22 +1360,29 @@
     const G = A.G;
     if (A.sel === null || !G || !humanTurn()) { wrap.hidden = true; return; }
     const to = A.sel;
-    let tickets = "", opt = "";
-    if (G.turn === "x") {
+    const isX = G.turn === "x";
+    let tickets = "", opt = "", title;
+    if (to === -1) {
+      const cnt = isX ? G.heli : G.det[G.turn].t.heli;
+      title = `<span class="no">H</span>ヘリで飛ぶ`;
+      tickets = `<button class="ticket heli" data-act="ticket" data-type="heli"><span class="en">Helicopter</span><span class="ja">ほかのヘリポートのどこかへ着陸（ランダム）</span><span class="cnt">${cnt}</span></button>`;
+      opt = `<p style="margin:0;color:var(--muted);font-size:13px">着陸できるヘリポート：${heliTargets(G, isX ? A.sec.pos : G.det[G.turn].pos, isX, isX ? -1 : G.turn).map(h => NO(h)).join("・")}</p>`;
+    } else if (isX) {
+      title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
       const opts = xMoves(G, A.sec).filter(m => m.to === to).map(m => m.type);
-      const ferryOnly = !opts.some(t => t !== "black");
-      tickets = ["taxi", "bus", "tube", "black"].filter(t => opts.includes(t)).map(t =>
-        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}${t === "black" ? "（手段を隠す" + (ferryOnly ? "・ボート" : "") + "）" : ""}</span>${t === "black" ? `<span class="cnt">${G.black}</span>` : ""}</button>`).join("");
+      tickets = ["taxi", "bus", "tube", "boat", "black"].filter(t => opts.includes(t)).map(t =>
+        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}${t === "black" ? "（乗り物を隠す）" : ""}</span>${t === "black" ? `<span class="cnt">${G.black}</span>` : ""}</button>`).join("");
       if (canDouble(G)) opt = `<div class="opt-row"><div><b>2倍移動</b><div style="font-size:12px;color:var(--muted)">この後もう1駅続けて動く（残り${G.dbl}）</div></div><button class="switch" role="switch" aria-checked="${A.useDouble}" data-act="double" aria-label="2倍移動"></button></div>`;
     } else {
+      title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
       const k = G.turn, d = G.det[k];
       const opts = detMoves(G, k).filter(m => m.to === to).map(m => m.type);
-      tickets = DET_TYPES.filter(t => opts.includes(t)).map(t =>
+      tickets = MOVE_TYPES.filter(t => opts.includes(t)).map(t =>
         `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}</span><span class="cnt">${d.t[t]}</span></button>`).join("");
     }
     wrap.hidden = false;
     wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="切符を選ぶ">
-      <h3><span class="no">${NO(to)}</span>${esc(NAME(to))} へ</h3>
+      <h3>${title}</h3>
       <div class="tickets">${tickets}</div>
       ${opt}
       <button class="btn ghost wide" data-act="cancel">キャンセル</button></div>`;
@@ -1373,7 +1408,7 @@
             <button class="btn ghost" data-act="start" data-role="pass">${portrait("d", 1)}みんなで遊ぶ<span class="s">1台を回すパス&プレイ</span></button>
           </div>
           <div class="field"><label>刑事の人数</label><div class="seg">${[3, 4, 5].map(n => `<button data-act="dets" data-n="${n}" aria-pressed="${A.detCount === n}">${n}人</button>`).join("")}</div></div>
-          <p class="c" style="font-size:12px;margin-top:-6px">刑事が少ないほど怪盗Xが有利です（5人が標準）</p>
+          <p class="c" style="font-size:12px;margin-top:-6px">3人が標準。刑事を増やすほど怪盗Xは苦しくなります</p>
           <button class="btn ghost wide" data-act="rules">遊び方</button>
         </div>`;
       return;
@@ -1383,12 +1418,13 @@
       sc.classList.add("title");
       sc.innerHTML = `<div class="card"><h2>遊び方</h2><ol class="rules">
         <li><b>怪盗X</b> 1人と <b>刑事</b> 3〜5人の追いかけっこ。駅から駅へ、1手に1駅ずつ動きます。</li>
-        <li>移動には切符を使います。<b>タクシー</b>（黄）・<b>バス</b>（緑）・<b>地下鉄</b>（赤）。駅マークの上半分の色が、その駅で使える乗り物です。</li>
+        <li>乗り物は4種類。<b>タクシー</b>（黄）は近くの駅へ。<b>バス</b>（緑）と <b>地下鉄</b>（赤）は遠くまで一気に進めます。地下鉄は外周を一周する環状線と、中央を貫く3路線です。<b>水上バス</b>（青）はテムズ川沿いと川に浮かぶ2つの島を結びます。駅マークの上半分の色が、その駅で使える乗り物です。</li>
+        <li><b>ヘリポート</b>（H）からはヘリで飛べます。行き先は選べず、ほかのヘリポートのどこかにランダムで着陸します。島へは水上バスかヘリでしか行けません。</li>
         <li>怪盗Xの居場所は秘密。刑事にわかるのは下の記録に残る <b>切符の種類</b> だけ。${REVEAL.join("・")}手目の後だけ姿を現します。</li>
-        <li>刑事の切符は有限（タクシー${DET_TICKETS.taxi}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.tube}）。使い切ると動けません。</li>
-        <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す・テムズ川のボートに乗れる。刑事の人数と同じ枚数）と <b>2倍移動</b> ${X_DOUBLE}枚を持っています。</li>
+        <li>刑事の切符は有限（タクシー${DET_TICKETS.taxi}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.tube}・水上バス${DET_TICKETS.boat}・ヘリ${DET_TICKETS.heli}）。</li>
+        <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
         <li>刑事が怪盗Xのいる駅に入れば <b>逮捕</b>。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
-        <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。</li>
+        <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは下の「ヘリで飛ぶ」ボタンから。</li>
       </ol><button class="btn wide" data-act="title">戻る</button></div>`;
       return;
     }
@@ -1467,6 +1503,12 @@
       case "log": $("drawer").hidden = !$("drawer").hidden; return;
       case "cancel": A.sel = null; A.useDouble = false; render(); return;
       case "double": A.useDouble = !A.useDouble; renderSheet(); return;
+      case "heli": {
+        if (!humanTurn()) return;
+        const G = A.G, moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+        if (!moves.some(m => m.type === "heli")) return;
+        A.sel = -1; A.useDouble = false; render(); return;
+      }
       case "ticket": {
         const G = A.G, to = A.sel, type = b.dataset.type;
         if (to === null || !humanTurn()) return;
