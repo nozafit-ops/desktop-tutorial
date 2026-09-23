@@ -10,11 +10,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <style>
   :root {
-    --ground: #EEF1F4;
+    --ground: #E9ECEF;
     --panel: #FFFFFF;
     --ink: #1B2230;
     --muted: #5F6B7A;
     --rule: #CDD5DF;
+    --land: #EEF0EA;
+    --block: #E1E4DC;
+    --water: #A9D2EA;
+    --water-deep: #8FC2E0;
+    --park: #CBE3BF;
     --train: #2E9A4E;
     --subway: #7D4CC0;
     --bus: #E0801C;
@@ -29,40 +34,50 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --ground: #0F131B;
-      --panel: #171D28;
+      --ground: #0C1017;
+      --panel: #161C27;
       --ink: #E6EBF2;
       --muted: #93A0B2;
       --rule: #2A3343;
+      --land: #141A24;
+      --block: #1A212D;
+      --water: #12304A;
+      --water-deep: #0F2940;
+      --park: #17301F;
       --train: #46C06B;
       --subway: #A67DEA;
       --bus: #F29A3A;
       --secret: #E6EBF2;
       --target: #FF4F65;
-      --chaser: #7FA6FF;
+      --chaser: #5F8BF0;
       --agent: #FFC83D;
       --board: #07090C;
       --board-ink: #FFB547;
-      --station: #171D28;
+      --station: #161C27;
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --ground: #0F131B;
-    --panel: #171D28;
+    --ground: #0C1017;
+    --panel: #161C27;
     --ink: #E6EBF2;
     --muted: #93A0B2;
     --rule: #2A3343;
+    --land: #141A24;
+    --block: #1A212D;
+    --water: #12304A;
+    --water-deep: #0F2940;
+    --park: #17301F;
     --train: #46C06B;
     --subway: #A67DEA;
     --bus: #F29A3A;
     --secret: #E6EBF2;
     --target: #FF4F65;
-    --chaser: #7FA6FF;
+    --chaser: #5F8BF0;
     --agent: #FFC83D;
     --board: #07090C;
     --board-ink: #FFB547;
-    --station: #171D28;
+    --station: #161C27;
   }
 
   [hidden] { display: none !important; }
@@ -76,7 +91,7 @@
     line-height: 1.6;
   }
   .app {
-    max-width: 1280px;
+    max-width: 1440px;
     margin: 0 auto;
     padding-inline: 16px;
     padding-block: 12px 24px;
@@ -93,7 +108,10 @@
     justify-content: space-between;
     gap: 10px 16px;
   }
-  .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .brand-chars { display: flex; }
+  .brand-chars svg { width: 38px; height: 38px; }
+  .brand-chars svg + svg { margin-left: -10px; }
   h1 {
     font-family: "Dela Gothic One", "Zen Kaku Gothic New", sans-serif;
     font-weight: 400;
@@ -118,27 +136,32 @@
   .flap b { font-weight: 400; font-size: 22px; }
   .flap span { font-size: 12px; opacity: 0.85; }
 
-  /* ---------- layout ---------- */
-  .main {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
-    gap: 16px;
-    align-items: start;
-  }
-  @media (max-width: 900px) {
-    .main { grid-template-columns: minmax(0, 1fr); }
-  }
+  /* ---------- legend ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--muted); align-items: center; }
+  .legend > span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend svg.sw { width: 38px; height: 12px; }
+  .legend svg.face { width: 22px; height: 22px; }
 
+  /* ---------- layout ---------- */
   .mapwrap {
     position: relative;
-    background: var(--panel);
+    background: var(--land);
     border: 1px solid var(--rule);
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
   }
+  .mapscroll { overflow-x: auto; }
   svg#map { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
+  @media (max-width: 760px) {
+    svg#map { width: 760px; max-width: none; }
+  }
 
-  .side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .panels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+    align-items: start;
+  }
   .card {
     background: var(--panel);
     border: 1px solid var(--rule);
@@ -147,6 +170,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-width: 0;
   }
   .label {
     font-size: 11px;
@@ -159,11 +183,7 @@
   .turn-title { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; }
   .turn-help { color: var(--muted); font-size: 13px; margin: 0; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  button {
-    font: inherit;
-    color: inherit;
-    cursor: pointer;
-  }
+  button { font: inherit; color: inherit; cursor: pointer; }
   button:focus-visible { outline: 2px solid var(--chaser); outline-offset: 2px; }
   .chip {
     border: 1px solid var(--rule);
@@ -180,7 +200,7 @@
   .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
   .dot.train { background: var(--train); }
   .dot.subway { background: var(--subway); }
-  .dot.bus { background: var(--bus); }
+  .dot.bus { background: var(--bus); border-radius: 50%; }
   .btn {
     border: 1px solid var(--ink);
     background: var(--ink);
@@ -195,17 +215,19 @@
   .toggle[aria-pressed="true"] { background: var(--secret); color: var(--panel); border-color: var(--secret); }
   .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-  .who { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 5px; border-radius: 5px; font-size: 12px; font-weight: 700; color: #fff; }
-  .who.t { background: var(--target); }
-  .who.c { background: var(--chaser); color: var(--panel); }
-  .who.a { background: var(--agent); color: #1B2230; }
+  .who { display: inline-flex; align-items: center; gap: 2px; font-weight: 700; font-size: 13px; white-space: nowrap; }
+  .who svg { width: 26px; height: 26px; flex: none; }
+  .disc.t { fill: var(--target); }
+  .disc.c { fill: var(--chaser); }
+  .disc.a { fill: var(--agent); }
 
   /* ---------- ticket board ---------- */
   .board { display: flex; flex-direction: column; gap: 6px; }
-  .board-row { display: grid; grid-template-columns: 30px repeat(20, minmax(0, 1fr)); gap: 2px; align-items: center; }
-  .board-row .who { min-width: 0; height: 18px; font-size: 11px; padding: 0; }
+  .board-row, .board-nums { display: grid; grid-template-columns: 34px repeat(20, minmax(0, 1fr)); gap: 2px; align-items: center; }
+  .board-row .who svg { width: 24px; height: 24px; }
+  .board-row .who { font-size: 11px; }
   .cell {
-    height: 22px;
+    height: 24px;
     border-radius: 3px;
     background: var(--ground);
     border: 1px solid var(--rule);
@@ -222,75 +244,96 @@
   .cell.bus { background: var(--bus); border-color: var(--bus); }
   .cell.secret { background: var(--secret); border-color: var(--secret); color: var(--panel); }
   .cell.reveal.train, .cell.reveal.subway, .cell.reveal.bus, .cell.reveal.secret { border-color: var(--target); }
-  .board-nums { display: grid; grid-template-columns: 30px repeat(20, minmax(0, 1fr)); gap: 2px; font-size: 9px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+  .board-nums { font-size: 9px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
   .board-nums .rv { color: var(--target); font-weight: 700; }
 
   /* ---------- log ---------- */
-  .log { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+  .log { list-style: none; margin: 0; padding: 0; max-height: 230px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
   .log li { display: flex; gap: 8px; }
   .log .r { font-family: "DotGothic16", ui-monospace, monospace; color: var(--muted); min-width: 28px; font-variant-numeric: tabular-nums; }
   .log li.hot { font-weight: 700; color: var(--target); }
 
-  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
-  .legend i { display: inline-block; width: 18px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+  /* ---------- map background ---------- */
+  .bg-land { fill: var(--land); }
+  .bg-block { fill: var(--block); }
+  .bg-water { fill: var(--water); }
+  .bg-river { fill: none; stroke: var(--water); stroke-linecap: round; stroke-linejoin: round; }
+  .bg-park { fill: var(--park); }
+  .bg-moat { fill: var(--park); stroke: var(--water); stroke-width: 5; }
+  .bg-road { fill: none; stroke: var(--panel); stroke-width: 7; stroke-linecap: round; opacity: 0.8; }
+  .bg-ward {
+    font-family: "Dela Gothic One", sans-serif;
+    font-size: 34px;
+    letter-spacing: 0.4em;
+    fill: var(--ink);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .bg-place { font-size: 13px; fill: var(--muted); font-weight: 700; letter-spacing: 0.15em; pointer-events: none; opacity: 0.9; }
+  .bg-place.water { fill: var(--water-deep); font-style: italic; filter: brightness(0.7); }
+  .bg-ink { fill: var(--ink); }
+  .bg-inkline { stroke: var(--ink); fill: none; }
 
-  /* ---------- map SVG ---------- */
-  .edge { fill: none; stroke-width: 4.5; stroke-linecap: round; }
-  .edge.train { stroke: var(--train); }
-  .edge.subway { stroke: var(--subway); }
-  .edge.bus { stroke: var(--bus); stroke-dasharray: 2 7; stroke-width: 5; }
-  .stn { fill: var(--station); stroke: var(--ink); stroke-width: 2.5; }
-  .stn-hit { fill: transparent; cursor: default; }
+  /* ---------- lines: shape differs per transport ---------- */
+  .edge { fill: none; stroke-linecap: round; }
+  /* 電車: JR風の白黒ならぬ「色×白」の枕木模様 */
+  .edge.train.base { stroke: var(--train); stroke-width: 8; stroke-linecap: butt; }
+  .edge.train.tie  { stroke: var(--panel); stroke-width: 3.5; stroke-dasharray: 12 12; stroke-linecap: butt; }
+  /* 地下鉄: 中が抜けたチューブ（二重線） */
+  .edge.subway.base { stroke: var(--subway); stroke-width: 10; }
+  .edge.subway.tie  { stroke: var(--land); stroke-width: 3.5; }
+  /* バス: 丸い点の列 */
+  .edge.bus.base { stroke: var(--bus); stroke-width: 7; stroke-dasharray: 0 13; }
+
+  .stn { fill: var(--station); stroke: var(--ink); stroke-width: 3; }
+  .stn-hit { fill: transparent; }
   .stn-hit.can { cursor: pointer; }
   .stn-label {
     font-family: "Zen Kaku Gothic New", "Hiragino Sans", sans-serif;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
     fill: var(--ink);
     paint-order: stroke;
-    stroke: var(--panel);
-    stroke-width: 5px;
+    stroke: var(--land);
+    stroke-width: 6px;
     stroke-linejoin: round;
     pointer-events: none;
   }
-  .dest { fill: none; stroke: var(--ink); stroke-width: 3; pointer-events: none; }
-  .dest.pulse { animation: pulse 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
-  .poss { fill: var(--target); opacity: 0.16; pointer-events: none; }
-  .lastseen { fill: none; stroke: var(--target); stroke-width: 2.5; stroke-dasharray: 5 4; pointer-events: none; }
-  .lastseen-label { font-size: 13px; font-weight: 700; fill: var(--target); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; pointer-events: none; }
+  .dest { fill: none; stroke: var(--ink); stroke-width: 3.5; pointer-events: none; }
+  .dest.pulse { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .poss { fill: var(--target); opacity: 0.18; pointer-events: none; }
+  .lastseen { fill: none; stroke: var(--target); stroke-width: 3; stroke-dasharray: 6 5; pointer-events: none; }
+  .lastseen-label { font-size: 15px; font-weight: 700; fill: var(--target); paint-order: stroke; stroke: var(--land); stroke-width: 5px; pointer-events: none; }
   .tok { pointer-events: none; }
-  .tok text { font-size: 13px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
-  .tok.c rect { fill: var(--chaser); }
-  .tok.c text { fill: var(--panel); }
-  .tok.t circle { fill: var(--target); }
-  .tok.t text { fill: #fff; }
-  .tok.a circle { fill: var(--agent); }
-  .tok.a text { fill: #1B2230; }
-  .tok .ring { fill: none; stroke: var(--ink); stroke-width: 2.5; }
-  .trail { fill: none; stroke: var(--target); stroke-width: 3; stroke-dasharray: 8 6; opacity: 0.8; pointer-events: none; }
+  .tok .disc { stroke: var(--panel); stroke-width: 3; }
+  .tok .ring { fill: none; stroke: var(--ink); stroke-width: 3.5; }
+  .tok .num { fill: var(--ink); }
+  .tok .num-t { fill: var(--panel); font-size: 12px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .trail { fill: none; stroke: var(--target); stroke-width: 4; stroke-dasharray: 10 7; opacity: 0.85; pointer-events: none; }
 
   /* ---------- overlay ---------- */
   .overlay {
     position: absolute;
     inset: 0;
-    background: color-mix(in srgb, var(--ground) 72%, transparent);
+    background: color-mix(in srgb, var(--ground) 65%, transparent);
     display: grid;
     place-items: center;
     padding: 16px;
     backdrop-filter: blur(2px);
+    overflow-y: auto;
   }
   .sheet {
     background: var(--panel);
     border: 1px solid var(--rule);
     border-radius: 12px;
     padding: 20px 22px;
-    max-width: 460px;
+    max-width: 560px;
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
   }
   .sheet h2 { font-family: "Dela Gothic One", sans-serif; font-weight: 400; font-size: 24px; margin: 0; text-wrap: balance; line-height: 1.25; }
   .sheet p { margin: 0; color: var(--muted); font-size: 13px; }
@@ -302,14 +345,18 @@
     border-radius: 10px;
     padding: 12px;
     text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 4px 10px;
+    align-items: center;
   }
   .role:hover { border-color: var(--ink); }
-  .role strong { font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .role svg { width: 64px; height: 64px; grid-row: span 2; }
+  .role strong { font-size: 15px; }
   .role span { font-size: 12px; color: var(--muted); line-height: 1.5; }
-  @media (max-width: 520px) {
+  .result-chars { display: flex; gap: 4px; }
+  .result-chars svg { width: 56px; height: 56px; }
+  @media (max-width: 560px) {
     .roles { grid-template-columns: 1fr; }
     .overlay { position: fixed; z-index: 10; }
   }
@@ -322,11 +369,56 @@
 </head>
 <body>
 <!-- ARTIFACT-BODY-START -->
+<!-- キャラクター（泥棒・警官）の図柄 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <clipPath id="clip-chr"><circle r="17.5"></circle></clipPath>
+    <symbol id="chr-thief" viewBox="-20 -20 40 40">
+      <g clip-path="url(#clip-chr)">
+        <circle cx="11.5" cy="-9" r="6.5" fill="#D9B27A" stroke="#7A5A2E" stroke-width="1"></circle>
+        <path d="M9,-15.2 l2.5,2 l2.5,-2" stroke="#7A5A2E" fill="none" stroke-width="1.3"></path>
+        <text x="11.5" y="-6.2" font-size="7" font-weight="700" text-anchor="middle" fill="#7A5A2E">¥</text>
+        <path d="M-15,20 Q-15,8 0,8 Q15,8 15,20 Z" fill="#FFFFFF"></path>
+        <path d="M-11.5,12 H11.5 M-14,16.5 H14" stroke="#1B2230" stroke-width="2.2"></path>
+        <circle cy="-1" r="9" fill="#F4C9A0"></circle>
+        <path d="M-9.6,-3 A9.6,9.6 0 0 1 9.6,-3 Z" fill="#1B2230"></path>
+        <circle cx="0" cy="-12.6" r="2" fill="#1B2230"></circle>
+        <rect x="-10" y="-5" width="20" height="3" rx="1.5" fill="#3A4254"></rect>
+        <rect x="-9.8" y="-1.2" width="19.6" height="5.2" rx="2.6" fill="#1B2230"></rect>
+        <circle cx="-4" cy="1.4" r="1.5" fill="#FFFFFF"></circle>
+        <circle cx="4" cy="1.4" r="1.5" fill="#FFFFFF"></circle>
+        <path d="M-3.5,5.2 Q0,8.2 3.5,5.2" stroke="#6B3A2A" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+      </g>
+    </symbol>
+    <symbol id="chr-police" viewBox="-20 -20 40 40">
+      <g clip-path="url(#clip-chr)">
+        <path d="M-15,20 Q-15,9 0,9 Q15,9 15,20 Z" fill="#23408E"></path>
+        <path d="M-4.5,9 L0,14 L4.5,9 Z" fill="#FFFFFF"></path>
+        <path d="M-1.3,11.5 h2.6 l0.9,5.5 l-2.2,2 l-2.2,-2 z" fill="#0F1733"></path>
+        <circle cx="7.5" cy="14" r="1.9" fill="#F2C230"></circle>
+        <circle cy="0.5" r="8.6" fill="#F4C9A0"></circle>
+        <path d="M-10,-5 L-8.5,-14 Q0,-18.5 8.5,-14 L10,-5 Z" fill="#1F2F5F"></path>
+        <rect x="-10.5" y="-7.2" width="21" height="3" fill="#0F1733"></rect>
+        <path d="M-10.2,-4.4 Q0,-1.2 10.2,-4.4 L10.2,-3.2 Q0,0.6 -10.2,-3.2 Z" fill="#0F1733"></path>
+        <circle cx="0" cy="-11" r="2.4" fill="#F2C230"></circle>
+        <circle cx="-3.3" cy="1.6" r="1.3" fill="#1B2230"></circle>
+        <circle cx="3.3" cy="1.6" r="1.3" fill="#1B2230"></circle>
+        <path d="M-5.2,-1.4 h3.2 M2,-1.4 h3.2" stroke="#1B2230" stroke-width="1.1" stroke-linecap="round"></path>
+        <path d="M-2.6,5 Q0,7 2.6,5" stroke="#6B3A2A" stroke-width="1.3" fill="none" stroke-linecap="round"></path>
+      </g>
+    </symbol>
+    <pattern id="blocks" width="34" height="26" patternUnits="userSpaceOnUse">
+      <rect x="3" y="3" width="28" height="20" rx="3" class="bg-block"></rect>
+    </pattern>
+  </defs>
+</svg>
+
 <div class="app">
   <header>
     <div class="brand">
+      <div class="brand-chars" id="brandChars"></div>
       <h1>トーキョー・チェイス</h1>
-      <small>路線図で遊ぶ 追跡ボードゲーム</small>
+      <small>泥棒と警察の 路線図おいかけっこ</small>
     </div>
     <div class="flap" aria-live="polite">
       <span>ROUND</span><b id="roundNo">--/20</b>
@@ -334,49 +426,43 @@
     </div>
   </header>
 
-  <div class="main">
-    <div class="mapwrap">
-      <svg id="map" viewBox="0 0 990 800" role="img" aria-label="東京の路線図マップ">
+  <div class="legend" id="legend"></div>
+
+  <div class="mapwrap">
+    <div class="mapscroll">
+      <svg id="map" viewBox="0 0 1400 750" role="img" aria-label="東京の路線図マップ">
+        <g id="gBg"></g>
         <g id="gEdges"></g>
         <g id="gPoss"></g>
         <g id="gTrail"></g>
         <g id="gStations"></g>
         <g id="gDest"></g>
-        <g id="gTokens"></g>
         <g id="gLabels"></g>
+        <g id="gTokens"></g>
         <g id="gHits"></g>
       </svg>
-      <div class="overlay" id="overlay"></div>
     </div>
+    <div class="overlay" id="overlay"></div>
+  </div>
 
-    <div class="side">
-      <section class="card" id="turnCard" aria-live="polite"></section>
+  <div class="panels">
+    <section class="card" id="turnCard" aria-live="polite"><div class="label">いまの手番</div><p class="turn-help">泥棒か警察かを選ぶとゲームが始まります。</p></section>
 
-      <section class="card">
-        <div class="label">移動記録（ターゲットの切符）</div>
-        <div class="board" id="board"></div>
-      </section>
+    <section class="card">
+      <div class="label">移動記録（泥棒の切符）</div>
+      <div class="board" id="board"></div>
+    </section>
 
-      <section class="card">
-        <div class="row" style="justify-content: space-between;">
-          <div class="label">ログ</div>
-          <div class="row">
-            <button class="btn ghost small toggle" id="hintBtn" aria-pressed="true">推理ヒント</button>
-            <button class="btn ghost small" id="newBtn">新しいゲーム</button>
-          </div>
+    <section class="card">
+      <div class="row" style="justify-content: space-between;">
+        <div class="label">ログ</div>
+        <div class="row">
+          <button class="btn ghost small toggle" id="hintBtn" aria-pressed="true">推理ヒント</button>
+          <button class="btn ghost small" id="newBtn">新しいゲーム</button>
         </div>
-        <ul class="log" id="log"></ul>
-      </section>
-
-      <div class="legend">
-        <span><i style="background: var(--train)"></i>電車</span>
-        <span><i style="background: var(--subway)"></i>地下鉄</span>
-        <span><i style="background: repeating-linear-gradient(90deg, var(--bus) 0 3px, transparent 3px 7px)"></i>バス</span>
-        <span><span class="who c" style="min-width:18px;height:16px;font-size:10px">C</span> チェイサー</span>
-        <span><span class="who t" style="min-width:18px;height:16px;font-size:10px">T</span> ターゲット</span>
-        <span><span class="who a" style="min-width:18px;height:16px;font-size:10px">A</span> エージェント</span>
       </div>
-    </div>
+      <ul class="log" id="log"></ul>
+    </section>
   </div>
 </div>
 
@@ -385,75 +471,76 @@
   "use strict";
 
   // ================= マップデータ =================
+  // 座標は元の縦長レイアウトで書き、横長に引き伸ばして使う
+  const MX = x => 60 + (x - 50) * 1.45;
+  const MY = y => 30 + y * 0.9;
   // [駅名, x, y, ラベルdx, ラベルdy, text-anchor]
-  const STATIONS = [
-    ["池袋", 220, 110, 0, -22, "middle"],
-    ["大塚", 400, 75, 0, -22, "middle"],
-    ["日暮里", 600, 50, 0, -22, "middle"],
-    ["上野", 740, 125, 20, 6, "start"],
-    ["浅草", 890, 110, 0, -22, "middle"],
-    ["秋葉原", 740, 230, 20, 6, "start"],
-    ["神田", 700, 310, 20, 6, "start"],
-    ["御茶ノ水", 590, 270, 0, -22, "middle"],
-    ["後楽園", 500, 190, 0, -22, "middle"],
-    ["高田馬場", 180, 230, -20, 6, "end"],
-    ["中野", 50, 360, 0, 32, "middle"],
-    ["新宿", 170, 370, -20, -8, "end"],
-    ["四ツ谷", 380, 370, 0, 32, "middle"],
-    ["大手町", 610, 370, -20, 6, "end"],
-    ["日本橋", 770, 380, 0, -22, "middle"],
-    ["錦糸町", 930, 280, 0, 32, "middle"],
-    ["東京", 700, 440, 20, 6, "start"],
-    ["赤坂見附", 390, 470, -20, 6, "end"],
-    ["霞ケ関", 500, 470, 0, 32, "middle"],
-    ["銀座", 670, 530, 20, 6, "start"],
-    ["門前仲町", 850, 480, 20, 6, "start"],
-    ["原宿", 190, 480, -20, 6, "end"],
-    ["表参道", 280, 540, 0, 32, "middle"],
-    ["渋谷", 180, 590, 0, 32, "middle"],
-    ["下北沢", 50, 610, 0, 32, "middle"],
-    ["六本木", 380, 590, 0, 32, "middle"],
-    ["新橋", 590, 590, -16, 30, "end"],
-    ["月島", 790, 590, 0, 32, "middle"],
-    ["麻布十番", 480, 650, 0, 32, "middle"],
-    ["浜松町", 610, 690, 20, 6, "start"],
-    ["豊洲", 920, 660, 0, 32, "middle"],
-    ["目黒", 250, 700, 0, 32, "middle"],
-    ["品川", 400, 740, 0, 32, "middle"],
+  const RAW_STATIONS = [
+    ["池袋", 220, 110, 0, -26, "middle"],
+    ["大塚", 400, 75, 0, -26, "middle"],
+    ["日暮里", 600, 50, 0, -26, "middle"],
+    ["上野", 740, 125, 22, 7, "start"],
+    ["浅草", 890, 110, 0, -26, "middle"],
+    ["秋葉原", 740, 230, 22, 7, "start"],
+    ["神田", 700, 310, 22, 7, "start"],
+    ["御茶ノ水", 590, 270, 0, -26, "middle"],
+    ["後楽園", 500, 190, 0, -26, "middle"],
+    ["高田馬場", 180, 230, -22, 7, "end"],
+    ["中野", 50, 360, 0, 36, "middle"],
+    ["新宿", 170, 370, -22, -12, "end"],
+    ["四ツ谷", 380, 370, 0, 36, "middle"],
+    ["大手町", 610, 370, -22, 7, "end"],
+    ["日本橋", 770, 380, 0, -26, "middle"],
+    ["錦糸町", 930, 280, 0, 36, "middle"],
+    ["東京", 700, 440, 22, 7, "start"],
+    ["赤坂見附", 390, 470, -22, 7, "end"],
+    ["霞ケ関", 500, 470, 0, 36, "middle"],
+    ["銀座", 670, 530, 22, 7, "start"],
+    ["門前仲町", 850, 480, 22, 7, "start"],
+    ["原宿", 190, 480, -22, 7, "end"],
+    ["表参道", 280, 540, 0, 36, "middle"],
+    ["渋谷", 180, 590, 0, 36, "middle"],
+    ["下北沢", 50, 610, 0, 36, "middle"],
+    ["六本木", 380, 590, 0, 36, "middle"],
+    ["新橋", 590, 590, -18, 34, "end"],
+    ["月島", 790, 590, 0, 36, "middle"],
+    ["麻布十番", 480, 650, 0, 36, "middle"],
+    ["浜松町", 610, 690, 22, 7, "start"],
+    ["豊洲", 920, 660, 0, 36, "middle"],
+    ["目黒", 250, 700, 0, 36, "middle"],
+    ["品川", 400, 740, 0, 36, "middle"],
   ];
+  const STATIONS = RAW_STATIONS.map(([n, x, y, dx, dy, a]) => [n, MX(x), MY(y), dx, dy, a]);
 
   const LINES = [
-    // 電車
-    ["train", ["東京","神田","秋葉原","上野","日暮里","大塚","池袋","高田馬場","新宿","原宿","渋谷","目黒","品川","浜松町","新橋","東京"]],
-    ["train", ["中野","新宿","四ツ谷","御茶ノ水","神田"]],
-    ["train", ["秋葉原","錦糸町"]],
-    ["train", ["下北沢","渋谷"]],
-    ["train", ["下北沢","新宿"]],
-    ["train", ["新橋","豊洲"]],
-    // 地下鉄
-    ["subway", ["渋谷","表参道","赤坂見附","新橋","銀座","日本橋","神田","上野","浅草"]],
-    ["subway", ["中野","新宿","四ツ谷","赤坂見附","霞ケ関","銀座","東京","大手町","御茶ノ水","後楽園","池袋"]],
-    ["subway", ["中野","高田馬場","後楽園"]],
-    ["subway", ["大手町","日本橋","門前仲町"]],
-    ["subway", ["新宿","六本木","麻布十番","浜松町","月島"]],
-    ["subway", ["銀座","月島","豊洲"]],
-    ["subway", ["日本橋","錦糸町"]],
-    ["subway", ["六本木","霞ケ関"]],
-    ["subway", ["目黒","麻布十番"]],
-    // バス
-    ["bus", ["渋谷","六本木","新橋"]],
-    ["bus", ["原宿","表参道","六本木"]],
-    ["bus", ["中野","下北沢","目黒"]],
-    ["bus", ["大塚","後楽園","上野"]],
-    ["bus", ["日暮里","浅草","錦糸町","門前仲町","月島"]],
-    ["bus", ["門前仲町","豊洲"]],
-    ["bus", ["御茶ノ水","秋葉原"]],
-    ["bus", ["品川","麻布十番"]],
-    ["bus", ["霞ケ関","新橋"]],
-    ["bus", ["四ツ谷","後楽園"]],
-    ["bus", ["東京","日本橋"]],
-    ["bus", ["大手町","神田"]],
-    ["bus", ["赤坂見附","六本木"]],
+    ["train", "山手線", ["東京","神田","秋葉原","上野","日暮里","大塚","池袋","高田馬場","新宿","原宿","渋谷","目黒","品川","浜松町","新橋","東京"]],
+    ["train", "中央線", ["中野","新宿","四ツ谷","御茶ノ水","神田"]],
+    ["train", "総武線", ["秋葉原","錦糸町"]],
+    ["train", "井の頭線", ["下北沢","渋谷"]],
+    ["train", "小田急線", ["下北沢","新宿"]],
+    ["train", "ゆりかもめ", ["新橋","豊洲"]],
+    ["subway", "銀座線", ["渋谷","表参道","赤坂見附","新橋","銀座","日本橋","神田","上野","浅草"]],
+    ["subway", "丸ノ内線", ["中野","新宿","四ツ谷","赤坂見附","霞ケ関","銀座","東京","大手町","御茶ノ水","後楽園","池袋"]],
+    ["subway", "東西線", ["中野","高田馬場","後楽園"]],
+    ["subway", "東西線", ["大手町","日本橋","門前仲町"]],
+    ["subway", "大江戸線", ["新宿","六本木","麻布十番","浜松町","月島"]],
+    ["subway", "有楽町線", ["銀座","月島","豊洲"]],
+    ["subway", "半蔵門線", ["日本橋","錦糸町"]],
+    ["subway", "日比谷線", ["六本木","霞ケ関"]],
+    ["subway", "南北線", ["目黒","麻布十番"]],
+    ["bus", "都01", ["渋谷","六本木","新橋"]],
+    ["bus", "青山ルート", ["原宿","表参道","六本木"]],
+    ["bus", "城西ルート", ["中野","下北沢","目黒"]],
+    ["bus", "文京ルート", ["大塚","後楽園","上野"]],
+    ["bus", "下町ルート", ["日暮里","浅草","錦糸町","門前仲町","月島"]],
+    ["bus", "湾岸ルート", ["門前仲町","豊洲"]],
+    ["bus", "神田ルート", ["御茶ノ水","秋葉原"]],
+    ["bus", "港南ルート", ["品川","麻布十番"]],
+    ["bus", "官庁ルート", ["霞ケ関","新橋"]],
+    ["bus", "飯田橋ルート", ["四ツ谷","後楽園"]],
+    ["bus", "八重洲ルート", ["東京","日本橋"]],
+    ["bus", "大手町ルート", ["大手町","神田"]],
+    ["bus", "赤坂ルート", ["赤坂見附","六本木"]],
   ];
 
   const TYPE = {
@@ -474,20 +561,22 @@
   const NAME = i => STATIONS[i][0];
 
   // 隣接リスト（同じ区間に複数の交通手段がありうる）
-  const edgeTypes = new Map(); // "a-b" -> Set(type)
-  for (const [type, seq] of LINES) {
+  const edgeTypes = new Map(); // "a-b" -> Map(type -> 路線名[])
+  for (const [type, lineName, seq] of LINES) {
     for (let k = 0; k < seq.length - 1; k++) {
       const a = IDX[seq[k]], b = IDX[seq[k + 1]];
       if (a === undefined || b === undefined) throw new Error("unknown station " + seq[k] + "/" + seq[k + 1]);
       const key = a < b ? a + "-" + b : b + "-" + a;
-      if (!edgeTypes.has(key)) edgeTypes.set(key, new Set());
-      edgeTypes.get(key).add(type);
+      if (!edgeTypes.has(key)) edgeTypes.set(key, new Map());
+      const m = edgeTypes.get(key);
+      if (!m.has(type)) m.set(type, []);
+      if (!m.get(type).includes(lineName)) m.get(type).push(lineName);
     }
   }
   const ADJ = Array.from({ length: N }, () => []);
   for (const [key, types] of edgeTypes) {
     const [a, b] = key.split("-").map(Number);
-    for (const t of types) {
+    for (const t of types.keys()) {
       ADJ[a].push({ to: b, type: t });
       ADJ[b].push({ to: a, type: t });
     }
@@ -517,14 +606,20 @@
     return e;
   }
   const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
-  const tName = i => "T" + (i + 1);
-  const cName = i => "C" + (i + 1);
+  const tName = i => "泥棒" + (i + 1);
+  const cName = i => "警官" + (i + 1);
+
+  // キャラクターのアイコン（HTML用）
+  function face(kind) {
+    const chr = kind === "c" ? "chr-police" : "chr-thief";
+    return `<svg class="face" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" class="disc ${kind}"></circle><use href="#${chr}" x="-20" y="-20" width="40" height="40"></use></svg>`;
+  }
 
   function newGame(role) {
     clearTimeout(timer);
     const ids = shuffle([...Array(N).keys()]);
     const chaserPos = ids.slice(0, 3);
-    // スタート地点のルール（公開情報）：チェイサーから2駅以上離れている
+    // スタート地点のルール（公開情報）：警官から2駅以上離れている
     const startable = ids.filter(p => chaserPos.every(c => D[p][c] >= 2));
     const t1 = startable[0];
     const t2 = startable.find(p => p !== t1 && D[p][t1] >= 2) ?? startable[1];
@@ -548,8 +643,8 @@
     };
     buildQueue();
     addLog(role === "target"
-      ? "あなたはターゲット。20ラウンド逃げ切れば勝ち！"
-      : "あなたはチェイサー。20ラウンド以内に2人とも捕まえよう！", true);
+      ? "あなたは泥棒。20ラウンド逃げ切れば勝ち！"
+      : "あなたは警察。20ラウンド以内に泥棒を2人とも捕まえよう！", true);
     $("overlay").hidden = true;
     step();
   }
@@ -612,7 +707,7 @@
       if (!moves.length) {
         if (a.k === "t") {
           addLog(`${tName(a.i)} は囲まれて動けない！`, true);
-          capture(a.i, null);
+          capture(a.i);
         } else {
           addLog(`${actorName(a)} は動ける駅がないので待機`);
         }
@@ -637,7 +732,7 @@
     if (S.round >= MAX_ROUNDS) {
       S.over = true;
       S.winner = "target";
-      addLog("逃げ切り成功！ターゲットの勝ち", true);
+      addLog("逃げ切り成功！泥棒の勝ち", true);
       return;
     }
     S.round++;
@@ -663,7 +758,7 @@
       if (REVEAL.includes(S.round)) {
         t.possible = [m.to];
         t.lastSeen = { pos: m.to, round: S.round };
-        addLog(`公開！ ${tName(a.i)} は ${NAME(m.to)} にいる`, true);
+        addLog(`目撃情報！ ${tName(a.i)} は ${NAME(m.to)} にいる`, true);
       }
     } else if (a.k === "a") {
       S.targets[a.i].pos = m.to;
@@ -674,8 +769,8 @@
       addLog(`${cName(a.i)} → ${NAME(m.to)}`);
       const hit = S.targets.findIndex(t => t.state === "free" && t.pos === m.to);
       if (hit >= 0) {
-        addLog(`${cName(a.i)} が ${tName(hit)} を ${NAME(m.to)} で捕まえた！`, true);
-        capture(hit, a.i);
+        addLog(`${cName(a.i)} が ${tName(hit)} を ${NAME(m.to)} で逮捕！`, true);
+        capture(hit);
       }
       for (const t of S.targets) {
         if (t.state === "free") t.possible = t.possible.filter(p => p !== m.to);
@@ -690,11 +785,11 @@
     t.possible = [t.pos];
     t.lastSeen = { pos: t.pos, round: S.round };
     if (othersFree) {
-      addLog(`${tName(i)} はエージェントになった。チェイサーはエージェントのいる駅に入れない`);
+      addLog(`${tName(i)} はエージェントになった。警官はエージェントのいる駅に入れない`);
     } else {
       S.over = true;
       S.winner = "chaser";
-      addLog("全員確保！チェイサーの勝ち", true);
+      addLog("全員逮捕！警察の勝ち", true);
     }
   }
 
@@ -802,8 +897,68 @@
     step();
   }
 
+  // ================= 背景（街の地図） =================
+  function buildBackground() {
+    const g = $("gBg");
+    el("rect", { x: 0, y: 0, width: 1400, height: 750, class: "bg-land" }, g);
+    el("rect", { x: 0, y: 0, width: 1400, height: 750, fill: "url(#blocks)" }, g);
+
+    // 元の座標系で描いて横長に変換する
+    const w = el("g", { transform: "matrix(1.45 0 0 0.9 -12.5 30)" }, g);
+    // 幹線道路
+    const roads = [
+      "M 0,300 C 200,290 400,300 560,330 C 700,355 820,340 990,330",
+      "M 300,0 C 320,160 300,300 310,420 C 320,560 330,680 340,800",
+      "M 0,520 C 180,520 330,500 450,540 C 560,580 620,650 700,800",
+      "M 620,0 C 640,120 650,220 660,330",
+    ];
+    for (const d of roads) el("path", { d, class: "bg-road", "vector-effect": "non-scaling-stroke" }, w);
+    // 東京湾
+    el("path", { d: "M 440,800 C 520,770 600,760 660,742 C 705,728 722,700 742,662 C 762,628 820,640 862,620 C 905,600 950,602 1000,590 L 1000,800 Z", class: "bg-water" }, w);
+    // 埋立地（月島・豊洲）
+    el("ellipse", { cx: 800, cy: 604, rx: 52, ry: 36, class: "bg-land" }, w);
+    el("ellipse", { cx: 918, cy: 672, rx: 62, ry: 44, class: "bg-land" }, w);
+    // 隅田川・神田川
+    el("path", { d: "M 935,-10 C 915,60 908,110 915,160 C 922,220 892,262 880,320 C 868,380 822,440 815,500 C 812,540 792,560 772,572 C 752,590 742,620 746,662", class: "bg-river", "stroke-width": 20, "vector-effect": "non-scaling-stroke" }, w);
+    el("path", { d: "M 430,212 C 520,238 600,250 680,256 C 760,262 830,300 890,300", class: "bg-river", "stroke-width": 8, "vector-effect": "non-scaling-stroke" }, w);
+    // 皇居と公園
+    el("ellipse", { cx: 520, cy: 385, rx: 58, ry: 50, class: "bg-moat", "vector-effect": "non-scaling-stroke" }, w);
+    el("ellipse", { cx: 272, cy: 420, rx: 36, ry: 26, class: "bg-park" }, w);
+    el("ellipse", { cx: 118, cy: 482, rx: 40, ry: 38, class: "bg-park" }, w);
+    el("ellipse", { cx: 675, cy: 118, rx: 40, ry: 30, class: "bg-park" }, w);
+    el("ellipse", { cx: 470, cy: 530, rx: 26, ry: 18, class: "bg-park" }, w);
+
+    // 区名・地名（ゆがませないよう変換後の座標で置く）
+    const txt = (x, y, s, cls) => { const t = el("text", { x: MX(x), y: MY(y), class: cls, "text-anchor": "middle" }, g); t.textContent = s; };
+    txt(330, 175, "TOSHIMA", "bg-ward");
+    txt(110, 300, "SHINJUKU", "bg-ward");
+    txt(560, 440, "CHIYODA", "bg-ward");
+    txt(270, 650, "SHIBUYA", "bg-ward");
+    txt(520, 600, "MINATO", "bg-ward");
+    txt(820, 200, "TAITO", "bg-ward");
+    txt(880, 540, "KOTO", "bg-ward");
+    txt(520, 390, "皇居", "bg-place");
+    txt(118, 520, "代々木公園", "bg-place");
+    txt(272, 424, "新宿御苑", "bg-place");
+    txt(655, 98, "上野公園", "bg-place");
+    txt(620, 780, "東 京 湾", "bg-place water");
+    txt(958, 200, "隅田川", "bg-place water");
+
+    // 方位記号
+    const cx = 1350, cy = 60;
+    el("circle", { cx, cy, r: 26, class: "bg-inkline", "stroke-width": 1.5, opacity: 0.5 }, g);
+    el("path", { d: `M ${cx},${cy - 22} L ${cx + 7},${cy} L ${cx},${cy + 22} L ${cx - 7},${cy} Z`, class: "bg-ink", opacity: 0.55 }, g);
+    const n = el("text", { x: cx, y: cy - 30, "text-anchor": "middle", class: "bg-place" }, g);
+    n.textContent = "N";
+    // 縮尺
+    el("path", { d: "M 30,730 h 120 M 30,724 v 12 M 90,726 v 8 M 150,724 v 12", class: "bg-inkline", "stroke-width": 2, opacity: 0.5 }, g);
+    const sc = el("text", { x: 158, y: 735, class: "bg-place" }, g);
+    sc.textContent = "2 km";
+  }
+
   // ================= 描画 =================
   function buildMap() {
+    buildBackground();
     const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels"), gH = $("gHits");
     for (const [key, types] of edgeTypes) {
       const [a, b] = key.split("-").map(Number);
@@ -812,20 +967,29 @@
       const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
       const list = TYPE_ORDER.filter(t => types.has(t));
       list.forEach((t, k) => {
-        const off = (k - (list.length - 1) / 2) * 6;
-        el("line", {
-          x1: x1 + nx * off, y1: y1 + ny * off, x2: x2 + nx * off, y2: y2 + ny * off,
-          class: "edge " + t,
-        }, gE);
+        const off = (k - (list.length - 1) / 2) * 11;
+        const pts = { x1: x1 + nx * off, y1: y1 + ny * off, x2: x2 + nx * off, y2: y2 + ny * off };
+        const grp = el("g", {}, gE);
+        el("title", {}, grp).textContent = `${types.get(t).join("・")}（${TYPE[t].name}）`;
+        el("line", { ...pts, class: `edge ${t} base` }, grp);
+        if (t !== "bus") el("line", { ...pts, class: `edge ${t} tie` }, grp);
       });
     }
     STATIONS.forEach(([name, x, y, dx, dy, anchor], i) => {
-      el("circle", { cx: x, cy: y, r: 11, class: "stn" }, gS);
+      el("circle", { cx: x, cy: y, r: 12, class: "stn" }, gS);
       const tx = el("text", { x: x + dx, y: y + dy, "text-anchor": anchor, class: "stn-label", "dominant-baseline": "middle" }, gL);
       tx.textContent = name;
-      const hit = el("circle", { cx: x, cy: y, r: 26, class: "stn-hit", "data-id": i }, gH);
+      const hit = el("circle", { cx: x, cy: y, r: 30, class: "stn-hit", "data-id": i }, gH);
       hit.addEventListener("click", () => onStation(i));
     });
+  }
+
+  function buildLegend() {
+    const sw = (t) => `<svg class="sw" viewBox="0 0 38 12" aria-hidden="true"><line x1="3" y1="6" x2="35" y2="6" class="edge ${t} base"></line>${t !== "bus" ? `<line x1="3" y1="6" x2="35" y2="6" class="edge ${t} tie"></line>` : ""}</svg>`;
+    $("legend").innerHTML =
+      `<span>${sw("train")}電車</span><span>${sw("subway")}地下鉄</span><span>${sw("bus")}バス</span>` +
+      `<span>${face("c")}警官（警察）</span><span>${face("t")}泥棒</span><span>${face("a")}エージェント（捕まった泥棒）</span>`;
+    $("brandChars").innerHTML = face("t") + face("c");
   }
 
   function render() {
@@ -842,8 +1006,8 @@
     $("roundNo").textContent = String(S.round).padStart(2, "0") + "/" + MAX_ROUNDS;
     const nr = REVEAL.find(r => r >= S.round);
     $("nextReveal").textContent = S.over ? "ゲーム終了"
-      : nr === undefined ? "公開なし"
-      : nr === S.round ? "このラウンド公開" : `次の公開 R${nr}`;
+      : nr === undefined ? "目撃情報なし"
+      : nr === S.round ? "このラウンドに目撃情報" : `次の目撃情報 R${nr}`;
     const hb = $("hintBtn");
     hb.hidden = S.role !== "chaser";
     hb.setAttribute("aria-pressed", String(S.hints));
@@ -856,18 +1020,18 @@
     const human = a && isHuman(a);
     const reveal = S.role === "target" || S.over;
 
-    // 推理ヒント（チェイサー側）
+    // 推理ヒント（警察側）
     if (!reveal && S.hints) {
       const seen = new Set();
       for (const t of S.targets) if (t.state === "free") for (const p of t.possible) {
         if (seen.has(p)) continue;
         seen.add(p);
         const [, x, y] = STATIONS[p];
-        el("circle", { cx: x, cy: y, r: 22, class: "poss" }, gP);
+        el("circle", { cx: x, cy: y, r: 26, class: "poss" }, gP);
       }
     }
 
-    // ゲーム終了後：ターゲットの逃走経路
+    // ゲーム終了後：泥棒の逃走経路
     if (S.over) {
       for (const t of S.targets) {
         const pts = t.path.map(p => STATIONS[p][1] + "," + STATIONS[p][2]).join(" ");
@@ -882,63 +1046,61 @@
       const dests = new Set(legal(a).map(m => m.to));
       for (const d of dests) {
         const [, x, y] = STATIONS[d];
-        el("circle", { cx: x, cy: y, r: 19, class: "dest pulse" }, gD);
+        el("circle", { cx: x, cy: y, r: 21, class: "dest pulse" }, gD);
         hitEls[d].classList.add("can");
       }
       if (S.pending) {
         const [, x, y] = STATIONS[S.pending.to];
-        el("circle", { cx: x, cy: y, r: 19, class: "dest", style: "stroke: var(--target); stroke-width: 4" }, gD);
+        el("circle", { cx: x, cy: y, r: 21, class: "dest", style: "stroke: var(--target); stroke-width: 4.5" }, gD);
       }
     }
 
     // コマ
     const stack = {};
     const place = (p) => { stack[p] = (stack[p] || 0) + 1; return stack[p] - 1; };
-    const offset = (k) => [[0, 0], [16, -14], [-16, -14], [16, 14]][k] || [0, 0];
+    const offset = (k) => [[0, 0], [22, -18], [-22, -18], [22, 18]][k] || [0, 0];
 
-    // 最後に見た位置（チェイサー側）
+    // 最後の目撃位置（警察側）
     if (!reveal) {
       S.targets.forEach((t, i) => {
         if (t.state !== "free" || !t.lastSeen) return;
         const [, x, y] = STATIONS[t.lastSeen.pos];
-        el("circle", { cx: x, cy: y, r: 17, class: "lastseen" }, gT);
-        const lb = el("text", { x: x + 18, y: y - 18, class: "lastseen-label" }, gT);
+        el("circle", { cx: x, cy: y, r: 22, class: "lastseen" }, gT);
+        const lb = el("text", { x: x + 24, y: y - 22, class: "lastseen-label" }, gT);
         lb.textContent = `${tName(i)}? R${t.lastSeen.round}`;
       });
     }
 
     S.targets.forEach((t, i) => {
       if (t.state === "caught") {
-        drawToken(gT, "t", tName(i), t.pos, place(t.pos), offset, false, 0.45);
+        drawToken(gT, "t", i + 1, t.pos, place(t.pos), offset, false, 0.45);
         return;
       }
       if (t.state === "agent") {
-        drawToken(gT, "a", "A" + (i + 1), t.pos, place(t.pos), offset, a && a.k === "a" && a.i === i);
+        drawToken(gT, "a", i + 1, t.pos, place(t.pos), offset, a && a.k === "a" && a.i === i);
         return;
       }
-      if (reveal) drawToken(gT, "t", tName(i), t.pos, place(t.pos), offset, a && a.k === "t" && a.i === i);
+      if (reveal) drawToken(gT, "t", i + 1, t.pos, place(t.pos), offset, a && a.k === "t" && a.i === i);
     });
     S.chasers.forEach((c, i) => {
-      drawToken(gT, "c", cName(i), c.pos, place(c.pos), offset, a && a.k === "c" && a.i === i);
+      drawToken(gT, "c", i + 1, c.pos, place(c.pos), offset, a && a.k === "c" && a.i === i);
     });
   }
 
-  function drawToken(g, kind, label, pos, k, offset, active, opacity = 1) {
+  function drawToken(g, kind, num, pos, k, offset, active, opacity = 1) {
     const [, sx, sy] = STATIONS[pos];
     const [ox, oy] = offset(k);
-    const x = sx + ox, y = sy + oy;
-    const grp = el("g", { class: "tok " + kind, opacity }, g);
-    if (active) el("circle", { cx: x, cy: y, r: 20, class: "ring" }, grp);
-    if (kind === "c") el("rect", { x: x - 15, y: y - 13, width: 30, height: 26, rx: 5 }, grp);
-    else el("circle", { cx: x, cy: y, r: 15 }, grp);
-    const t = el("text", { x, y }, grp);
-    t.textContent = label;
+    const grp = el("g", { class: "tok " + kind, opacity, transform: `translate(${sx + ox} ${sy + oy})` }, g);
+    if (active) el("circle", { r: 29, class: "ring" }, grp);
+    el("circle", { r: 23, class: "disc " + kind }, grp);
+    el("use", { href: kind === "c" ? "#chr-police" : "#chr-thief", x: -23, y: -23, width: 46, height: 46 }, grp);
+    el("circle", { cx: 17, cy: 17, r: 9, class: "num" }, grp);
+    el("text", { x: 17, y: 17.5, class: "num-t" }, grp).textContent = num;
   }
 
   function whoBadge(a) {
-    const cls = a.k === "c" ? "c" : a.k === "a" ? "a" : "t";
-    const lbl = a.k === "c" ? cName(a.i) : a.k === "a" ? "A" + (a.i + 1) : tName(a.i);
-    return `<span class="who ${cls}">${lbl}</span>`;
+    const kind = a.k;
+    return `<span class="who">${face(kind)}${a.i + 1}</span>`;
   }
 
   function renderTurn() {
@@ -948,7 +1110,7 @@
       card.innerHTML = `
         <div class="label">結果</div>
         <div class="turn-title">${win ? "あなたの勝ち！" : "あなたの負け…"}</div>
-        <p class="turn-help">${S.winner === "target" ? "ターゲットが逃げ切りました。" : "チェイサーが全員を確保しました。"}地図上の赤い点線がターゲットの逃走経路です。</p>
+        <p class="turn-help">${S.winner === "target" ? "泥棒が逃げ切りました。" : "警察が泥棒を全員逮捕しました。"}地図上の赤い点線が泥棒の逃走経路です。</p>
         <div class="row"><button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="menu">役割を選び直す</button></div>`;
       return;
     }
@@ -956,8 +1118,8 @@
     if (!isHuman(a)) {
       card.innerHTML = `
         <div class="label">いまの手番</div>
-        <div class="turn-title">${whoBadge(a)} CPU が考え中…</div>
-        <p class="turn-help">${a.k === "t" ? "ターゲットがどの交通手段を使ったかは、下の移動記録に残ります。" : "しばらくお待ちください。"}</p>`;
+        <div class="turn-title">${whoBadge(a)} ${actorName(a)}（CPU）が考え中…</div>
+        <p class="turn-help">${a.k === "t" ? "泥棒がどの交通手段を使ったかは、移動記録に残ります。" : "しばらくお待ちください。"}</p>`;
       return;
     }
     const moves = legal(a);
@@ -967,9 +1129,9 @@
       byDest.get(m.to).add(m.type);
     }
     let help;
-    if (a.k === "t") help = "移動する駅を地図か下のボタンで選んでください。使った交通手段はチェイサーに知られます。";
-    else if (a.k === "a") help = "エージェントは見えていますが、チェイサーはこの駅に入れません。仲間の逃げ道を守りましょう。";
-    else help = "ターゲットのいる駅に入れば確保。ピンクの駅はターゲットがいる可能性のある場所です。";
+    if (a.k === "t") help = "移動する駅を地図か下のボタンで選んでください。使った交通手段は警察に知られます。";
+    else if (a.k === "a") help = "エージェントの姿は見えていますが、警官はこの駅に入れません。仲間の逃げ道を守りましょう。";
+    else help = "泥棒のいる駅に入れば逮捕。赤くにじんだ駅は泥棒がいるかもしれない場所です。";
 
     let extra = "";
     if (a.k === "t") {
@@ -1000,7 +1162,7 @@
     let html = `<div class="board-nums"><span></span>` +
       Array.from({ length: MAX_ROUNDS }, (_, r) => `<span class="${REVEAL.includes(r + 1) ? "rv" : ""}">${r + 1}</span>`).join("") + `</div>`;
     S.targets.forEach((t, i) => {
-      html += `<div class="board-row"><span class="who ${t.state === "agent" ? "a" : "t"}">${t.state === "agent" ? "A" + (i + 1) : tName(i)}</span>`;
+      html += `<div class="board-row"><span class="who">${face(t.state === "agent" ? "a" : "t")}${i + 1}</span>`;
       for (let r = 0; r < MAX_ROUNDS; r++) {
         const mv = t.moves[r];
         const cls = ["cell"];
@@ -1030,9 +1192,10 @@
     ov.hidden = false;
     ov.innerHTML = `
       <div class="sheet" role="dialog" aria-label="結果">
+        <div class="result-chars">${S.winner === "target" ? face("t") + face("t") : face("c") + face("c") + face("c")}</div>
         <div class="label">ROUND ${S.round} で決着</div>
         <h2>${win ? "作戦成功！" : "作戦失敗…"}</h2>
-        <p>${S.winner === "target" ? "ターゲットが最後まで逃げ切りました。" : "チェイサーがターゲットを全員確保しました。"}</p>
+        <p>${S.winner === "target" ? "泥棒が最後まで逃げ切りました。" : "警察が泥棒を全員逮捕しました。"}</p>
         <div class="row">
           <button class="btn" data-act="again">もう一度</button>
           <button class="btn ghost" data-act="close">逃走経路を見る</button>
@@ -1046,23 +1209,25 @@
     ov.hidden = false;
     ov.innerHTML = `
       <div class="sheet" role="dialog" aria-label="ゲーム開始">
-        <div class="label">路線図 追跡ゲーム</div>
+        <div class="label">路線図 おいかけっこ</div>
         <h2>東京を逃げ切るか、追い詰めるか</h2>
         <ul>
-          <li>ターゲット2人、チェイサー3人。1ラウンドにつき全員が1駅ずつ動きます。</li>
-          <li>ターゲットの居場所は秘密。使った交通手段（電車・地下鉄・バス）だけが公開されます。</li>
-          <li>ラウンド ${REVEAL.join("・")} の移動後は居場所が公開されます。</li>
-          <li>捕まったターゲットは「エージェント」になり、チェイサーの通り道をふさげます。</li>
-          <li>ターゲットは「シークレット切符」を${SECRETS}枚持っていて、交通手段を隠して移動できます。</li>
+          <li>泥棒2人、警官3人。1ラウンドにつき全員が1駅ずつ動きます。</li>
+          <li>泥棒の居場所は秘密。使った交通手段（電車・地下鉄・バス）だけが警察に伝わります。</li>
+          <li>ラウンド ${REVEAL.join("・")} の移動後は「目撃情報」で居場所がばれます。</li>
+          <li>捕まった泥棒は「エージェント」になり、警官の通り道をふさげます。</li>
+          <li>泥棒は交通手段を隠せる「シークレット切符」を${SECRETS}枚持っています。</li>
         </ul>
         <div class="roles">
           <button class="role" data-act="start" data-role="target">
-            <strong><span class="who t">T</span>ターゲットで遊ぶ</strong>
+            ${face("t")}
+            <strong>泥棒で遊ぶ</strong>
             <span>2人を操作して、${MAX_ROUNDS}ラウンド逃げ切る。</span>
           </button>
           <button class="role" data-act="start" data-role="chaser">
-            <strong><span class="who c">C</span>チェイサーで遊ぶ</strong>
-            <span>3人を操作して、切符の記録から居場所を推理する。</span>
+            ${face("c")}
+            <strong>警察で遊ぶ</strong>
+            <span>警官3人を操作して、切符の記録から居場所を推理する。</span>
           </button>
         </div>
       </div>`;
@@ -1087,6 +1252,7 @@
 
   function boot(data) {
     buildMap();
+    buildLegend();
     if (data && data.S) {
       S = data.S;
       step();
