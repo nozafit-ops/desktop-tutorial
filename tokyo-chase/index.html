@@ -111,8 +111,10 @@
     -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 6px 24px rgba(0,0,0,0.35);
   }
-  .top { top: 10px; left: 10px; right: 10px; display: flex; gap: 8px; align-items: stretch; pointer-events: none; }
-  .top > * { pointer-events: auto; }
+  .top { top: 10px; left: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toprow { display: flex; gap: 8px; align-items: stretch; }
+  .toprow > * { pointer-events: auto; }
+  .toprow.second .xlog { flex: 1; min-width: 0; }
   .iconbtn {
     width: 46px; min-height: 46px; display: grid; place-items: center; border-radius: 12px;
   }
@@ -167,9 +169,9 @@
 
   .bottom { left: 10px; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
   .bottom > * { pointer-events: auto; }
-  .prompt { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; min-height: 60px; }
+  .prompt { display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; flex: none; max-width: 46%; }
   .prompt .txt { flex: 1; min-width: 0; }
-  .prompt .t1 { font-weight: 900; font-size: 16px; line-height: 1.3; }
+  .prompt .t1 { font-weight: 900; font-size: 15px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .prompt .t2 { color: var(--muted); font-size: 12px; line-height: 1.4; }
   .pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--hud-2); color: var(--muted); white-space: nowrap; }
   .pill.gold { background: var(--gold); color: #1A140C; }
@@ -302,18 +304,21 @@
   .drawer li.hot { color: var(--gold); font-weight: 700; }
 
   @media (max-width: 640px) {
-    .top { flex-wrap: wrap; }
-    .top .xcard { flex: 1; }
+    .toprow.first { flex-wrap: wrap; }
+    .toprow.first .xcard { flex: 1; }
     .dets { order: 3; width: 100%; margin-left: 0; justify-content: space-between; padding: 4px; }
     .det { min-width: 0; flex: 1; padding: 3px 2px; }
     .tk { min-width: 14px; font-size: 9px; padding: 0 2px; }
-    .side { top: auto; bottom: 150px; transform: none; padding: 4px; gap: 2px; }
+    .side { top: auto; bottom: 16px; transform: none; padding: 4px; gap: 2px; }
     .side .iconbtn { width: 40px; min-height: 40px; }
     .menu .btn span.s { display: none; }
     .portrait { width: 40px; height: 40px; }
     .portrait.sm { width: 30px; height: 30px; }
-    .prompt { min-height: 54px; }
-    .slot { width: 38px; height: 44px; }
+    .prompt { max-width: 44%; padding: 4px 8px 4px 4px; }
+    .prompt .t1 { font-size: 13px; }
+    .prompt .btn { min-height: 34px; padding: 0 10px; font-size: 13px; }
+    .slot { width: 32px; height: 40px; font-size: 12px; }
+    .xlog { padding: 4px; }
   }
 </style>
 <!-- ARTIFACT-HEAD-END -->
@@ -422,11 +427,17 @@
   </svg>
 
   <div class="hud top">
-    <button class="panel iconbtn" data-act="menu" aria-label="メニュー">
-      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
-    </button>
-    <button class="panel xcard" id="xcard" data-act="focusX"></button>
-    <div class="panel dets" id="dets"></div>
+    <div class="toprow first">
+      <button class="panel iconbtn" data-act="menu" aria-label="メニュー">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      <button class="panel xcard" id="xcard" data-act="focusX"></button>
+      <div class="panel dets" id="dets"></div>
+    </div>
+    <div class="toprow second">
+      <div class="panel prompt" id="prompt"></div>
+      <div class="panel xlog" id="xlog" aria-label="怪盗Xの移動記録"></div>
+    </div>
   </div>
 
   <div class="hud side panel">
@@ -436,11 +447,6 @@
     <button class="iconbtn" data-act="focusTurn" aria-label="手番のコマへ移動"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></button>
     <button class="iconbtn" id="hintBtn" data-act="hint" aria-pressed="true" aria-label="推理ヒント（怪盗Xがいるかもしれない駅）"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg></button>
     <button class="iconbtn" data-act="log" aria-label="ログ"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"></path></svg></button>
-  </div>
-
-  <div class="hud bottom">
-    <div class="panel prompt" id="prompt"></div>
-    <div class="panel xlog" id="xlog" aria-label="怪盗Xの移動記録"></div>
   </div>
 
   <div class="panel drawer" id="drawer" hidden>
@@ -1053,12 +1059,17 @@
   let anim = null;
 
   function vpSize() { const r = mapEl.getBoundingClientRect(); return { w: r.width, h: r.height, r }; }
+  function hudTop() {
+    const t = document.querySelector(".hud.top");
+    return t ? t.getBoundingClientRect().bottom - mapEl.getBoundingClientRect().top : 100;
+  }
   function clampView() {
     const { w, h } = vpSize();
     V.s = Math.min(3, Math.max(V.fit * 0.85, V.s));
     const mw = W * V.s, mh = H * V.s, pad = 80;
     V.tx = mw + pad * 2 <= w ? (w - mw) / 2 : Math.min(pad, Math.max(w - mw - pad, V.tx));
-    V.ty = mh + pad * 2 <= h ? (h - mh) / 2 : Math.min(pad + 60, Math.max(h - mh - pad - 110, V.ty));
+    const top = hudTop();
+    V.ty = mh + top + 40 <= h ? top + (h - top - mh) / 2 : Math.min(top + 20, Math.max(h - mh - 60, V.ty));
   }
   function applyView() {
     world.setAttribute("transform", `translate(${V.tx.toFixed(1)} ${V.ty.toFixed(1)}) scale(${V.s.toFixed(4)})`);
@@ -1082,8 +1093,9 @@
   }
   function fitView(animate = true) {
     const { w, h } = vpSize();
-    V.fit = Math.min(w / W, (h - 120) / H);
-    const s = V.fit * 1.02, tx = (w - W * s) / 2, ty = (h - H * s) / 2 + 10;
+    const top = hudTop();
+    V.fit = Math.min(w / W, (h - top - 20) / H);
+    const s = V.fit * 1.02, tx = (w - W * s) / 2, ty = top + (h - top - H * s) / 2;
     animate ? animateView(s, tx, ty) : setView(s, tx, ty);
   }
   function zoomAt(factor, cx, cy, animate = true) {
@@ -1095,13 +1107,13 @@
   function centerOn(i, s = Math.max(V.s, 0.95)) {
     const { w, h } = vpSize();
     const [, x, y] = STATIONS[i];
-    animateView(s, w / 2 - x * s, h / 2 - y * s - 20);
+    animateView(s, w / 2 - x * s, (hudTop() + h) / 2 - y * s + 20);
   }
   function ensureVisible(i) {
     const { w, h } = vpSize();
     const [, x, y] = STATIONS[i];
     const sx = x * V.s + V.tx, sy = y * V.s + V.ty;
-    if (sx < 70 || sx > w - 70 || sy < 110 || sy > h - 170) centerOn(i, V.s);
+    if (sx < 70 || sx > w - 70 || sy < hudTop() + 60 || sy > h - 70) centerOn(i, V.s);
   }
   function focusTurn() {
     const G = A.G;
@@ -1169,7 +1181,7 @@
     const { r } = vpSize();
     zoomAt(1.8, e.clientX - r.left, e.clientY - r.top);
   });
-  window.addEventListener("resize", () => { const { w, h } = vpSize(); V.fit = Math.min(w / W, (h - 120) / H); clampView(); applyView(); });
+  window.addEventListener("resize", () => { const { w, h } = vpSize(); V.fit = Math.min(w / W, (h - hudTop() - 20) / H); clampView(); applyView(); });
 
   // ======================================================================
   // 盤面の描画
@@ -1417,7 +1429,7 @@
     const r = mapEl.getBoundingClientRect();
     const topEl = document.querySelector(".hud.top"), botEl = document.querySelector(".hud.bottom"), sideEl = document.querySelector(".hud.side");
     const top = (topEl ? topEl.getBoundingClientRect().bottom - r.top : 100) + 36;
-    const bottom = (botEl ? botEl.getBoundingClientRect().top - r.top : r.height - 160) - 40;
+    const bottom = (botEl ? botEl.getBoundingClientRect().top - r.top : r.height) - 40;
     const sideR = sideEl ? sideEl.getBoundingClientRect() : null;
     const right = r.width - 36;
     const left = 40;
@@ -1540,30 +1552,22 @@
   function renderPrompt() {
     const G = A.G, el_ = $("prompt");
     if (!G) { el_.innerHTML = ""; return; }
-    const move = `<span class="pill gold">${G.xLog.length}/${MAX_MOVES}手</span>`;
+    const moveTxt = `${G.xLog.length}/${MAX_MOVES}手`;
     if (G.over) {
-      el_.innerHTML = `${portrait(G.winner === "x" ? "x" : "d", 0)}<div class="txt"><div class="t1">${G.winner === "x" ? "怪盗Xの勝ち" : "刑事チームの勝ち"}</div><div class="t2">赤い点線が怪盗Xの逃走経路です</div></div><button class="btn" data-act="result">結果</button>`;
+      el_.innerHTML = `${portrait(G.winner === "x" ? "x" : "d", 0, "sm")}<div class="txt"><div class="t1">${G.winner === "x" ? "Xの勝ち" : "刑事の勝ち"}</div></div><button class="btn" data-act="result">結果</button>`;
       return;
     }
-    const who = G.turn === "x" ? portrait("x") : portrait("d", G.turn);
+    const who = G.turn === "x" ? portrait("x", 0, "sm") : portrait("d", G.turn, "sm");
     const name = G.turn === "x" ? "怪盗X" : dName(G.turn);
-    let t1, t2;
-    if (humanTurn()) {
-      t1 = `${name} の番`;
-      t2 = G.turn === "x"
-        ? (G.doubling ? "2倍移動の2手目。もう1駅進んでください" : `${exposure(G).help}。光っている駅をタップして逃げる`)
-        : "光っている駅をタップ。怪盗Xのいる駅に入れば逮捕";
-    } else {
-      t1 = `${name} が考え中…`;
-      t2 = G.turn === "x" ? "怪盗Xの切符は下の記録に残ります" : "CPUの刑事が動いています";
-    }
+    const t1 = humanTurn() ? (G.turn === "x" && G.doubling ? "Xの2手目" : `${name}の番`) : `${name} 考え中…`;
     let heliBtn = "";
     if (humanTurn()) {
       const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
-      if (moves.some(m => m.type === "heli")) heliBtn = `<button class="btn heli-btn" data-act="heli">ヘリで飛ぶ</button>`;
+      if (moves.some(m => m.type === "heli")) heliBtn = `<button class="btn heli-btn" data-act="heli">ヘリ</button>`;
     }
-    el_.innerHTML = `${who}<div class="txt"><div class="t1">${t1}</div><div class="t2">${t2}</div></div>${heliBtn || move}`;
+    el_.innerHTML = `${who}<div class="txt"><div class="t1">${t1}</div><div class="t2">${moveTxt}</div></div>${heliBtn}`;
   }
+
 
   function renderLog() {
     const G = A.G;
@@ -1663,7 +1667,7 @@
         <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数より1枚少ない）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
         <li>刑事の駒の吹き出しは、刑事がどこまで怪盗Xをつかんでいるかの合図です。<b>？</b>は見失っている、<b>！</b>は捕捉している。怪盗Xの札には「見失われている／追われている／発見されている」が表示されます。</li>
         <li>刑事が怪盗Xのいる駅に入れば <b>逮捕</b>。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
-        <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは下の「ヘリで飛ぶ」ボタンから。</li>
+        <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは画面上部の手番表示にある「ヘリ」ボタンから。</li>
       </ol><button class="btn wide" data-act="title">戻る</button></div>`;
       return;
     }
