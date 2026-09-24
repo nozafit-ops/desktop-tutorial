@@ -293,6 +293,34 @@
     background: var(--hud-solid); color: var(--ink); border: 1px solid var(--rule);
   }
   .edge-arrow .ea-d.hot { background: #E5484D; color: #fff; border-color: #E5484D; }
+  /* カード */
+  .label-c { text-align: center; font-size: 12px; letter-spacing: 0.12em; color: var(--muted); font-weight: 700; }
+  .gcard {
+    position: relative; margin: 0 auto; width: min(260px, 80%); aspect-ratio: 5 / 7; border-radius: 16px; padding: 18px 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center;
+    border: 3px solid #F4ECDC; box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 0 0 6px rgba(255,255,255,0.08);
+    animation: flip 0.5s ease-out;
+  }
+  @keyframes flip { from { transform: perspective(600px) rotateY(90deg); } to { transform: perspective(600px) rotateY(0); } }
+  .gcard.d { background: linear-gradient(160deg, #2F5FB8, #1C3570); }
+  .gcard.x { background: linear-gradient(160deg, #8E1B16, #3A0B09); }
+  .gcard.miss { background: linear-gradient(160deg, #5A5146, #2A241D); }
+  .gc-kind { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: 0.25em; font-size: 12px; color: rgba(255,255,255,0.7); }
+  .gc-name { font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 34px; color: #fff; line-height: 1.1; }
+  .gc-desc { font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.5; }
+  .card-dest { fill: rgba(227, 179, 65, 0.35); stroke: #E3B341; }
+  .barricade { fill: #fff; stroke: #C0271F; stroke-width: 4; stroke-dasharray: 10 8; }
+  .rubble { fill: rgba(40, 30, 20, 0.55); stroke: #2A1E12; stroke-width: 3; }
+  .rubble-x { stroke: #E5484D; stroke-width: 7; stroke-linecap: round; }
+  .trap-mark { fill: #9A9A9A; stroke: #2A1E12; stroke-width: 2.5; stroke-linejoin: round; }
+  .mark-label { font-weight: 900; font-size: 17px; fill: #fff; paint-order: stroke; stroke-width: 6px; stroke-linejoin: round; text-anchor: middle; }
+  .mark-label.block { stroke: #C0271F; }
+  .mark-label.ruin { stroke: #2A1E12; }
+  .order-line { fill: none; stroke-width: 5; stroke-dasharray: 4 10; stroke-linecap: round; opacity: 0.9; }
+  .order-flag { stroke: #2A1E12; stroke-width: 2.5; stroke-linejoin: round; }
+  .me-tag.order { background: #3B82F6; color: #fff; }
+  .ticket.order-go { background: #2F5FB8; color: #fff; }
+  .ticket.order-free { background: #4A3D2E; color: #fff; }
   .toast {
     position: absolute; left: 50%; top: 84px; transform: translateX(-50%); z-index: 25;
     padding: 8px 14px; border-radius: 999px; background: var(--hud-solid); border: 1px solid var(--rule);
@@ -679,11 +707,14 @@
   }
 
   // 怪盗Xの手：{to, type}。ヘリは to = -1（着陸地点はランダム）
+  // 封鎖・破壊された駅（until 手目になるまで入れない）
+  const isClosed = (map, st, G) => !!map && map[st] !== undefined && G.xLog.length < map[st];
+
   function xMoves(G, sec) {
     const occ = new Set(G.det.map(d => d.pos));
     const out = [], blackTo = new Set();
     for (const e of ADJ[sec.pos]) {
-      if (occ.has(e.to)) continue;
+      if (occ.has(e.to) || isClosed(G.closedX, e.to, G)) continue;
       out.push({ to: e.to, type: e.type });
       if (G.black > 0 && !blackTo.has(e.to)) { blackTo.add(e.to); out.push({ to: e.to, type: "black" }); }
     }
@@ -693,16 +724,16 @@
   }
   function heliTargets(G, from, forX, k = -1) {
     const occ = new Set(G.det.filter((_, j) => j !== k).map(d => d.pos));
-    return HELI.filter(h => h !== from && !(forX && occ.has(h)) && !(!forX && occ.has(h)));
+    return HELI.filter(h => h !== from && !occ.has(h) && !isClosed(forX ? G.closedX : G.closedD, h, G));
   }
   const canDouble = G => G.dbl > 0 && !G.doubling && G.xLog.length <= MAX_MOVES - 2;
 
   function nextPossible(G, type) {
     const occ = new Set(G.det.map(d => d.pos));
-    if (type === "heli") return HELI.filter(h => !occ.has(h));
+    if (type === "heli") return HELI.filter(h => !occ.has(h) && !isClosed(G.closedX, h, G));
     const nx = new Set();
     for (const s of G.possible) for (const e of ADJ[s]) {
-      if ((type === "black" || e.type === type) && !occ.has(e.to)) nx.add(e.to);
+      if ((type === "black" || e.type === type) && !occ.has(e.to) && !isClosed(G.closedX, e.to, G)) nx.add(e.to);
     }
     return [...nx].sort((a, b) => a - b);
   }
@@ -716,8 +747,9 @@
     sec.pos = to;
     sec.path.push(to);
     const n = G.xLog.length + 1;
-    const rev = REVEAL.includes(n);
-    G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0) });
+    let rev = REVEAL.includes(n), vanished = false;
+    if (rev && G.skipReveal > 0) { G.skipReveal--; rev = false; vanished = true; }   // 雲隠れ
+    G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0 });
     if (type === "black") G.black--;
     G.possible = rev ? [to] : nextPossible(G, type);
     if (rev) G.lastSeen = { pos: to, n };
@@ -730,11 +762,77 @@
   function detMoves(G, k) {
     const d = G.det[k];
     const occ = G.det.filter((_, j) => j !== k).map(x => x.pos);
-    const out = ADJ[d.pos].filter(e => d.t[e.type] > 0 && !occ.includes(e.to));
+    const out = ADJ[d.pos].filter(e => d.t[e.type] > 0 && !occ.includes(e.to) && !isClosed(G.closedD, e.to, G));
     if (d.t.heli > 0 && HELI_SET.has(d.pos) && !(G.dudFound && d.pos === G.dud) && heliTargets(G, d.pos, false, k).length) out.push({ to: -1, type: "heli" });
     return out;
   }
   const allStuck = G => G.det.every((_, k) => detMoves(G, k).length === 0);
+
+  // ---------------- カード（5・10・17手目に両陣営が1枚引く。ハズレあり） ----------------
+  const CARD_TURNS = [5, 10, 17];
+  const CARD = {
+    bridge:    { side: "d", name: "橋封鎖", desc: "橋を1つ選んで封鎖する。4手のあいだ怪盗Xは通れない。" },
+    dog:       { side: "d", name: "追跡犬", desc: "においをたどり、怪盗Xがいるかもしれない駅を「本当の居場所から2手以内」に絞り込む。" },
+    inquiry:   { side: "d", name: "聞き込み", desc: "町の人に聞き込み。怪盗Xがいるかもしれない駅が半分に減る。" },
+    reinforce: { side: "d", name: "応援要請", desc: "刑事全員にタクシー2・バス1・地下鉄1の切符が追加される。" },
+    trap:      { side: "x", name: "罠", desc: "いまいる駅に罠を仕掛ける。踏んだ刑事は1回休み。刑事には見えない。" },
+    vanish:    { side: "x", name: "雲隠れ", desc: "次の目撃情報を1回だけ無効にする。" },
+    destroy:   { side: "x", name: "駅破壊", desc: "2手以内の駅を1つ壊す。4手のあいだ刑事はその駅に入れない。" },
+    miss:      { side: "", name: "ハズレ", desc: "何も起こらなかった。" },
+  };
+  const DECK = {
+    d: [["bridge", 22], ["dog", 22], ["inquiry", 18], ["reinforce", 18], ["miss", 20]],
+    x: [["trap", 25], ["vanish", 25], ["destroy", 25], ["miss", 25]],
+  };
+  function drawCard(side) {
+    const deck = DECK[side];
+    let r = Math.random() * deck.reduce((s, c) => s + c[1], 0);
+    for (const [c, w] of deck) if ((r -= w) < 0) return c;
+    return "miss";
+  }
+  function cardTargets(G, sec, card) {
+    if (card === "bridge") return BRIDGE_ST.filter(b => !isClosed(G.closedX, b, G));
+    if (card === "destroy") {
+      const occ = new Set(G.det.map(d => d.pos));
+      return [...Array(N).keys()].filter(i => i !== sec.pos && D[sec.pos][i] <= 2 && !occ.has(i));
+    }
+    return null;
+  }
+  function applyCard(G, sec, card, target) {
+    const n = G.xLog.length;
+    if (card === "bridge") G.closedX = { ...(G.closedX || {}), [target]: n + 4 };
+    else if (card === "dog") G.possible = G.possible.filter(s => D[s][sec.pos] <= 2);
+    else if (card === "inquiry") {
+      const others = shuffle(G.possible.filter(s => s !== sec.pos));
+      G.possible = [sec.pos, ...others.slice(0, Math.floor(others.length / 2))].sort((a, b) => a - b);
+    } else if (card === "reinforce") G.det.forEach(d => { d.t.taxi += 2; d.t.bus += 1; d.t.tube += 1; });
+    else if (card === "trap") sec.trap = sec.pos;
+    else if (card === "vanish") G.skipReveal = (G.skipReveal || 0) + 1;
+    else if (card === "destroy") G.closedD = { ...(G.closedD || {}), [target]: n + 4 };
+    G.cards = [...(G.cards || []), { card, n, target: card === "trap" ? null : (target ?? null) }];
+  }
+  // CPU が選ぶ対象
+  function aiCardTarget(G, sec, card) {
+    const opts = cardTargets(G, sec, card);
+    if (!opts || !opts.length) return null;
+    if (card === "bridge") {
+      const P = G.possible;
+      return opts.reduce((best, b) => { const v = P.reduce((s, p) => s + dd(b, p), 0) / P.length; return v < best[1] ? [b, v] : best; }, [opts[0], Infinity])[0];
+    }
+    // 駅破壊：いちばん近い刑事の通り道になっている駅を壊す
+    let near = G.det[0].pos;
+    for (const d of G.det) if (D[sec.pos][d.pos] < D[sec.pos][near]) near = d.pos;
+    return opts.reduce((best, o) => { const v = D[o][near] + D[o][sec.pos] * 0.5; return v < best[1] ? [o, v] : best; }, [opts[0], Infinity])[0];
+  }
+  // 罠：踏んだ刑事は1回休み
+  function checkTrap(G, sec) {
+    if (sec.trap === null || sec.trap === undefined || sec.trap === sec.pos) return -1;
+    const k = G.det.findIndex(d => d.pos === sec.trap);
+    if (k < 0) return -1;
+    G.stun = { ...(G.stun || {}), [k]: 1 };
+    sec.trap = null;
+    return k;
+  }
 
   function advance(G, k) {
     if (k + 1 < G.det.length) G.turn = k + 1;
@@ -796,6 +894,22 @@
 
   function aiD(G, k) {
     const moves = detMoves(G, k);
+    const order = G.orders ? G.orders[k] : undefined;
+    if (order !== undefined && order !== null) {
+      // 指示された駅へ向かう。着いたら周辺で張り込む
+      const here = G.det[k].pos;
+      const norm = moves.filter(m => m.to >= 0);
+      if (norm.length) {
+        let pool = D[here][order] > 1 ? norm.filter(m => D[m.to][order] < D[here][order]) : norm.filter(m => D[m.to][order] <= 1);
+        if (!pool.length) pool = norm;
+        pool.sort((a, b) => (D[a.to][order] - D[b.to][order]) || (G.det[k].t[b.type] - G.det[k].t[a.type]));
+        const bestD = D[pool[0].to][order];
+        const tied = pool.filter(m => D[m.to][order] === bestD);
+        const pr = new Set(G.possible);
+        const pickM = tied.find(m => pr.has(m.to)) || tied[0];
+        return { to: pickM.to, type: pickM.type };
+      }
+    }
     const P = G.possible;
     const w = 1 / Math.max(1, P.length);
     const scoreAt = to => {
@@ -871,7 +985,7 @@
 
   const humanTurn = () => {
     const G = A.G;
-    if (!G || G.over) return false;
+    if (!G || G.over || A.pendingCard) return false;
     if (A.role === "pass") return G.turn === "x" ? A.cover === "x-open" : A.cover === null;
     return A.role === "x" ? G.turn === "x" : G.turn === ME_DET;
   };
@@ -896,6 +1010,7 @@
       if (e.d === 1) s = "怪盗Xが2倍移動！ " + s;
       if (xVisible()) s += `（→ ${NO(A.sec.path[i + 1])} ${NAME(A.sec.path[i + 1])}）`;
       pushFeed(i + 1, s);
+      if (e.v) { pushFeed(i + 1, "雲隠れ！ 目撃情報が消えた", true); toast("雲隠れ！ 目撃情報が消えた"); }
       if (e.p !== null) { pushFeed(i + 1, `目撃情報！ 怪盗Xは ${NO(e.p)} ${NAME(e.p)} にいる`, true); toast(`目撃情報！ 怪盗Xは ${NAME(e.p)} に`); }
     }
     G.det.forEach((d, k) => {
@@ -971,6 +1086,8 @@
     fn();
     if (!A.G.over && A.G.det.some(d => d.pos === A.sec.pos)) finish(A.G, "d", "caught");
     describe(prev, A.G);
+    const tk = A.G.over ? -1 : checkTrap(A.G, A.sec);
+    if (tk >= 0) { toast(`${dName(tk)} が罠にかかった！ 1回休み`); pushFeed(A.G.xLog.length, `${dName(tk)} が ${NAME(A.G.det[tk].pos)} で怪盗Xの罠にかかった（1回休み）`, true); }
   }
 
   function step() {
@@ -980,6 +1097,17 @@
       if (G.turn === "x") {
         if (!xMoves(G, A.sec).length) { apply(() => finish(G, "d", "trapped")); continue; }
         if (A.role === "pass" && A.cover === null) A.cover = "x";
+        if (A.role === "pass" && A.cover !== "x-open") { save(); render(); return; }
+        if (!G.doubling) {
+          const n = G.xLog.length + 1;
+          G.drawn = G.drawn || { x: [], d: [] };
+          if (CARD_TURNS.includes(n) && !G.drawn.x.includes(n)) {
+            G.drawn.x.push(n);
+            const card = drawCard("x");
+            if (A.role === "x" || A.role === "pass") { A.pendingCard = { side: "x", card, stage: "reveal" }; save(); render(); return; }
+            cpuCard("x", card);
+          }
+        }
         if (A.role === "x" || A.role === "pass") { save(); render(); return; }
         render();
         timer = setTimeout(() => {
@@ -990,6 +1118,23 @@
         return;
       }
       const k = G.turn;
+      if (k === 0) {
+        const n = G.xLog.length;
+        G.drawn = G.drawn || { x: [], d: [] };
+        if (CARD_TURNS.includes(n) && !G.drawn.d.includes(n)) {
+          if (A.role === "pass" && A.cover !== null) { save(); render(); return; }
+          G.drawn.d.push(n);
+          const card = drawCard("d");
+          if (A.role === "d" || A.role === "pass") { A.pendingCard = { side: "d", card, stage: "reveal" }; save(); render(); return; }
+          cpuCard("d", card);
+        }
+      }
+      if (G.stun && G.stun[k] > 0) {
+        G.stun[k]--;
+        pushFeed(G.xLog.length, `${dName(k)} は罠で足止め（1回休み）`, true);
+        apply(() => skipD(G, k));
+        continue;
+      }
       if (allStuck(G)) { apply(() => finish(G, "x", "stuck")); continue; }
       if (!detMoves(G, k).length) {
         pushFeed(G.xLog.length, `${dName(k)} は使える切符がないので待機`);
@@ -1012,6 +1157,47 @@
     A.cover = null;
     render();
     setTimeout(() => { A.screen = "result"; renderScreen(); }, 900);
+  }
+
+  // ---------------- カードの処理 ----------------
+  const needsTarget = card => card === "bridge" || card === "destroy";
+  function announceCard(side, card, target) {
+    const G = A.G, c = CARD[card];
+    if (side === "d") {
+      let detail = "";
+      if (card === "bridge") detail = `${NO(target)} ${NAME(target)} を封鎖（4手）`;
+      else if (card === "dog" || card === "inquiry") detail = `候補が ${G.possible.length} 駅に絞られた`;
+      else if (card === "reinforce") detail = "刑事全員に切符を追加";
+      else detail = "何も起こらなかった";
+      toast(`刑事チームのカード「${c.name}」`);
+      pushFeed(G.xLog.length, `刑事チームのカード「${c.name}」：${detail}`, card !== "miss");
+      return;
+    }
+    const mine = A.role === "x" || (A.role === "pass" && A.cover === "x-open");
+    if (card === "destroy") {
+      toast(`怪盗Xが ${NAME(target)} を破壊！`);
+      pushFeed(G.xLog.length, `怪盗Xのカード「駅破壊」：${NO(target)} ${NAME(target)} は4手のあいだ刑事が入れない`, true);
+    } else if (mine) {
+      toast(`怪盗Xのカード「${c.name}」`);
+      pushFeed(G.xLog.length, `怪盗Xのカード「${c.name}」${card === "trap" ? `：${NAME(A.sec.pos)} に罠を仕掛けた` : card === "vanish" ? "：次の目撃情報を消す" : "：何も起こらなかった"}`, card !== "miss");
+    } else {
+      toast("怪盗Xがカードを引いた…");
+      pushFeed(G.xLog.length, "怪盗Xがカードを引いた（効果はわからない）", true);
+    }
+  }
+  function cpuCard(side, card) {
+    const G = A.G;
+    let target = null;
+    if (needsTarget(card)) { target = aiCardTarget(G, A.sec, card); if (target === null) card = "miss"; }
+    applyCard(G, A.sec, card, target);
+    announceCard(side, card, target);
+  }
+  function finishCard(target) {
+    const pc = A.pendingCard, G = A.G;
+    applyCard(G, A.sec, pc.card, target);
+    announceCard(pc.side, pc.card, target);
+    A.pendingCard = null;
+    step();
   }
 
   function heliNote(k, from, landed) {
@@ -1047,6 +1233,20 @@
   function onStationTap(i) {
     const G = A.G;
     if (!G || A.screen !== "game") return;
+    if (A.pendingCard && A.pendingCard.stage === "target") {
+      if (A.pendingCard.opts.includes(i)) finishCard(i);
+      else toast(`${NAME(i)} は選べません`);
+      return;
+    }
+    if (A.pendingOrder !== null && A.pendingOrder !== undefined) {
+      const k = A.pendingOrder;
+      G.orders = { ...(G.orders || {}), [k]: i };
+      A.pendingOrder = null;
+      toast(`${dName(k)}：${NAME(i)} へ向かいます`);
+      pushFeed(G.xLog.length, `指示：${dName(k)} は ${NO(i)} ${NAME(i)} へ向かう`);
+      save(); render();
+      return;
+    }
     if (!humanTurn()) { toast(`${NO(i)} ${NAME(i)}`); return; }
     const opts = G.turn === "x" ? xMoves(G, A.sec).filter(m => m.to === i) : detMoves(G, G.turn).filter(m => m.to === i);
     if (!opts.length) { toast(`${NO(i)} ${NAME(i)} へは行けません`); return; }
@@ -1495,6 +1695,41 @@
         hot(to);
       }
     }
+    if (A.pendingCard && A.pendingCard.stage === "target") {
+      for (const t of A.pendingCard.opts) {
+        const [x, y] = P(t);
+        el("circle", { cx: x, cy: y, r: 33, class: "dest card-dest pulse" }, gD);
+        hot(t);
+      }
+    }
+    // 封鎖された橋・破壊された駅・罠・仲間への指示
+    for (const [st, until] of Object.entries(G.closedX || {})) {
+      if (G.xLog.length >= until) continue;
+      const [x, y] = P(Number(st));
+      el("rect", { x: x - 34, y: y - 10, width: 68, height: 20, rx: 4, class: "barricade" }, gM);
+      el("text", { x, y: y - 40, class: "mark-label block" }, gM).textContent = `封鎖 あと${until - G.xLog.length}手`;
+    }
+    for (const [st, until] of Object.entries(G.closedD || {})) {
+      if (G.xLog.length >= until) continue;
+      const [x, y] = P(Number(st));
+      el("circle", { cx: x, cy: y, r: 30, class: "rubble" }, gM);
+      el("path", { d: `M${x - 20},${y - 20} L${x + 20},${y + 20} M${x + 20},${y - 20} L${x - 20},${y + 20}`, class: "rubble-x" }, gM);
+      el("text", { x, y: y - 40, class: "mark-label ruin" }, gM).textContent = `破壊 あと${until - G.xLog.length}手`;
+    }
+    if (showX && A.sec.trap !== null && A.sec.trap !== undefined) {
+      const [x, y] = P(A.sec.trap);
+      el("path", { d: `M${x - 26},${y + 10} L${x - 16},${y - 8} L${x - 8},${y + 6} L${x},${y - 12} L${x + 8},${y + 6} L${x + 16},${y - 8} L${x + 26},${y + 10} Z`, class: "trap-mark" }, gM);
+      el("text", { x, y: y - 40, class: "mark-label ruin" }, gM).textContent = "罠";
+    }
+    if (G.orders && A.role !== "x") {
+      for (const [ks, st] of Object.entries(G.orders)) {
+        const k = Number(ks);
+        if (!G.det[k]) continue;
+        const [x1, y1] = P(G.det[k].pos), [x2, y2] = P(st);
+        el("path", { d: `M${x1},${y1} L${x2},${y2}`, class: "order-line", stroke: DCOL[k] }, gM);
+        el("path", { d: `M${x2},${y2} L${x2},${y2 - 58} L${x2 + 34},${y2 - 48} L${x2},${y2 - 38}`, class: "order-flag", fill: DCOL[k] }, gM);
+      }
+    }
     if (A.sel !== null && A.sel >= 0) { const [x, y] = P(A.sel); el("circle", { cx: x, cy: y, r: 36, class: "sel" }, gM); hot(A.sel); }
     if (G.dud !== undefined && (G.dudFound || G.over || (showX && A.sec.dudKnown))) {
       const [x, y] = P(G.dud);
@@ -1524,7 +1759,7 @@
       t.querySelector(".ring").setAttribute("visibility", G.turn === k && !G.over ? "visible" : "hidden");
       const b = t.querySelector(".bubble");
       if (b) {
-        const mark = G.over ? "" : detBubble(G, k);
+        const mark = G.over ? "" : (G.stun && G.stun[k] > 0 ? "休" : detBubble(G, k));
         b.style.display = mark ? "" : "none";
         const tx_ = b.querySelector("text");
         if (tx_.textContent !== mark) {
@@ -1547,8 +1782,8 @@
       <span class="chipsx"><span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
     $("xcard").classList.toggle("active", G.turn === "x");
     $("dets").innerHTML = G.det.map((d, k) => `
-      <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="focusD" data-k="${k}" aria-label="${dName(k)}：${DET_TYPES.map(t => TYPE[t].name + d.t[t]).join("・")}">
-        ${portrait("d", k, "sm")}${A.role === "d" && k === ME_DET ? `<span class="me-tag">あなた</span>` : ""}
+      <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="${A.role === "d" && k !== ME_DET ? "order" : "focusD"}" data-k="${k}" aria-label="${dName(k)}：${DET_TYPES.map(t => TYPE[t].name + d.t[t]).join("・")}">
+        ${portrait("d", k, "sm")}${A.role === "d" && k === ME_DET ? `<span class="me-tag">あなた</span>` : ""}${A.role === "d" && k !== ME_DET ? `<span class="me-tag order">${G.orders && G.orders[k] !== undefined ? "指示中" : "指示"}</span>` : ""}
         <span class="tks">${DET_TYPES.map(t => `<span class="tk ${t} ${d.t[t] ? "" : "zero"}">${t === "heli" ? "H" + d.t[t] : d.t[t]}</span>`).join("")}</span>
       </button>`).join("");
   }
@@ -1556,6 +1791,14 @@
   function renderPrompt() {
     const G = A.G, el_ = $("prompt");
     if (!G) { el_.innerHTML = ""; return; }
+    if (A.pendingCard && A.pendingCard.stage === "target") {
+      el_.innerHTML = `<div class="txt"><div class="t1">「${CARD[A.pendingCard.card].name}」</div><div class="t2">光る駅を選ぶ</div></div>`;
+      return;
+    }
+    if (A.pendingOrder !== null && A.pendingOrder !== undefined) {
+      el_.innerHTML = `${portrait("d", A.pendingOrder, "sm")}<div class="txt"><div class="t1">行き先を選ぶ</div><div class="t2">駅をタップ</div></div>`;
+      return;
+    }
     const moveTxt = `${G.xLog.length}/${MAX_MOVES}手`;
     if (G.over) {
       el_.innerHTML = `${portrait(G.winner === "x" ? "x" : "d", 0, "sm")}<div class="txt"><div class="t1">${G.winner === "x" ? "Xの勝ち" : "刑事の勝ち"}</div></div><button class="btn" data-act="result">結果</button>`;
@@ -1602,6 +1845,19 @@
   function renderSheet() {
     const wrap = $("sheet");
     const G = A.G;
+    if (G && A.orderSheet !== null && A.orderSheet !== undefined) {
+      const k = A.orderSheet, cur = G.orders ? G.orders[k] : undefined;
+      wrap.hidden = false;
+      wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="仲間への指示">
+        <h3>${portrait("d", k, "sm")}${dName(k)} への指示</h3>
+        <p style="margin:0;color:var(--muted);font-size:13px">${cur !== undefined ? `いまの指示：${NO(cur)} ${esc(NAME(cur))} へ向かい、周辺を張り込む` : "いまはCPUの判断（おまかせ）で動いています"}</p>
+        <div class="tickets">
+          <button class="ticket order-go" data-act="orderPick"><span class="en">Go</span><span class="ja">行き先の駅を地図で選ぶ</span></button>
+          <button class="ticket order-free" data-act="orderClear"><span class="en">Free</span><span class="ja">おまかせに戻す</span></button>
+        </div>
+        <div class="row"><button class="btn ghost" data-act="focusD" data-k="${k}">この刑事を見る</button><button class="btn ghost" data-act="orderClose">閉じる</button></div></div>`;
+      return;
+    }
     if (A.sel === null || !G || !humanTurn()) { wrap.hidden = true; return; }
     const to = A.sel;
     const isX = G.turn === "x";
@@ -1669,6 +1925,8 @@
         <li>怪盗Xの居場所は秘密。刑事にわかるのは下の記録に残る <b>切符の種類</b> だけ。${REVEAL.join("・")}手目の後だけ姿を現します。</li>
         <li>刑事の切符は有限（タクシー${DET_TICKETS.taxi}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.tube}・水上バス${DET_TICKETS.boat}・ヘリ${DET_TICKETS.heli}）。</li>
         <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数より1枚少ない）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
+        <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引いてすぐ発動します（ハズレもあり）。刑事側は「橋封鎖」「追跡犬」「聞き込み」「応援要請」、怪盗X側は「罠」「雲隠れ」「駅破壊」。</li>
+        <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
         <li>刑事の駒の吹き出しは、刑事がどこまで怪盗Xをつかんでいるかの合図です。<b>？</b>は見失っている、<b>！</b>は捕捉している。怪盗Xの札には「見失われている／追われている／発見されている」が表示されます。</li>
         <li>刑事が怪盗Xのいる駅に入れば <b>逮捕</b>。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
         <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは画面上部の手番表示にある「ヘリ」ボタンから。</li>
@@ -1686,6 +1944,20 @@
         <p class="c">${G.xLog.length}手目で決着。${reason}</p>
         <div class="row"><button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="title">タイトルへ</button></div>
         <button class="btn ghost wide" data-act="closeResult">盤面と逃走経路を見る</button></div>`;
+      return;
+    }
+    if (G && A.pendingCard && A.pendingCard.stage === "reveal" && !(A.role === "pass" && (A.cover === "x" || A.cover === "d"))) {
+      const pc = A.pendingCard, c = CARD[pc.card];
+      sc.hidden = false;
+      sc.classList.add("dim");
+      sc.innerHTML = `<div class="card">
+        <div class="label-c">${pc.side === "x" ? "怪盗Xのカード" : "刑事チームのカード"}・${G.xLog.length + (pc.side === "x" ? 1 : 0)}手目</div>
+        <div class="gcard ${pc.card === "miss" ? "miss" : pc.side}">
+          <div class="gc-kind">${pc.card === "miss" ? "MISS" : pc.side === "x" ? "THIEF CARD" : "DETECTIVE CARD"}</div>
+          <div class="gc-name">${c.name}</div>
+          <div class="gc-desc">${c.desc}</div>
+        </div>
+        <button class="btn wide" data-act="cardOk">${pc.card === "miss" ? "残念… 閉じる" : needsTarget(pc.card) ? "対象の駅を選ぶ" : "発動する"}</button></div>`;
       return;
     }
     if (G && A.role === "pass" && !G.over && (A.cover === "x" || A.cover === "d")) {
@@ -1772,7 +2044,7 @@
       case "dets": A.detCount = Number(b.dataset.n); renderScreen(); return;
       case "result": A.screen = "result"; renderScreen(); return;
       case "closeResult": A.screen = "game"; renderScreen(); fitView(); return;
-      case "openX": A.cover = "x-open"; render(); focusTurn(); return;
+      case "openX": A.cover = "x-open"; step(); focusTurn(); return;
       case "openD": A.cover = null; render(); step(); return;
       case "zoomIn": return zoomAt(1.5, w / 2, h / 2);
       case "zoomOut": return zoomAt(1 / 1.5, w / 2, h / 2);
@@ -1781,6 +2053,23 @@
       case "focusX": { const G = A.G; if (!G) return; if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else toast("怪盗Xはまだ姿を見せていません"); return; }
       case "focusD": return A.G && centerOn(A.G.det[Number(b.dataset.k)].pos);
       case "focusPos": return centerOn(Number(b.dataset.pos));
+      case "cardOk": {
+        const pc = A.pendingCard;
+        if (!pc) return;
+        if (needsTarget(pc.card)) {
+          const opts = cardTargets(A.G, A.sec, pc.card) || [];
+          if (!opts.length) { pc.card = "miss"; return finishCard(null); }
+          pc.stage = "target"; pc.opts = opts;
+          render();
+          if (pc.card === "destroy") centerOn(A.sec.pos); else fitView();
+          return;
+        }
+        return finishCard(null);
+      }
+      case "order": A.orderSheet = Number(b.dataset.k); A.sel = null; renderSheet(); return;
+      case "orderPick": A.pendingOrder = A.orderSheet; A.orderSheet = null; renderSheet(); render(); toast(`${dName(A.pendingOrder)} の行き先の駅をタップ`); return;
+      case "orderClear": { const k = A.orderSheet; if (A.G.orders) delete A.G.orders[k]; A.orderSheet = null; toast(`${dName(k)} はおまかせで動きます`); save(); render(); return; }
+      case "orderClose": A.orderSheet = null; renderSheet(); return;
       case "hint": A.hints = !A.hints; render(); return;
       case "log": $("drawer").hidden = !$("drawer").hidden; return;
       case "cancel": A.sel = null; A.useDouble = false; render(); return;
@@ -1799,7 +2088,7 @@
       }
     }
   });
-  $("sheet").addEventListener("click", e => { if (e.target === $("sheet")) { A.sel = null; A.useDouble = false; render(); } });
+  $("sheet").addEventListener("click", e => { if (e.target === $("sheet")) { A.sel = null; A.useDouble = false; A.orderSheet = null; render(); } });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && A.sel !== null) { A.sel = null; render(); }
     if (A.screen !== "game") return;
