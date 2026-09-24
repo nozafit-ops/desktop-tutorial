@@ -310,6 +310,15 @@
   .gc-desc { font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.5; }
   .card-dest { fill: rgba(227, 179, 65, 0.35); stroke: #E3B341; }
   .barricade { fill: #fff; stroke: #C0271F; stroke-width: 4; stroke-dasharray: 10 8; }
+  .ruin-fill { fill: #0E0B09; stroke: #000; stroke-width: 4; }
+  .ruin-crack { fill: none; stroke: #5A4A3A; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .find-arrow { fill: #E5484D; stroke: #FBF5E4; stroke-width: 4; stroke-linejoin: round; animation: findPulse 0.9s ease-in-out infinite; }
+  .find-ring { fill: none; stroke: #E5484D; stroke-width: 7; stroke-dasharray: 16 10; animation: findPulse 0.9s ease-in-out infinite; }
+  @keyframes findPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .tok.x-found { animation: xBlink 0.55s steps(2, jump-none) infinite; }
+  @keyframes xBlink { 0% { opacity: 1; filter: drop-shadow(0 0 10px #E5484D) drop-shadow(0 0 4px #E5484D); } 100% { opacity: 0.25; filter: none; } }
+  .edge-arrow.found .dir { animation: findPulse 0.7s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .find-arrow, .find-ring, .tok.x-found, .edge-arrow.found .dir { animation: none; } }
   .rubble { fill: rgba(40, 30, 20, 0.55); stroke: #2A1E12; stroke-width: 3; }
   .rubble-x { stroke: #E5484D; stroke-width: 7; stroke-linecap: round; }
   .trap-mark { fill: #9A9A9A; stroke: #2A1E12; stroke-width: 2.5; stroke-linejoin: round; }
@@ -738,7 +747,9 @@
 
   // 怪盗Xの手：{to, type}。ヘリは to = -1（着陸地点はランダム）
   // 封鎖・破壊された駅（until 手目になるまで入れない）
-  const isClosed = (map, st, G) => !!map && map[st] !== undefined && G.xLog.length < map[st];
+  // 破壊された駅（G.ruin）は最後まで誰も通れない。封鎖は期限つき
+  const isRuin = (G, st) => !!G.ruin && G.ruin.includes(st);
+  const isClosed = (map, st, G) => isRuin(G, st) || (!!map && map[st] !== undefined && G.xLog.length < map[st]);
 
   function xMoves(G, sec) {
     const occ = new Set(G.det.map(d => d.pos));
@@ -808,7 +819,7 @@
     reinforce: { side: "d", name: "応援要請", desc: "刑事全員にタクシー2・バス1・地下鉄1の切符が追加される。" },
     trap:      { side: "x", name: "罠", desc: "いまいる駅に罠を仕掛ける。踏んだ刑事は1回休み。刑事には見えない。" },
     vanish:    { side: "x", name: "雲隠れ", desc: "次の目撃情報を1回だけ無効にする。" },
-    destroy:   { side: "x", name: "駅破壊", desc: "2手以内の駅を1つ壊す。4手のあいだ刑事はその駅に入れない。" },
+    destroy:   { side: "x", name: "駅破壊", desc: "2手以内の駅を1つ壊す。壊れた駅は最後まで誰も通れない（怪盗Xも）。" },
     miss:      { side: "", name: "ハズレ", desc: "何も起こらなかった。" },
   };
   const DECK = {
@@ -825,7 +836,7 @@
     if (card === "bridge") return BRIDGE_ST.filter(b => !isClosed(G.closedX, b, G));
     if (card === "destroy") {
       const occ = new Set(G.det.map(d => d.pos));
-      return [...Array(N).keys()].filter(i => i !== sec.pos && D[sec.pos][i] <= 2 && !occ.has(i));
+      return [...Array(N).keys()].filter(i => i !== sec.pos && D[sec.pos][i] <= 2 && !occ.has(i) && !isRuin(G, i));
     }
     return null;
   }
@@ -839,7 +850,10 @@
     } else if (card === "reinforce") G.det.forEach(d => { d.t.taxi += 2; d.t.bus += 1; d.t.tube += 1; });
     else if (card === "trap") sec.trap = sec.pos;
     else if (card === "vanish") G.skipReveal = (G.skipReveal || 0) + 1;
-    else if (card === "destroy") G.closedD = { ...(G.closedD || {}), [target]: n + 4 };
+    else if (card === "destroy") {
+      G.ruin = [...(G.ruin || []), target];
+      G.possible = G.possible.filter(p => p !== target);
+    }
     G.cards = [...(G.cards || []), { card, n, target: card === "trap" ? null : (target ?? null) }];
   }
   // CPU が選ぶ対象
@@ -850,10 +864,13 @@
       const P = G.possible;
       return opts.reduce((best, b) => { const v = P.reduce((s, p) => s + dd(b, p), 0) / P.length; return v < best[1] ? [b, v] : best; }, [opts[0], Infinity])[0];
     }
-    // 駅破壊：いちばん近い刑事の通り道になっている駅を壊す
+    // 駅破壊：いちばん近い刑事の通り道になっている駅を壊す（自分の逃げ道は3つ以上残す）
     let near = G.det[0].pos;
     for (const d of G.det) if (D[sec.pos][d.pos] < D[sec.pos][near]) near = d.pos;
-    return opts.reduce((best, o) => { const v = D[o][near] + D[o][sec.pos] * 0.5; return v < best[1] ? [o, v] : best; }, [opts[0], Infinity])[0];
+    const exits = o => new Set(ADJ[sec.pos].map(e => e.to).filter(t => t !== o && !isRuin(G, t))).size;
+    const safe = opts.filter(o => exits(o) >= 3);
+    if (!safe.length) return null;
+    return safe.reduce((best, o) => { const v = D[o][near] + D[o][sec.pos] * 0.5; return v < best[1] ? [o, v] : best; }, [safe[0], Infinity])[0];
   }
   // 手札：いまが何手目か（怪盗Xはこれから動く手、刑事はいまの手）
   const cardMove = (G, side) => side === "x" ? G.xLog.length + 1 : G.xLog.length;
@@ -1320,7 +1337,7 @@
     const mine = A.role === "x" || (A.role === "pass" && A.cover === "x-open");
     if (card === "destroy") {
       toast(`怪盗Xが ${NAME(target)} を破壊！`);
-      pushFeed(G.xLog.length, `怪盗Xのカード「駅破壊」：${NO(target)} ${NAME(target)} は4手のあいだ刑事が入れない`, true);
+      pushFeed(G.xLog.length, `怪盗Xのカード「駅破壊」：${NO(target)} ${NAME(target)} は壊れて最後まで誰も通れない`, true);
     } else if (mine) {
       toast(`カード「${c.name}」を使った`);
       pushFeed(G.xLog.length, `怪盗Xのカード「${c.name}」${card === "trap" ? `：${NAME(A.sec.pos)} に罠を仕掛けた` : card === "vanish" ? "：次の目撃情報を消す" : "：何も起こらなかった"}`, card !== "miss");
@@ -1827,7 +1844,8 @@
     const G = A.G;
     if (!G || A.screen !== "game") return [];
     const t = G.det.map((d, k) => ({ key: "d" + k, kind: "d", k, pos: d.pos }));
-    if (xVisible()) t.push({ key: "x", kind: "x", k: 0, pos: A.sec.pos });
+    if (xVisible()) t.push({ key: "x", kind: "x", k: 0, pos: A.sec.pos, found: !G.over && exposure(G).level === "found" });
+    else if (!G.over && exposure(G).level === "found") t.push({ key: "xf" + G.possible[0], kind: "x", k: 0, pos: G.possible[0], found: true });
     return t;
   }
   function renderEdge() {
@@ -1842,7 +1860,7 @@
         dist = `<span class="ea-d ${n <= 2 ? "hot" : ""}">あと${n}手</span>`;
       }
       const label = t.kind === "x" ? "怪盗X" : dName(t.k);
-      return `<button class="edge-arrow" data-act="focusPos" data-pos="${t.pos}" data-key="${t.key}" aria-label="${label}の方向（${NAME(t.pos)}）" hidden>
+      return `<button class="edge-arrow ${t.found ? "found" : ""}" data-act="focusPos" data-pos="${t.pos}" data-key="${t.key}" aria-label="${label}の方向（${NAME(t.pos)}）" hidden>
         <svg class="dir" viewBox="-28 -28 56 56"><g class="rot"><circle r="24" fill="${color}" stroke="#FBF5E4" stroke-width="3"></circle><path d="M24,-10 L38,0 L24,10 Z" fill="${color}" stroke="#FBF5E4" stroke-width="2.5" stroke-linejoin="round"></path></g></svg>
         ${portrait(t.kind, t.k)}${dist}</button>`;
     }).join("");
@@ -1930,12 +1948,25 @@
       el("rect", { x: x - 34, y: y - 10, width: 68, height: 20, rx: 4, class: "barricade" }, gM);
       el("text", { x, y: y - 40, class: "mark-label block" }, gM).textContent = `封鎖 あと${until - G.xLog.length}手`;
     }
-    for (const [st, until] of Object.entries(G.closedD || {})) {
-      if (G.xLog.length >= until) continue;
-      const [x, y] = P(Number(st));
-      el("circle", { cx: x, cy: y, r: 30, class: "rubble" }, gM);
-      el("path", { d: `M${x - 20},${y - 20} L${x + 20},${y + 20} M${x + 20},${y - 20} L${x - 20},${y + 20}`, class: "rubble-x" }, gM);
-      el("text", { x, y: y - 40, class: "mark-label ruin" }, gM).textContent = `破壊 あと${until - G.xLog.length}手`;
+    for (const st of G.ruin || []) {
+      const [x, y] = P(st);
+      el("circle", { cx: x, cy: y, r: 38, class: "ruin-fill" }, gM);
+      el("path", { d: `M${x - 22},${y - 14} L${x - 6},${y - 2} L${x - 12},${y + 12} M${x - 6},${y - 2} L${x + 10},${y - 8} L${x + 22},${y + 6} M${x + 10},${y - 8} L${x + 6},${y - 24}`, class: "ruin-crack" }, gM);
+      el("path", { d: `M${x - 16},${y - 16} L${x + 16},${y + 16} M${x + 16},${y - 16} L${x - 16},${y + 16}`, class: "rubble-x" }, gM);
+      el("text", { x, y: y - 46, class: "mark-label ruin" }, gM).textContent = "破壊・通行不可";
+    }
+    // 発見中：刑事の足元から怪盗Xの方向へ矢印
+    if (!G.over && exposure(G).level === "found") {
+      const [tx, ty] = P(G.possible[0]);
+      G.det.forEach((d, k) => {
+        const [x, y] = P(d.pos);
+        const dx = tx - x, dy = ty - y, len = Math.hypot(dx, dy);
+        if (len < 60) return;
+        const a = Math.atan2(dy, dx) * 180 / Math.PI;
+        const g = el("g", { transform: `translate(${x} ${y}) rotate(${a})` }, gM);
+        el("path", { d: "M46,-15 L112,-15 L112,-32 L160,0 L112,32 L112,15 L46,15 Z", class: "find-arrow" }, g);
+      });
+      el("circle", { cx: tx, cy: ty, r: 46, class: "find-ring" }, gM);
     }
     if (showX && A.sec.trap !== null && A.sec.trap !== undefined) {
       const [x, y] = P(A.sec.trap);
@@ -1994,6 +2025,7 @@
       tx.style.display = showX ? "" : "none";
       if (showX) { const [dx, dy] = off(A.sec.pos); placeToken(tx, A.sec.pos, dx, dy); hot(A.sec.pos); }
       tx.querySelector(".ring").setAttribute("visibility", G.turn === "x" && !G.over ? "visible" : "hidden");
+      tx.classList.toggle("x-found", !G.over && exposure(G).level === "found");
     }
     G.det.forEach((d, k) => {
       const t = $("tokD" + k);
