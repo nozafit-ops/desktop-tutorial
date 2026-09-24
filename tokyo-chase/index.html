@@ -316,6 +316,10 @@
   .mark-label { font-weight: 900; font-size: 17px; fill: #fff; paint-order: stroke; stroke-width: 6px; stroke-linejoin: round; text-anchor: middle; }
   .mark-label.block { stroke: #C0271F; }
   .mark-label.ruin { stroke: #2A1E12; }
+  .pin-mark { fill: #E3B341; stroke: #2A1E12; stroke-width: 3; }
+  .aim-line { fill: none; stroke-width: 6; stroke-dasharray: 2 9; stroke-linecap: round; opacity: 0.95; }
+  .aim-label { font-weight: 900; font-size: 15px; paint-order: stroke; stroke: #FBF5E4; stroke-width: 6px; stroke-linejoin: round; text-anchor: middle; pointer-events: none; }
+  .ticket.pin-all { background: #8E6A12; color: #fff; }
   .order-line { fill: none; stroke-width: 5; stroke-dasharray: 4 10; stroke-linecap: round; opacity: 0.9; }
   .order-flag { stroke: #2A1E12; stroke-width: 2.5; stroke-linejoin: round; }
   .me-tag.order { background: #3B82F6; color: #fff; }
@@ -892,7 +896,7 @@
     return { to: best, type, useDouble };
   }
 
-  function aiD(G, k) {
+  function aiD(G, k, steady = false) {
     const moves = detMoves(G, k);
     const order = G.orders ? G.orders[k] : undefined;
     if (order !== undefined && order !== null) {
@@ -924,7 +928,7 @@
     for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) {
       const types = moves.filter(m => m.to === to).map(m => m.type);
       const spare = Math.max(...types.map(t => G.det[k].t[t]));
-      const s = scoreAt(to) - (spare <= 1 ? 1.5 : 0) + Math.random() * 0.8;
+      const s = scoreAt(to) - (spare <= 1 ? 1.5 : 0) + (steady ? (to % 7) * 0.01 : Math.random() * 0.8);
       if (s > bs) { bs = s; best = to; }
     }
     if (moves.some(m => m.type === "heli")) {
@@ -1144,7 +1148,7 @@
       if (A.role === "pass" || (A.role === "d" && k === ME_DET)) { save(); render(); ensureVisible(G.det[k].pos); return; }
       render();
       timer = setTimeout(() => {
-        const m = aiD(G, k);
+        const m = aiD(G, k, A.role === "d");
         const from = G.det[k].pos;
         let landed = m.to;
         apply(() => { landed = applyD(G, k, m.to, m.type); });
@@ -1329,11 +1333,27 @@
   // ポインター操作：1本指でパン、2本指でピンチ、タップで駅を選ぶ
   const ptrs = new Map();
   let gesture = null;
+  function stationAt(clientX, clientY) {
+    const { r } = vpSize();
+    const wx = (clientX - r.left - V.tx) / V.s, wy = (clientY - r.top - V.ty) / V.s;
+    let best = -1, bd = Math.max(34, 26 / V.s);
+    STATIONS.forEach(([, x, y], i) => { const d = Math.hypot(x - wx, y - wy); if (d < bd) { bd = d; best = i; } });
+    return best;
+  }
   mapEl.addEventListener("pointerdown", e => {
     mapEl.setPointerCapture(e.pointerId);
     ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
     cancelAnimationFrame(anim);
-    if (ptrs.size === 1) gesture = { type: "pan", sx: e.clientX, sy: e.clientY, tx: V.tx, ty: V.ty, moved: 0, t: performance.now() };
+    if (ptrs.size === 1) {
+      const g = gesture = { type: "pan", sx: e.clientX, sy: e.clientY, tx: V.tx, ty: V.ty, moved: 0, t: performance.now() };
+      // 長押しで作戦ピン
+      g.lp = setTimeout(() => {
+        if (gesture === g && g.moved <= 6 && ptrs.size === 1) {
+          const st = stationAt(g.sx, g.sy);
+          if (st >= 0 && openPin(st)) g.longFired = true;
+        }
+      }, 550);
+    }
     else if (ptrs.size === 2) {
       const [a, b] = [...ptrs.values()];
       gesture = { type: "pinch", d: Math.hypot(a.x - b.x, a.y - b.y), s: V.s, tx: V.tx, ty: V.ty, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, moved: 99 };
@@ -1362,11 +1382,9 @@
     if (!ptrs.has(e.pointerId)) return;
     ptrs.delete(e.pointerId);
     mapEl.classList.remove("dragging");
-    if (gesture && gesture.type === "pan" && gesture.moved <= 6 && e.type === "pointerup" && performance.now() - gesture.t < 600) {
-      const { r } = vpSize();
-      const wx = (e.clientX - r.left - V.tx) / V.s, wy = (e.clientY - r.top - V.ty) / V.s;
-      let best = -1, bd = Math.max(34, 26 / V.s);
-      STATIONS.forEach(([, x, y], i) => { const d = Math.hypot(x - wx, y - wy); if (d < bd) { bd = d; best = i; } });
+    if (gesture) clearTimeout(gesture.lp);
+    if (gesture && gesture.type === "pan" && !gesture.longFired && gesture.moved <= 6 && e.type === "pointerup" && performance.now() - gesture.t < 600) {
+      const best = stationAt(e.clientX, e.clientY);
       if (best >= 0) onStationTap(best);
     }
     if (ptrs.size === 1) {
@@ -1375,6 +1393,35 @@
     } else if (!ptrs.size) gesture = null;
   };
   mapEl.addEventListener("pointerup", endPtr);
+  mapEl.addEventListener("contextmenu", e => {
+    e.preventDefault();
+    const st = stationAt(e.clientX, e.clientY);
+    if (st >= 0) openPin(st);
+  });
+  // 作戦ピン：刑事モードで駅を長押し（右クリック）すると、仲間への作戦を出せる
+  function openPin(st) {
+    const G = A.G;
+    if (!G || G.over || A.role !== "d" || A.screen !== "game" || A.pendingCard) return false;
+    A.pinSheet = st; A.orderSheet = null; A.sel = null;
+    renderSheet();
+    return true;
+  }
+  function surround(st) {
+    const G = A.G;
+    const spots = [st, ...new Set(ADJ[st].filter(e => e.type !== "boat").map(e => e.to))];
+    const mates = G.det.map((_, k) => k).filter(k => k !== ME_DET);
+    const orders = { ...(G.orders || {}) };
+    const used = new Set();
+    // 近い仲間から順に、まだ誰も向かっていない周りの駅を割り当てる
+    mates.sort((a, b) => D[G.det[a].pos][st] - D[G.det[b].pos][st]);
+    for (const k of mates) {
+      const free = spots.filter(p => !used.has(p));
+      const tgt = (free.length ? free : spots).reduce((best, p) => D[G.det[k].pos][p] < D[G.det[k].pos][best] ? p : best, (free.length ? free : spots)[0]);
+      used.add(tgt);
+      orders[k] = tgt;
+    }
+    G.orders = orders;
+  }
   mapEl.addEventListener("pointercancel", endPtr);
   mapEl.addEventListener("wheel", e => {
     e.preventDefault();
@@ -1721,6 +1768,29 @@
       el("path", { d: `M${x - 26},${y + 10} L${x - 16},${y - 8} L${x - 8},${y + 6} L${x},${y - 12} L${x + 8},${y + 6} L${x + 16},${y - 8} L${x + 26},${y + 10} Z`, class: "trap-mark" }, gM);
       el("text", { x, y: y - 40, class: "mark-label ruin" }, gM).textContent = "罠";
     }
+    if (A.role === "d" && G.pin !== undefined && G.pin !== null && !G.over) {
+      const [x, y] = P(G.pin);
+      el("path", { d: `M${x},${y - 30} c-16,-20 -22,-30 -22,-42 a22,22 0 1 1 44,0 c0,12 -6,22 -22,42 Z`, class: "pin-mark" }, gM);
+      el("circle", { cx: x, cy: y - 72, r: 8, fill: "#FBF5E4" }, gM);
+    }
+    // 仲間の狙い：CPUの刑事が次に動く駅を点線の矢印で見せる
+    if (A.role === "d" && !G.over && !A.pendingCard) {
+      G.det.forEach((d, k) => {
+        if (k === ME_DET || !detMoves(G, k).length || (G.stun && G.stun[k] > 0)) return;
+        const m = aiD(G, k, true);
+        const [x1, y1] = P(d.pos);
+        if (m.type === "heli") {
+          el("text", { x: x1, y: y1 + 58, class: "aim-label", fill: DCOL[k] }, gM).textContent = "次はヘリで移動";
+          return;
+        }
+        const [x2, y2] = P(m.to);
+        const len = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+        const ex = x2 - ux * 30, ey = y2 - uy * 30;
+        el("path", { d: `M${x1 + ux * 30},${y1 + uy * 30} L${ex},${ey}`, class: "aim-line", stroke: DCOL[k] }, gM);
+        el("path", { d: `M${ex + ux * 4},${ey + uy * 4} l${-ux * 20 - uy * 11},${-uy * 20 + ux * 11} l${uy * 22},${-ux * 22} Z`, fill: DCOL[k], stroke: "#2A1E12", "stroke-width": 2 }, gM);
+        el("text", { x: x2, y: y2 + 58, class: "aim-label", fill: DCOL[k] }, gM).textContent = `${dName(k)}：次は${NAME(m.to)}`;
+      });
+    }
     if (G.orders && A.role !== "x") {
       for (const [ks, st] of Object.entries(G.orders)) {
         const k = Number(ks);
@@ -1845,6 +1915,19 @@
   function renderSheet() {
     const wrap = $("sheet");
     const G = A.G;
+    if (G && A.pinSheet !== null && A.pinSheet !== undefined) {
+      const st = A.pinSheet;
+      const mates = G.det.map((_, k) => k).filter(k => k !== ME_DET);
+      wrap.hidden = false;
+      wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="作戦ピン">
+        <h3><span class="no">${NO(st)}</span>作戦ピン：${esc(NAME(st))}</h3>
+        <div class="tickets">
+          ${mates.map(k => `<button class="ticket pin-send" data-act="pinSend" data-k="${k}" style="background:${DCOL[k]}"><span class="en">Go</span><span class="ja">${dName(k)} を向かわせる</span></button>`).join("")}
+          <button class="ticket pin-all" data-act="pinSurround"><span class="en">Surround</span><span class="ja">全員でこの駅を包囲する</span></button>
+        </div>
+        <div class="row">${G.pin !== undefined && G.pin !== null ? `<button class="btn ghost" data-act="pinClear">ピンと指示を外す</button>` : ""}<button class="btn ghost" data-act="pinClose">閉じる</button></div></div>`;
+      return;
+    }
     if (G && A.orderSheet !== null && A.orderSheet !== undefined) {
       const k = A.orderSheet, cur = G.orders ? G.orders[k] : undefined;
       wrap.hidden = false;
@@ -1927,6 +2010,8 @@
         <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数より1枚少ない）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
         <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引いてすぐ発動します（ハズレもあり）。刑事側は「橋封鎖」「追跡犬」「聞き込み」「応援要請」、怪盗X側は「罠」「雲隠れ」「駅破壊」。</li>
         <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
+        <li><b>作戦ピン</b>：刑事モードで駅を長押し（パソコンは右クリック）すると作戦ピンを立て、仲間をその駅へ向かわせたり、全員で包囲させたりできます。</li>
+        <li><b>仲間の狙い</b>：刑事モードでは、CPUの仲間が次に動く駅が点線の矢印と「次は◯◯」で表示されます。</li>
         <li>刑事の駒の吹き出しは、刑事がどこまで怪盗Xをつかんでいるかの合図です。<b>？</b>は見失っている、<b>！</b>は捕捉している。怪盗Xの札には「見失われている／追われている／発見されている」が表示されます。</li>
         <li>刑事が怪盗Xのいる駅に入れば <b>逮捕</b>。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
         <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは画面上部の手番表示にある「ヘリ」ボタンから。</li>
@@ -2070,6 +2155,24 @@
       case "orderPick": A.pendingOrder = A.orderSheet; A.orderSheet = null; renderSheet(); render(); toast(`${dName(A.pendingOrder)} の行き先の駅をタップ`); return;
       case "orderClear": { const k = A.orderSheet; if (A.G.orders) delete A.G.orders[k]; A.orderSheet = null; toast(`${dName(k)} はおまかせで動きます`); save(); render(); return; }
       case "orderClose": A.orderSheet = null; renderSheet(); return;
+      case "pinSend": {
+        const k = Number(b.dataset.k), st = A.pinSheet, G = A.G;
+        G.pin = st; G.orders = { ...(G.orders || {}), [k]: st };
+        A.pinSheet = null;
+        toast(`${dName(k)}：${NAME(st)} へ向かいます`);
+        pushFeed(G.xLog.length, `作戦ピン：${dName(k)} は ${NO(st)} ${NAME(st)} へ`);
+        save(); render(); return;
+      }
+      case "pinSurround": {
+        const st = A.pinSheet, G = A.G;
+        G.pin = st; surround(st);
+        A.pinSheet = null;
+        toast(`${NAME(st)} を包囲せよ！`);
+        pushFeed(G.xLog.length, `作戦ピン：全員で ${NO(st)} ${NAME(st)} を包囲`, true);
+        save(); render(); return;
+      }
+      case "pinClear": A.G.pin = null; A.G.orders = {}; A.pinSheet = null; toast("作戦ピンと指示を外しました"); save(); render(); return;
+      case "pinClose": A.pinSheet = null; renderSheet(); return;
       case "hint": A.hints = !A.hints; render(); return;
       case "log": $("drawer").hidden = !$("drawer").hidden; return;
       case "cancel": A.sel = null; A.useDouble = false; render(); return;
@@ -2088,7 +2191,7 @@
       }
     }
   });
-  $("sheet").addEventListener("click", e => { if (e.target === $("sheet")) { A.sel = null; A.useDouble = false; A.orderSheet = null; render(); } });
+  $("sheet").addEventListener("click", e => { if (e.target === $("sheet")) { A.sel = null; A.useDouble = false; A.orderSheet = null; A.pinSheet = null; render(); } });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && A.sel !== null) { A.sel = null; render(); }
     if (A.screen !== "game") return;
