@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" width="600" height="420">
+<defs>
+<linearGradient id="pawnShade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000" stop-opacity="0.35"></stop>
+      <stop offset="0.28" stop-color="#fff" stop-opacity="0.45"></stop>
+      <stop offset="0.45" stop-color="#fff" stop-opacity="0.08"></stop>
+      <stop offset="1" stop-color="#000" stop-opacity="0.45"></stop>
+    </linearGradient>
+<radialGradient id="pawnHead" cx="0.35" cy="0.3" r="0.75">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.75"></stop>
+      <stop offset="0.35" stop-color="#fff" stop-opacity="0.1"></stop>
+      <stop offset="1" stop-color="#000" stop-opacity="0.45"></stop>
+    </radialGradient>
+<symbol id="fig-d" viewBox="-36 -112 72 120">
+      <ellipse cy="4" rx="28" ry="8" fill="#000" opacity="0.35"></ellipse>
+      <ellipse cy="0" rx="24" ry="7.5" fill="#3B2C1E"></ellipse>
+      <ellipse cy="-3.5" rx="23" ry="7" fill="#6B4E32" stroke="#2A1E12" stroke-width="1.2"></ellipse>
+      <rect x="-9.5" y="-34" width="7.5" height="30" rx="3" fill="#2B2B33"></rect>
+      <rect x="2" y="-34" width="7.5" height="30" rx="3" fill="#2B2B33"></rect>
+      <ellipse cx="-6" cy="-4" rx="6" ry="3" fill="#15110D"></ellipse>
+      <ellipse cx="6" cy="-4" rx="6" ry="3" fill="#15110D"></ellipse>
+      <path d="M-14,-70 Q-20,-66 -20,-55 L-22,-27 Q0,-20 22,-27 L20,-55 Q20,-66 14,-70 Z" fill="currentColor"></path>
+      <path d="M-14,-70 Q-20,-66 -20,-55 L-22,-27 Q0,-20 22,-27 L20,-55 Q20,-66 14,-70 Z" fill="url(#pawnShade)" stroke="#000" stroke-opacity="0.5" stroke-width="1.3"></path>
+      <path d="M0,-69 L0,-24" stroke="#000" stroke-opacity="0.35" stroke-width="1.2"></path>
+      <path d="M-20,-44 Q0,-40 20,-44" stroke="#2A1E12" stroke-width="3" fill="none" opacity="0.7"></path>
+      <path d="M-18,-64 Q-26,-50 -23,-36" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round"></path>
+      <path d="M18,-64 Q26,-50 23,-36" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round"></path>
+      <path d="M-18,-64 Q-26,-50 -23,-36 M18,-64 Q26,-50 23,-36" stroke="#000" stroke-opacity="0.25" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="0 3 30"></path>
+      <circle cx="-23" cy="-34" r="4" fill="#F1C7A0" stroke="#7A5234" stroke-width="0.8"></circle>
+      <circle cx="23" cy="-34" r="4" fill="#F1C7A0" stroke="#7A5234" stroke-width="0.8"></circle>
+      <path d="M-7,-70 L0,-60 L7,-70 Z" fill="#F4ECDC" stroke="#000" stroke-opacity="0.35" stroke-width="0.8"></path>
+      <circle cy="-80" r="11.5" fill="#F1C7A0"></circle>
+      <circle cy="-80" r="11.5" fill="url(#pawnHead)" opacity="0.55" stroke="#7A5234" stroke-width="1"></circle>
+      <circle cx="-4" cy="-80" r="1.5" fill="#2A1E12"></circle>
+      <circle cx="4" cy="-80" r="1.5" fill="#2A1E12"></circle>
+      <path d="M-3,-74 Q0,-72 3,-74" stroke="#7A3A2A" stroke-width="1.3" fill="none" stroke-linecap="round"></path>
+      <ellipse cy="-88" rx="17" ry="4" fill="#2A2118"></ellipse>
+      <path d="M-10,-88 Q-11,-103 0,-103 Q11,-103 10,-88 Z" fill="#2A2118"></path>
+      <path d="M-10.5,-91.5 L10.5,-91.5 L10,-88 L-10,-88 Z" fill="currentColor"></path>
+      <path d="M-7,-100 Q-3,-102 1,-101" stroke="#fff" stroke-opacity="0.35" stroke-width="2" fill="none" stroke-linecap="round"></path>
+    </symbol>
+<symbol id="fig-x" viewBox="-36 -112 72 120">
+      <ellipse cy="4" rx="28" ry="8" fill="#000" opacity="0.35"></ellipse>
+      <ellipse cy="0" rx="24" ry="7.5" fill="#3B2C1E"></ellipse>
+      <ellipse cy="-3.5" rx="23" ry="7" fill="#6B4E32" stroke="#2A1E12" stroke-width="1.2"></ellipse>
+      <path d="M-16,-70 Q-30,-50 -28,-18 Q0,-12 28,-18 Q30,-50 16,-70 Z" fill="#8E1B16"></path>
+      <path d="M-16,-70 Q-30,-50 -28,-18 Q-14,-15 -12,-17 L-14,-60 Z M16,-70 Q30,-50 28,-18 Q14,-15 12,-17 L14,-60 Z" fill="#15131A"></path>
+      <rect x="-9.5" y="-34" width="7.5" height="30" rx="3" fill="#1B1920"></rect>
+      <rect x="2" y="-34" width="7.5" height="30" rx="3" fill="#1B1920"></rect>
+      <ellipse cx="-6" cy="-4" rx="6" ry="3" fill="#0A0A0A"></ellipse>
+      <ellipse cx="6" cy="-4" rx="6" ry="3" fill="#0A0A0A"></ellipse>
+      <path d="M-13,-70 Q-18,-66 -18,-55 L-19,-28 Q0,-22 19,-28 L18,-55 Q18,-66 13,-70 Z" fill="currentColor"></path>
+      <path d="M-13,-70 Q-18,-66 -18,-55 L-19,-28 Q0,-22 19,-28 L18,-55 Q18,-66 13,-70 Z" fill="url(#pawnShade)" stroke="#000" stroke-opacity="0.5" stroke-width="1.3"></path>
+      <path d="M-6,-70 L0,-58 L6,-70 Z" fill="#F4ECDC"></path>
+      <path d="M-4,-66 L0,-64 L4,-66 L4,-62 L0,-64 L-4,-62 Z" fill="#C0271F"></path>
+      <text x="0" y="-36" font-family="Georgia, serif" font-weight="700" font-size="15" text-anchor="middle" fill="#E3B341">X</text>
+      <circle cy="-80" r="11.5" fill="#F1C7A0"></circle>
+      <circle cy="-80" r="11.5" fill="url(#pawnHead)" opacity="0.55" stroke="#7A5234" stroke-width="1"></circle>
+      <rect x="-12" y="-84" width="24" height="7" rx="3.5" fill="#0B0A0E"></rect>
+      <circle cx="-4.5" cy="-80.5" r="1.8" fill="#fff"></circle>
+      <circle cx="4.5" cy="-80.5" r="1.8" fill="#fff"></circle>
+      <path d="M-4,-73 Q1,-70.5 4.5,-73.5" stroke="#7A3A2A" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+      <ellipse cy="-89" rx="17" ry="4" fill="#0B0A0E"></ellipse>
+      <rect x="-9.5" y="-110" width="19" height="21" rx="2" fill="#0B0A0E"></rect>
+      <rect x="-9.5" y="-95" width="19" height="4" fill="#C0271F"></rect>
+      <path d="M-6,-107 L-6,-97" stroke="#fff" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"></path>
+    </symbol>
+<symbol id="card-trap" viewBox="0 0 200 140">
+      <ellipse cx="100" cy="112" rx="80" ry="16" fill="#000" opacity=".3"></ellipse>
+      <ellipse cx="100" cy="100" rx="64" ry="18" fill="#5A5248" stroke="#2A1E12" stroke-width="3"></ellipse>
+      <path d="M40,96 L52,60 L62,90 L74,52 L86,88 L100,48 L114,88 L126,52 L138,90 L148,60 L160,96" fill="#B8B2A6" stroke="#2A1E12" stroke-width="3" stroke-linejoin="round"></path>
+      <path d="M40,100 Q100,124 160,100" fill="none" stroke="#2A1E12" stroke-width="4"></path>
+      <circle cx="100" cy="100" r="9" fill="#C0271F" stroke="#2A1E12" stroke-width="2"></circle>
+      <path d="M160,100 q26,-4 30,-26" fill="none" stroke="#2A1E12" stroke-width="4" stroke-dasharray="6 4"></path>
+    </symbol>
+</defs>
+<rect width="200" height="140" fill="#FBF5E4"/>
+<use href="#card-trap" width="200" height="140"/>
+</svg>

@@ -44,6 +44,8 @@ Write your name on line 6, save it, and then head back to GitHub Desktop.
 - `tokyo-chase/art/london-background.svg`：背景（古地図）の元データ（ベクター）
 - `tokyo-chase/art/london-background.png`：背景画像（3000×1900）
 - `tokyo-chase/art/london-board.png`：路線と駅を載せた盤面全体（3000×1900）
+- `tokyo-chase/art/characters/`：キャラの図形（SVG）。刑事5色（detective-1〜5）、怪盗X（thief-x）、全員の並び（lineup）。ゲーム内の駒と同じ図形で、元の大きさは72×120（縦横比3:5）
+- `tokyo-chase/art/cards/`：カードの絵（SVG・200×140）。橋封鎖・追跡犬・聞き込み・ヘリ封鎖・応援要請・罠・雲隠れ・駅破壊・ハズレ。ゲームではカードを引いたときと手札に表示
 - タイトル画面の「古地図の下絵を保存」から、コードで描いた下絵を書き出せます。
 
 ### 画像の差し替え
