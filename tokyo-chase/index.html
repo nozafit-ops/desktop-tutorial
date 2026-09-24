@@ -152,6 +152,8 @@
   }
   .det.active { border-color: var(--gold); background: rgba(227,179,65,0.12); }
   .det .tks { display: flex; gap: 2px; }
+  .det { position: relative; }
+  .me-tag { position: absolute; top: -2px; right: -2px; font-size: 9px; font-weight: 900; padding: 1px 5px; border-radius: 999px; background: var(--gold); color: #1A140C; }
   .tk { font-size: 10px; font-weight: 900; min-width: 16px; height: 16px; border-radius: 4px; display: grid; place-items: center; padding: 0 3px; color: #1A140C; font-variant-numeric: tabular-nums; }
   .tk.taxi { background: var(--taxi); }
   .tk.bus { background: var(--bus); color: #fff; }
@@ -871,8 +873,10 @@
     const G = A.G;
     if (!G || G.over) return false;
     if (A.role === "pass") return G.turn === "x" ? A.cover === "x-open" : A.cover === null;
-    return A.role === "x" ? G.turn === "x" : G.turn !== "x";
+    return A.role === "x" ? G.turn === "x" : G.turn === ME_DET;
   };
+  // 刑事モードで自分が動かす刑事（ほかの刑事はCPU）
+  const ME_DET = 0;
   const xVisible = () => {
     const G = A.G;
     if (!G) return false;
@@ -947,7 +951,7 @@
     const { G, sec } = newGame(A.detCount);
     Object.assign(A, { role, G, sec, feed: [], sel: null, useDouble: false, screen: "game", busy: false });
     A.cover = role === "pass" ? "x" : null;
-    pushFeed(0, role === "x" ? `あなたは怪盗X。${MAX_MOVES}手逃げ切れば勝ち！` : role === "d" ? `あなたは刑事${A.detCount}人を指揮する。怪盗Xを逮捕せよ！` : "パス&プレイ。怪盗X役の人から始めます。", true);
+    pushFeed(0, role === "x" ? `あなたは怪盗X。${MAX_MOVES}手逃げ切れば勝ち！` : role === "d" ? `あなたは刑事1。ほかの刑事${A.detCount - 1}人はCPUの仲間です。怪盗Xを逮捕せよ！` : "パス&プレイ。怪盗X役の人から始めます。", true);
     buildTokens();
     fitView(false);
     step();
@@ -992,7 +996,7 @@
         apply(() => skipD(G, k));
         continue;
       }
-      if (A.role !== "x") { save(); render(); ensureVisible(G.det[k].pos); return; }
+      if (A.role === "pass" || (A.role === "d" && k === ME_DET)) { save(); render(); ensureVisible(G.det[k].pos); return; }
       render();
       timer = setTimeout(() => {
         const m = aiD(G, k);
@@ -1544,7 +1548,7 @@
     $("xcard").classList.toggle("active", G.turn === "x");
     $("dets").innerHTML = G.det.map((d, k) => `
       <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="focusD" data-k="${k}" aria-label="${dName(k)}：${DET_TYPES.map(t => TYPE[t].name + d.t[t]).join("・")}">
-        ${portrait("d", k, "sm")}
+        ${portrait("d", k, "sm")}${A.role === "d" && k === ME_DET ? `<span class="me-tag">あなた</span>` : ""}
         <span class="tks">${DET_TYPES.map(t => `<span class="tk ${t} ${d.t[t] ? "" : "zero"}">${t === "heli" ? "H" + d.t[t] : d.t[t]}</span>`).join("")}</span>
       </button>`).join("");
   }
@@ -1644,7 +1648,7 @@
           <div class="menu">
             ${sv ? `<button class="btn" data-act="resume">つづきから<span class="s">${sv.G.xLog.length}/${MAX_MOVES}手・${sv.role === "x" ? "怪盗X" : sv.role === "d" ? "刑事" : "パス&プレイ"}</span></button>` : ""}
             <button class="btn ${sv ? "ghost" : ""}" data-act="start" data-role="x">${portrait("x")}怪盗Xで遊ぶ<span class="s">CPUの刑事から逃げる</span></button>
-            <button class="btn ghost" data-act="start" data-role="d">${portrait("d", 0)}刑事で遊ぶ<span class="s">CPUの怪盗Xを追う</span></button>
+            <button class="btn ghost" data-act="start" data-role="d">${portrait("d", 0)}刑事で遊ぶ<span class="s">刑事1を操作・仲間はCPU</span></button>
             <button class="btn ghost" data-act="start" data-role="pass">${portrait("d", 1)}みんなで遊ぶ<span class="s">1台を回すパス&プレイ</span></button>
           </div>
           <div class="field"><label>刑事の人数</label><div class="seg">${[3, 4, 5].map(n => `<button data-act="dets" data-n="${n}" aria-pressed="${A.detCount === n}">${n}人</button>`).join("")}</div></div>
