@@ -319,7 +319,19 @@
   .gc-name { font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 34px; color: #fff; line-height: 1.1; }
   .gc-desc { font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.5; }
   .card-dest { fill: rgba(229, 72, 77, 0.35); stroke: #E5484D; }
-  .barricade { fill: #fff; stroke: #C0271F; stroke-width: 4; stroke-dasharray: 10 8; }
+  .barricade { fill: #fff; stroke: #C0271F; stroke-width: 5; }
+  .barricade-stripe { stroke: #E5484D; stroke-width: 11; }
+  .block-ring { fill: rgba(229,72,77,.18); stroke: #E5484D; stroke-width: 8; }
+  .mark-label.big { font-size: 24px; stroke-width: 8px; }
+  #gMarks { pointer-events: none; }
+  .card-aim { pointer-events: none; animation: aimPulse 1s ease-in-out infinite; transform-box: fill-box; }
+  .ca-ring { fill: rgba(229,72,77,.22); stroke: #E5484D; stroke-width: 10; }
+  .ca-ring2 { fill: none; stroke: #fff; stroke-width: 4; stroke-dasharray: 10 8; }
+  .ca-tick { stroke: #E5484D; stroke-width: 10; stroke-linecap: round; }
+  .ca-tag { fill: #C0271F; stroke: #fff; stroke-width: 3; }
+  .ca-text { font-weight: 900; font-size: 20px; fill: #fff; text-anchor: middle; }
+  @keyframes aimPulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+  @media (prefers-reduced-motion: reduce) { .card-aim { animation: none; } }
   .heliban-x { stroke: #6B4FB8; stroke-width: 9; stroke-linecap: round; opacity: .85; }
   .foot { fill: #3B2417; }
   .foot.x-over { fill: #8E1B16; }
@@ -2255,6 +2267,8 @@
   }
 
   // 手札はいつも画面の左下に表示。使えるときは金色に光り、タップで使う
+  // 盤を縮小表示しているときは目印を大きめに描く
+  const markScale = () => Math.min(2.2, Math.max(1, 0.6 / (V.s || 1)));
   function renderHandbar() {
     const host = $("handbar"), G = A.G;
     const side = A.screen === "game" ? handViewSide() : null;
@@ -2306,9 +2320,20 @@
       }
     }
     if (A.pendingCard && A.pendingCard.stage === "target") {
+      // 対象の駅：大きな赤い照準と「ここを封鎖／破壊」の札
+      const verb = A.pendingCard.card === "bridge" ? "ここを封鎖" : "ここを破壊";
+      const ms = markScale();
       for (const t of A.pendingCard.opts) {
         const [x, y] = P(t);
-        el("circle", { cx: x, cy: y, r: 33, class: "dest card-dest pulse" }, gD);
+        el("circle", { cx: x, cy: y, r: 36, class: "dest card-dest" }, gD);
+        const g = el("g", { class: "card-aim", transform: `translate(${x} ${y}) scale(${ms})` }, gM);
+        el("circle", { r: 60, class: "ca-ring" }, g);
+        el("circle", { r: 44, class: "ca-ring2" }, g);
+        el("path", { d: "M-76,0 h22 M54,0 h22 M0,-76 v22 M0,54 v22", class: "ca-tick" }, g);
+        const tag = el("g", { transform: "translate(0 -104)" }, g);
+        el("rect", { x: -62, y: -20, width: 124, height: 34, rx: 17, class: "ca-tag" }, tag);
+        el("path", { d: "M-9,14 L0,26 L9,14 Z", class: "ca-tag" }, tag);
+        el("text", { x: 0, y: 5, class: "ca-text" }, tag).textContent = verb;
         hot(t);
       }
     }
@@ -2316,8 +2341,11 @@
     for (const [st, until] of Object.entries(G.closedX || {})) {
       if (G.xLog.length >= until) continue;
       const [x, y] = P(Number(st));
-      el("rect", { x: x - 34, y: y - 10, width: 68, height: 20, rx: 4, class: "barricade" }, gM);
-      el("text", { x, y: y - 40, class: "mark-label block" }, gM).textContent = `封鎖 あと${until - G.xLog.length}手`;
+      const bg = el("g", { transform: `translate(${x} ${y}) scale(${markScale()})` }, gM);
+      el("circle", { r: 52, class: "block-ring" }, bg);
+      el("rect", { x: -56, y: -16, width: 112, height: 32, rx: 6, class: "barricade" }, bg);
+      el("path", { d: "M-44,-16 l24,32 M-8,-16 l24,32 M28,-16 l16,21", class: "barricade-stripe" }, bg);
+      el("text", { x: 0, y: -62, class: "mark-label block big" }, bg).textContent = `封鎖中 あと${until - G.xLog.length}手`;
     }
     for (const st of G.ruin || []) {
       const [x, y] = P(st);
