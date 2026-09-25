@@ -801,13 +801,13 @@
   const MOVE_TYPES = ["taxi", "bus", "tube", "boat"];
 
   const MAX_MOVES = 24;
-  const REVEAL = [3, 7, 11, 14, 17, 20, 24];
+  const REVEAL = [3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 24];
   // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
   const DET_TICKETS = { heli: 1 };
   const X_TICKETS = { taxi: 16, bus: 12, tube: 8, boat: 4 };
   const dHas = (d, type) => type === "heli" ? d.t.heli > 0 : true;
   const xHas = (G, type) => type === "black" ? G.black > 0 : type === "heli" ? G.heli > 0 : !G.xt || G.xt[type] > 0;
-  const X_DOUBLE = 2;
+  const X_DOUBLE = 3;
   const X_HELI = 1;
   const DEFAULT_DETS = 3;
 
@@ -858,7 +858,7 @@
     const startable = ids.filter(p => det.every(d => D[p][d.pos] >= 2));
     const xStart = startable[0];
     const G = {
-      seq: 1, turn: "x", det, xLog: [], xt: { ...X_TICKETS }, black: detCount - 1, dbl: X_DOUBLE, heli: X_HELI, doubling: false,
+      seq: 1, turn: "x", det, xLog: [], xt: { ...X_TICKETS }, black: detCount, dbl: X_DOUBLE, heli: X_HELI, doubling: false,
       // ガス欠のヘリポート（誰にも知らされない）。飛ぼうとして初めてわかる
       dud: pick(HELI), dudFound: false,
       possible: startable.slice().sort((a, b) => a - b), lastSeen: null,
@@ -887,7 +887,8 @@
     return out;
   }
   function heliTargets(G, from, forX, k = -1) {
-    const occ = new Set(G.det.filter((_, j) => j !== k).map(d => d.pos));
+    // 怪盗Xは刑事のいるヘリポートには降りない。刑事どうしは重なってよい
+    const occ = new Set(forX ? G.det.map(d => d.pos) : []);
     return HELI.filter(h => h !== from && !occ.has(h) && !isClosed(forX ? G.closedX : G.closedD, h, G));
   }
   const canDouble = G => G.dbl > 0 && !G.doubling && G.xLog.length <= MAX_MOVES - 2;
@@ -926,8 +927,8 @@
 
   function detMoves(G, k) {
     const d = G.det[k];
-    const occ = G.det.filter((_, j) => j !== k).map(x => x.pos);
-    const out = ADJ[d.pos].filter(e => dHas(d, e.type) && !occ.includes(e.to) && !isClosed(G.closedD, e.to, G));
+    // 刑事どうしは同じ駅に重なってもよい
+    const out = ADJ[d.pos].filter(e => dHas(d, e.type) && !isClosed(G.closedD, e.to, G));
     if (d.t.heli > 0 && HELI_SET.has(d.pos) && !heliBanned(G) && !(G.dudFound && d.pos === G.dud) && heliTargets(G, d.pos, false, k).length) out.push({ to: -1, type: "heli" });
     return out;
   }
@@ -1044,7 +1045,7 @@
     else if (G.xLog.length >= MAX_MOVES) { G.over = true; G.winner = "x"; G.reason = "escape"; }
     else G.turn = "x";
   }
-  function applyD(G, k, to, type) {
+  function applyD(G, k, to, type, sec = null) {
     const d = G.det[k];
     if (type === "heli") {
       if (d.pos === G.dud) { to = d.pos; G.dudFound = true; }         // ガス欠：その場から動けない（全員に知れ渡る）
@@ -1053,6 +1054,8 @@
     d.pos = to;
     if (type === "heli") d.t.heli--;
     d.last = type;
+    // 刑事の番で怪盗Xの駅に入った時点で確保（最終手でも逃げ切りより優先）
+    if (sec && to === sec.pos) { finish(G, "d", "caught"); return to; }
     G.possible = G.possible.filter(p => p !== to);
     advance(G, k);
     G.seq++;
@@ -1520,7 +1523,7 @@
         const m = aiD(G, k, A.role === "d");
         const from = G.det[k].pos;
         let landed = m.to;
-        apply(() => { landed = applyD(G, k, m.to, m.type); });
+        apply(() => { landed = applyD(G, k, m.to, m.type, A.sec); });
         if (m.type === "heli") heliNote(k, from, landed);
         step();
       }, AI_DELAY);
@@ -1635,7 +1638,7 @@
     A.sel = null;
     let landed = to;
     const from = A.G.det[k].pos;
-    apply(() => { landed = applyD(A.G, k, to, type); });
+    apply(() => { landed = applyD(A.G, k, to, type, A.sec); });
     if (type === "heli") heliNote(k, from, landed);
     step();
   }
@@ -2526,14 +2529,14 @@
         <li>怪盗Xの居場所は秘密。刑事にわかるのは下の記録に残る <b>切符の種類</b> だけ。${REVEAL.join("・")}手目の後だけ姿を現します。</li>
         <li><b>切符</b>：刑事はタクシー・バス・地下鉄・水上バスが使い放題（ヘリだけ${DET_TICKETS.heli}枚）。怪盗Xの切符は有限（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・水上バス${X_TICKETS.boat}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）。切符が尽きた乗り物には乗れず、動けなくなると怪盗Xの負け。</li>
         <li><b>手札ボタン</b>：画面上部の手番表示の横にいつも出ています。押すと手札とカードを引く手（${CARD_TURNS.join("・")}手目）が見られます。使えるときは金色に光ります。移動記録のカードを引く手には金色の小さなカード印。</li>
-        <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数より1枚少ない）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
+        <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
         <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引いて手札に加えます（ハズレもあり）。手札のカードは自分の番の「カード」ボタンから、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「追跡犬」「聞き込み」「ヘリ封鎖」「応援要請」、怪盗X側は「罠」「雲隠れ」「駅破壊」。CPUの刑事も自分の番にチームのカードを使います。</li>
         <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
         <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
         <li><b>作戦ピン</b>：刑事モードで駅を長押し（パソコンは右クリック）すると作戦ピンを立て、仲間をその駅へ向かわせたり、全員で包囲させたりできます。</li>
         <li><b>仲間の狙い</b>：刑事モードでは、CPUの仲間が次に動く駅が点線の矢印と「次は◯◯」で表示されます。</li>
         <li>刑事の駒の吹き出しは、刑事がどこまで怪盗Xをつかんでいるかの合図です。<b>？</b>は見失っている、<b>！</b>は捕捉している。怪盗Xの札には「見失われている／追われている／発見されている」が表示されます。</li>
-        <li>刑事が怪盗Xのいる駅に入れば <b>逮捕</b>。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
+        <li>刑事の番に怪盗Xのいる駅へ入った時点で <b>確保（逮捕）</b>。最後の手でも確保が優先です。刑事どうしは同じ駅に重なってもかまいません。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
         <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは画面上部の手番表示にある「ヘリ」ボタンから。</li>
       </ol><button class="btn wide" data-act="title">戻る</button></div>`;
       return;
