@@ -341,7 +341,12 @@
   .card-dest { fill: rgba(229, 72, 77, 0.35); stroke: #E5484D; }
   .barricade { fill: #fff; stroke: #C0271F; stroke-width: 5; }
   .barricade-stripe { stroke: #E5484D; stroke-width: 11; }
+  .cp-ring { fill: rgba(47,95,184,.18); stroke: #2F5FB8; stroke-width: 8; stroke-dasharray: 14 8; }
+  .cp-bar { fill: #fff; stroke: #1C3570; stroke-width: 3; }
+  .cp-stripe { stroke: #E5484D; stroke-width: 6; }
+  .cp-leg { stroke: #1C3570; stroke-width: 5; stroke-linecap: round; }
   .block-ring { fill: rgba(229,72,77,.18); stroke: #E5484D; stroke-width: 8; }
+  .mark-label.cp { stroke: #1C3570; }
   .mark-label.big { font-size: 24px; stroke-width: 8px; }
   #gMarks { pointer-events: none; }
   .card-aim { pointer-events: none; animation: aimPulse 1s ease-in-out infinite; transform-box: fill-box; }
@@ -1017,9 +1022,9 @@
   const CARD_LAST = 20;   // 手札のカードは20手目まで好きな時に使える
   const CARD = {
     bridge:    { side: "d", name: "橋封鎖", desc: "橋を1つ選んで封鎖する。4手のあいだ怪盗Xは通れない。" },
-    dog:       { side: "d", name: "追跡犬", desc: "においをたどり、怪盗Xがいるかもしれない駅を「本当の居場所から2手以内」に絞り込む。" },
+    checkpoint:{ side: "d", name: "検問", desc: "いま自分がいる駅に検問所を置く。6手のあいだ怪盗Xはその駅を通れない。" },
     inquiry:   { side: "d", name: "聞き込み", desc: "町の人に聞き込み。怪盗Xがいるかもしれない駅が半分に減る。" },
-    heliban:   { side: "d", name: "ヘリ封鎖", desc: "すべてのヘリポートを閉鎖する。5手のあいだ誰もヘリで飛べない。" },
+    heliban:   { side: "d", name: "ヘリ封鎖", desc: "引いたその場で発動。すべてのヘリポートを5手のあいだ閉鎖し、誰もヘリで飛べない。" },
     reinforce: { side: "d", name: "応援要請", desc: "刑事全員にヘリの切符が1枚ずつ追加される。" },
     trap:      { side: "x", name: "罠", desc: "いまいる駅に罠を仕掛ける。踏んだ刑事は1回休み。刑事には見えない。" },
     vanish:    { side: "x", name: "雲隠れ", desc: "次の目撃情報を1回だけ無効にする。" },
@@ -1027,7 +1032,7 @@
     miss:      { side: "", name: "ハズレ", desc: "何も起こらなかった。" },
   };
   const DECK = {
-    d: [["bridge", 23], ["dog", 23], ["inquiry", 19], ["heliban", 18], ["miss", 17]],
+    d: [["bridge", 22], ["checkpoint", 24], ["inquiry", 19], ["heliban", 18], ["miss", 17]],
     x: [["trap", 25], ["vanish", 25], ["destroy", 25], ["miss", 25]],
   };
   function drawCard(side) {
@@ -1048,7 +1053,11 @@
     const n = G.xLog.length;
     if (card === "bridge") G.closedX = { ...(G.closedX || {}), [target]: n + 4 };
     else if (card === "heliban") G.heliBan = n + 5;
-    else if (card === "dog") G.possible = G.possible.filter(s => D[s][sec.pos] <= 2);
+    else if (card === "checkpoint") {
+      // 検問所：怪盗Xは6手のあいだその駅を通れない
+      G.closedX = { ...(G.closedX || {}), [target]: n + 6 };
+      G.checkpoints = { ...(G.checkpoints || {}), [target]: n + 6 };
+    }
     else if (card === "inquiry") {
       const others = shuffle(G.possible.filter(s => s !== sec.pos));
       G.possible = [sec.pos, ...others.slice(0, Math.floor(others.length / 2))].sort((a, b) => a - b);
@@ -1094,7 +1103,12 @@
         if (c === "vanish") use = use || (REVEAL.includes(G.xLog.length + 1) && !(G.skipReveal > 0));
         if (c === "destroy") use = use || dmin <= 2;
       } else {
-        if (c === "dog" || c === "inquiry") use = use || G.possible.length > 6;
+        if (c === "inquiry") use = use || G.possible.length > 6;
+        if (c === "checkpoint") {
+          // 自分の駅が怪盗Xの逃げ道（候補の隣）になっていれば置く
+          const here = G.turn === "x" ? -1 : G.det[G.turn].pos;
+          use = use || (here >= 0 && G.possible.length <= 20 && G.possible.some(p => D[p][here] === 1));
+        }
         if (c === "bridge") use = use || G.possible.length <= 30;
         if (c === "heliban") use = use || (G.heli > 0 && !heliBanned(G) && G.possible.length <= 12 && G.possible.some(p => HELI_SET.has(p)));
         if (c === "reinforce") use = use || G.det.every(d => d.t.heli === 0);
@@ -1102,6 +1116,7 @@
       if (!use) continue;
       let target = null;
       if (needsTargetCard(c)) { target = aiCardTarget(G, sec, c); if (target === null) continue; }
+      if (c === "checkpoint") { if (G.turn === "x") continue; target = G.det[G.turn].pos; }
       hand.splice(i, 1);
       used.push([c, target]);
     }
@@ -1653,7 +1668,8 @@
     if (side === "d") {
       let detail = "";
       if (card === "bridge") detail = `${NO(target)} ${NAME(target)} を封鎖（4手）`;
-      else if (card === "dog" || card === "inquiry") detail = `候補が ${G.possible.length} 駅に絞られた`;
+      else if (card === "inquiry") detail = `候補が ${G.possible.length} 駅に絞られた`;
+      else if (card === "checkpoint") detail = `${NO(target)} ${NAME(target)} に検問所を設置（6手のあいだ怪盗Xは通れない）`;
       else if (card === "reinforce") detail = "刑事全員にヘリの切符を1枚追加";
       else if (card === "heliban") detail = `すべてのヘリポートを閉鎖（${G.heliBan - G.xLog.length}手）`;
       else detail = "何も起こらなかった";
@@ -1677,6 +1693,13 @@
   function gainCard(side, card) {
     const G = A.G;
     const mine = side === "x" ? (A.role === "x" || (A.role === "pass" && A.cover === "x-open")) : A.role !== "x";
+    if (card === "heliban") {
+      // ヘリ封鎖は引いたその場で自動発動
+      applyCard(G, A.sec, card, null);
+      announceCard(side, card, null);
+      banner("ヘリ封鎖！", `すべてのヘリポートが${G.heliBan - G.xLog.length}手のあいだ閉鎖`, "blue", 2);
+      return;
+    }
     if (card !== "miss") handOf(G, side).push(card);
     if (side === "d") {
       pushFeed(G.xLog.length, card === "miss" ? "刑事チームのカード：ハズレ" : `刑事チームがカード「${CARD[card].name}」を手に入れた`, card !== "miss");
@@ -1690,7 +1713,7 @@
   function useCardNow(side, card, target) {
     applyCard(A.G, A.sec, card, target);
     announceCard(side, card, target);
-    if (card === "dog" || card === "inquiry") noteExposure();
+    if (card === "inquiry") noteExposure();
   }
   function expireHand(side) {
     const G = A.G, hand = handOf(G, side);
@@ -2395,6 +2418,16 @@
     // 封鎖された橋・破壊された駅・罠・仲間への指示
     for (const [st, until] of Object.entries(G.closedX || {})) {
       if (G.xLog.length >= until) continue;
+      if (G.checkpoints && G.checkpoints[st] !== undefined) {
+        const [x, y] = P(Number(st));
+        const cg = el("g", { class: "scaled-mark", "data-x": x, "data-y": y, transform: `translate(${x} ${y}) scale(${markScale()})` }, gM);
+        el("circle", { r: 50, class: "cp-ring" }, cg);
+        el("rect", { x: -44, y: 22, width: 88, height: 12, rx: 3, class: "cp-bar" }, cg);
+        el("path", { d: "M-40,22 l12,12 M-16,22 l12,12 M8,22 l12,12 M32,22 l8,8", class: "cp-stripe" }, cg);
+        el("path", { d: "M-44,34 v18 M44,34 v18", class: "cp-leg" }, cg);
+        el("text", { x: 0, y: 84, class: "mark-label cp big" }, cg).textContent = `検問中 あと${until - G.xLog.length}手`;
+        continue;
+      }
       const [x, y] = P(Number(st));
       const bg = el("g", { class: "scaled-mark", "data-x": x, "data-y": y, transform: `translate(${x} ${y}) scale(${markScale()})` }, gM);
       el("circle", { r: 52, class: "block-ring" }, bg);
@@ -2708,7 +2741,7 @@
         <li><b>切符</b>：刑事はタクシー・バス・地下鉄・水上バスが使い放題（ヘリだけ${DET_TICKETS.heli}枚）。怪盗Xの切符は有限（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・水上バス${X_TICKETS.boat}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）。切符が尽きた乗り物には乗れず、動けなくなると怪盗Xの負け。</li>
         <li><b>手札</b>：画面の左下にいつも表示されます。自分の番で使えるときは金色に光り、カードをタップするとそのまま使えます。カードを引く手は${CARD_TURNS.join("・")}手目。移動記録のカードを引く手には金色の小さなカード印。</li>
         <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
-        <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引いて手札に加えます（ハズレもあり）。手札のカードは自分の番の「カード」ボタンから、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「追跡犬」「聞き込み」「ヘリ封鎖」、怪盗X側は「罠」「雲隠れ」「駅破壊」。CPUの刑事も自分の番にチームのカードを使います。</li>
+        <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引いて手札に加えます（ハズレもあり）。手札のカードは自分の番の「カード」ボタンから、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「聞き込み」「ヘリ封鎖」（ヘリ封鎖は引いたその場で発動）、怪盗X側は「罠」「雲隠れ」「駅破壊」。CPUの刑事も自分の番にチームのカードを使います。</li>
         <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
         <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
         <li><b>作戦ピン</b>：刑事モードで駅を長押し（パソコンは右クリック）すると作戦ピンを立て、仲間をその駅へ向かわせたり、全員で包囲させたりできます。</li>
@@ -2873,8 +2906,13 @@
           if (card === "destroy") fitStations([A.sec.pos, ...opts]); else fitView();
           return;
         }
+        let tgt = null;
+        if (card === "checkpoint") {
+          if (A.G.turn === "x") return;
+          tgt = A.G.det[A.G.turn].pos;
+        }
         handOf(A.G, side).splice(i, 1);
-        useCardNow(side, card, null);
+        useCardNow(side, card, tgt);
         save(); render();
         return;
       }
