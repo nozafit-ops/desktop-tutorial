@@ -369,12 +369,15 @@
   @keyframes detIn { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
   .rs-cuffs { position: absolute; left: 50%; bottom: 70px; width: 70px; transform: translateX(-50%); animation: cuffs .6s .8s cubic-bezier(.2,1.6,.4,1) both; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
   @keyframes cuffs { from { transform: translateX(-50%) scale(0) rotate(-90deg); } to { transform: translateX(-50%) scale(1) rotate(0); } }
-  .rs-stamp { position: absolute; left: 50%; top: 16px; transform: translateX(-50%) rotate(-6deg); font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 36px; letter-spacing: .06em; padding: 2px 18px; border-radius: 10px; white-space: nowrap; animation: stamp .5s .5s cubic-bezier(.2,1.8,.4,1) both; }
+  .rs-full { position: absolute; inset: 0; width: 100%; height: 100% !important; object-fit: cover; bottom: 0 !important; filter: none !important; z-index: 3; }
+  .rs-scene.full > :not(.rs-full) { display: none; }
+  .rs-stamp-row { display: flex; justify-content: center; margin: -26px 0 2px; position: relative; z-index: 4; }
+  .rs-stamp { display: inline-block; transform: rotate(-4deg); font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 36px; letter-spacing: .06em; padding: 2px 18px; border-radius: 10px; white-space: nowrap; animation: stamp .5s .5s cubic-bezier(.2,1.8,.4,1) both; }
   .rs-stamp.red { color: #fff; background: #C0271F; border: 4px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
   .rs-stamp.gold { color: #3B2C1E; background: #E3B341; border: 4px solid #FFF4C8; box-shadow: 0 0 24px rgba(227,179,65,.6); }
-  @keyframes stamp { from { transform: translateX(-50%) rotate(-6deg) scale(2.4); opacity: 0; } to { transform: translateX(-50%) rotate(-6deg) scale(1); opacity: 1; } }
+  @keyframes stamp { from { transform: rotate(-4deg) scale(2.4); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: 1; } }
   .rs-scene.escape .rs-hero { height: 165px !important; } .rs-scene.escape .rs-mate { height: 150px !important; }
-  @media (max-width: 520px) { .rs-scene { height: 210px; } .rs-scene img { height: 130px; } .rs-scene.escape .rs-hero { height: 128px !important; } .rs-scene.escape .rs-mate { height: 118px !important; } .rs-det { height: 125px !important; } .rs-thief { height: 108px !important; } .rs-stamp { font-size: 26px; top: 10px; } .rs-lose { height: 70px !important; } }
+  @media (max-width: 520px) { .rs-scene { height: 210px; } .rs-scene img { height: 130px; } .rs-scene.escape .rs-hero { height: 128px !important; } .rs-scene.escape .rs-mate { height: 118px !important; } .rs-det { height: 125px !important; } .rs-thief { height: 108px !important; } .rs-stamp { font-size: 26px; } .rs-lose { height: 70px !important; } }
   @media (prefers-reduced-motion: reduce) { .rs-scene *, .rs-scene img { animation: none !important; } }
   .gc-art { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; flex: none; background: rgba(251,245,228,0.92); border-radius: 10px; border: 2px solid rgba(255,255,255,0.6); }
   .hc-art { width: 96px; height: 64px; object-fit: cover; float: left; margin: 0 12px 0 0; background: rgba(251,245,228,0.92); border-radius: 8px; }
@@ -2853,13 +2856,17 @@
             ${G.reason === "meet" && G.mate ? `<img class="rs-mate" src="${mateChar().img}" alt="">` : ""}
             <img class="rs-hero" src="${thief().img}" alt="">
             ${dets.slice(0, 3).map((src, i) => `<img class="rs-lose d${i}" src="${src}" alt="">`).join("")}
-            <div class="rs-stamp gold">${title}</div></div>`
+            </div>`
         : `<div class="rs-scene caught">
             ${dets.slice(0, 4).map((src, i) => `<img class="rs-det d${i}" src="${src}" alt="">`).join("")}
             <img class="rs-thief" src="${thief().img}" alt="">
             <svg class="rs-cuffs" viewBox="0 0 80 40" aria-hidden="true"><circle cx="18" cy="20" r="13" fill="none" stroke="#C9CDD4" stroke-width="6"/><circle cx="62" cy="20" r="13" fill="none" stroke="#C9CDD4" stroke-width="6"/><path d="M31 20 h18" stroke="#C9CDD4" stroke-width="5" stroke-dasharray="5 3"/></svg>
-            <div class="rs-stamp red">${title}</div></div>`;
-      sc.innerHTML = `<div class="card result-card">${scene}
+            </div>`;
+      // 完成画像（art/results/scene-<種類>-<怪盗番号>.webp）があれば、合成の代わりにそれを表示
+      const kind = xWin ? (G.reason === "meet" ? "meet" : "escape") : "caught";
+      const full = `<img class="rs-full" src="art/results/scene-${kind}-${(A.thief || 0) + 1}.webp" alt="" onload="this.parentNode.classList.add('full')" onerror="this.remove()">`;
+      sc.innerHTML = `<div class="card result-card">${scene.replace(/(<div class="rs-scene[^>]*>)/, "$1" + full)}
+        <div class="rs-stamp-row"><span class="rs-stamp ${xWin ? "gold" : "red"}">${title}</span></div>
         <h2>${you === null ? (xWin ? "怪盗Xの逃走成功" : "怪盗X、逮捕！") : you ? "あなたの勝ち！" : "あなたの負け…"}</h2>
         <p class="c">${G.xLog.length}手目で決着。${reason}</p>
         <div class="row"><button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="title">タイトルへ</button></div>
