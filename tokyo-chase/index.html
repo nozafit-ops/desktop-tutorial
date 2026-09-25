@@ -2390,6 +2390,14 @@
       const [wx, wy] = P(pos);
       const sx = wx * V.s + V.tx, sy = (wy - 40) * V.s + V.ty;
       if (sx >= left - 20 && sx <= right + 20 && sy >= top - 30 && sy <= bottom + 30) { b.hidden = true; continue; }
+      // 駒（と相棒の札）が画面の中に見えていれば矢印は出さない
+      const key = b.dataset.key || "";
+      const tokEl = key === "x" || key.startsWith("xf") ? $("tokX") : key.startsWith("m") ? $("tokM") : $("tokD" + key.slice(1));
+      if (tokEl && tokEl.style.display !== "none") {
+        const tr = tokEl.getBoundingClientRect();
+        const tcx = tr.left + tr.width / 2 - r.left, tcy = tr.top + tr.height / 2 - r.top;
+        if (tr.width > 0 && tcx >= 0 && tcx <= r.width && tcy >= top - 36 && tcy <= r.height) { b.hidden = true; continue; }
+      }
       const dx = sx - cx, dy = sy - cy;
       const kx = dx ? Math.abs((dx > 0 ? right - cx : cx - left) / dx) : Infinity;
       const ky = dy ? Math.abs((dy > 0 ? bottom - cy : cy - top) / dy) : Infinity;
