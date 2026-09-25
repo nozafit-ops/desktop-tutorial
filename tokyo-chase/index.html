@@ -167,6 +167,7 @@
   .tk.tube { background: var(--tube); color: #fff; }
   .tk.boat { background: var(--ferry); color: #fff; }
   .tk.heli { background: var(--heli); color: #fff; }
+  .tk.inf { background: #E8E0CC; color: #1A140C; padding: 0 5px; }
   .tk.black { background: var(--black); color: #fff; border: 1px solid #8A7A60; }
   .tk.double { background: var(--paper); color: #1A140C; }
   .tk.zero { opacity: 0.3; }
@@ -348,6 +349,19 @@
   .pin-mark { fill: #E3B341; stroke: #2A1E12; stroke-width: 3; }
   .aim-line { fill: none; stroke-width: 6; stroke-dasharray: 2 9; stroke-linecap: round; opacity: 0.95; }
   .aim-label { font-weight: 900; font-size: 15px; paint-order: stroke; stroke: #FBF5E4; stroke-width: 6px; stroke-linejoin: round; text-anchor: middle; pointer-events: none; }
+  .btn.card-btn.idle { background: #3A4A6A; color: #D8E0F0; }
+  .btn.card-btn.ready { box-shadow: 0 0 0 3px rgba(227,179,65,.7); animation: cardReady 1.4s ease-in-out infinite; }
+  @keyframes cardReady { 50% { box-shadow: 0 0 0 6px rgba(227,179,65,.25); } }
+  .cb-ic { display: inline-block; width: 12px; height: 16px; border-radius: 2px; border: 2px solid currentColor; margin-right: 6px; vertical-align: -3px; background: linear-gradient(135deg, transparent 45%, currentColor 45% 55%, transparent 55%); }
+  @media (max-width: 520px) { .btn.card-btn { padding: 0 9px; } .cb-t { display: none; } }
+  .draw-sched { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; margin: 2px 0 6px; }
+  .draw-sched b { margin-right: 4px; color: var(--muted); font-weight: 700; }
+  .draw-sched .ds { padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); }
+  .draw-sched .ds.done { background: rgba(227,179,65,.2); border-color: #E3B341; }
+  .hand-note { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  .ticket.hand-card[disabled] { opacity: .75; cursor: default; }
+  .slot.cardturn::after { content: ""; position: absolute; right: 2px; bottom: 2px; width: 8px; height: 11px; border-radius: 2px; background: #E3B341; border: 1px solid #7A5A10; }
+  @media (prefers-reduced-motion: reduce) { .btn.card-btn.ready { animation: none; } }
   .btn.card-btn { background: #2F5FB8; color: #fff; min-height: 38px; padding: 0 12px; font-size: 13px; }
   .ticket.hand-card { min-height: 96px; }
   .ticket.hand-card .en { font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 22px; letter-spacing: 0; }
@@ -788,8 +802,12 @@
 
   const MAX_MOVES = 24;
   const REVEAL = [3, 7, 11, 14, 17, 20, 24];
-  const DET_TICKETS = { taxi: 16, bus: 11, tube: 6, boat: 3, heli: 1 };
-  const X_DOUBLE = 1;
+  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
+  const DET_TICKETS = { heli: 1 };
+  const X_TICKETS = { taxi: 16, bus: 12, tube: 8, boat: 4 };
+  const dHas = (d, type) => type === "heli" ? d.t.heli > 0 : true;
+  const xHas = (G, type) => type === "black" ? G.black > 0 : type === "heli" ? G.heli > 0 : !G.xt || G.xt[type] > 0;
+  const X_DOUBLE = 2;
   const X_HELI = 1;
   const DEFAULT_DETS = 3;
 
@@ -840,7 +858,7 @@
     const startable = ids.filter(p => det.every(d => D[p][d.pos] >= 2));
     const xStart = startable[0];
     const G = {
-      seq: 1, turn: "x", det, xLog: [], black: detCount - 1, dbl: X_DOUBLE, heli: X_HELI, doubling: false,
+      seq: 1, turn: "x", det, xLog: [], xt: { ...X_TICKETS }, black: detCount - 1, dbl: X_DOUBLE, heli: X_HELI, doubling: false,
       // ガス欠のヘリポート（誰にも知らされない）。飛ぼうとして初めてわかる
       dud: pick(HELI), dudFound: false,
       possible: startable.slice().sort((a, b) => a - b), lastSeen: null,
@@ -861,7 +879,7 @@
     const out = [], blackTo = new Set();
     for (const e of ADJ[sec.pos]) {
       if (occ.has(e.to) || isClosed(G.closedX, e.to, G)) continue;
-      out.push({ to: e.to, type: e.type });
+      if (xHas(G, e.type)) out.push({ to: e.to, type: e.type });
       if (G.black > 0 && !blackTo.has(e.to)) { blackTo.add(e.to); out.push({ to: e.to, type: "black" }); }
     }
     const xKnowsDud = (sec.dudKnown || G.dudFound) && sec.pos === G.dud;
@@ -897,6 +915,7 @@
     if (rev && G.skipReveal > 0) { G.skipReveal--; rev = false; vanished = true; }   // 雲隠れ
     G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0 });
     if (type === "black") G.black--;
+    else if (G.xt && G.xt[type] !== undefined) G.xt[type]--;
     G.possible = rev ? [to] : nextPossible(G, type);
     if (rev) G.lastSeen = { pos: to, n };
     if (useDouble) { G.dbl--; G.doubling = true; }
@@ -908,7 +927,7 @@
   function detMoves(G, k) {
     const d = G.det[k];
     const occ = G.det.filter((_, j) => j !== k).map(x => x.pos);
-    const out = ADJ[d.pos].filter(e => d.t[e.type] > 0 && !occ.includes(e.to) && !isClosed(G.closedD, e.to, G));
+    const out = ADJ[d.pos].filter(e => dHas(d, e.type) && !occ.includes(e.to) && !isClosed(G.closedD, e.to, G));
     if (d.t.heli > 0 && HELI_SET.has(d.pos) && !heliBanned(G) && !(G.dudFound && d.pos === G.dud) && heliTargets(G, d.pos, false, k).length) out.push({ to: -1, type: "heli" });
     return out;
   }
@@ -922,7 +941,7 @@
     dog:       { side: "d", name: "追跡犬", desc: "においをたどり、怪盗Xがいるかもしれない駅を「本当の居場所から2手以内」に絞り込む。" },
     inquiry:   { side: "d", name: "聞き込み", desc: "町の人に聞き込み。怪盗Xがいるかもしれない駅が半分に減る。" },
     heliban:   { side: "d", name: "ヘリ封鎖", desc: "すべてのヘリポートを閉鎖する。5手のあいだ誰もヘリで飛べない。" },
-    reinforce: { side: "d", name: "応援要請", desc: "刑事全員にタクシー2・バス1・地下鉄1の切符が追加される。" },
+    reinforce: { side: "d", name: "応援要請", desc: "刑事全員にヘリの切符が1枚ずつ追加される。" },
     trap:      { side: "x", name: "罠", desc: "いまいる駅に罠を仕掛ける。踏んだ刑事は1回休み。刑事には見えない。" },
     vanish:    { side: "x", name: "雲隠れ", desc: "次の目撃情報を1回だけ無効にする。" },
     destroy:   { side: "x", name: "駅破壊", desc: "2手以内の駅を1つ壊す。壊れた駅は最後まで誰も通れない（怪盗Xも）。" },
@@ -954,7 +973,7 @@
     else if (card === "inquiry") {
       const others = shuffle(G.possible.filter(s => s !== sec.pos));
       G.possible = [sec.pos, ...others.slice(0, Math.floor(others.length / 2))].sort((a, b) => a - b);
-    } else if (card === "reinforce") G.det.forEach(d => { d.t.taxi += 2; d.t.bus += 1; d.t.tube += 1; });
+    } else if (card === "reinforce") G.det.forEach(d => { d.t.heli += 1; });
     else if (card === "trap") sec.trap = sec.pos;
     else if (card === "vanish") G.skipReveal = (G.skipReveal || 0) + 1;
     else if (card === "destroy") {
@@ -999,7 +1018,7 @@
         if (c === "dog" || c === "inquiry") use = use || G.possible.length > 6;
         if (c === "bridge") use = use || G.possible.length <= 30;
         if (c === "heliban") use = use || (G.heli > 0 && !heliBanned(G) && G.possible.length <= 12 && G.possible.some(p => HELI_SET.has(p)));
-        if (c === "reinforce") use = use || G.det.some(d => d.t.taxi <= 3 || d.t.tube <= 1);
+        if (c === "reinforce") use = use || G.det.every(d => d.t.heli === 0);
       }
       if (!use) continue;
       let target = null;
@@ -1032,7 +1051,8 @@
       else to = pick(heliTargets(G, d.pos, false, k));
     }
     d.pos = to;
-    d.t[type]--;
+    if (type === "heli") d.t.heli--;
+    d.last = type;
     G.possible = G.possible.filter(p => p !== to);
     advance(G, k);
     G.seq++;
@@ -1070,7 +1090,8 @@
     const useDouble = canDouble(G) && bestD <= 1;
     const opts = moves.filter(m => m.to === best && m.type !== "black").map(m => m.type);
     let type = opts[0], size = -1;
-    for (const ty of opts) { const k = nextPossible(G, ty).length; if (k > size) { size = k; type = ty; } }
+    // 候補が広がる切符を選ぶ。残りが少ない切符は節約する
+    for (const ty of opts) { const k = nextPossible(G, ty).length + (G.xt ? Math.min(G.xt[ty], 4) * 3 : 0); if (k > size) { size = k; type = ty; } }
     const wantBlack = G.black > 0 && !REVEAL.includes(n) && (
       (REVEAL.includes(n - 1) && Math.random() < 0.6) ||
       (nowD <= 2 && Math.random() < 0.35));
@@ -1111,7 +1132,7 @@
       if (norm.length) {
         let pool = D[here][order] > 1 ? norm.filter(m => D[m.to][order] < D[here][order]) : norm.filter(m => D[m.to][order] <= 1);
         if (!pool.length) pool = norm;
-        pool.sort((a, b) => (D[a.to][order] - D[b.to][order]) || (G.det[k].t[b.type] - G.det[k].t[a.type]));
+        pool.sort((a, b) => D[a.to][order] - D[b.to][order]);
         const bestD = D[pool[0].to][order];
         const tied = pool.filter(m => D[m.to][order] === bestD);
         const pr = new Set(G.possible);
@@ -1147,8 +1168,7 @@
     let best = null, bs = -Infinity;
     for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) {
       const types = moves.filter(m => m.to === to).map(m => m.type);
-      const spare = Math.max(...types.map(t => G.det[k].t[t]));
-      const s = scoreAt(to) - (spare <= 1 ? 1.5 : 0) + (steady ? (to % 7) * 0.01 : Math.random() * 0.8);
+      const s = scoreAt(to) + (steady ? (to % 7) * 0.01 : Math.random() * 0.8);
       if (s > bs) { bs = s; best = to; }
     }
     if (moves.some(m => m.type === "heli")) {
@@ -1157,7 +1177,6 @@
       if (best === null || hs > bs + 6) return { to: -1, type: "heli" };
     }
     const types = moves.filter(m => m.to === best).map(m => m.type);
-    types.sort((a, b) => G.det[k].t[b] - G.det[k].t[a]);
     return { to: best, type: types[0] };
   }
   // ======================================================================
@@ -1179,7 +1198,7 @@
 
   const DCOL = ["#3B82F6", "#F97316", "#EC4899", "#14B8A6", "#A855F7"];
   const AI_DELAY = 650;
-  const SAVE_KEY = "london-chase-save-v2";
+  const SAVE_KEY = "london-chase-save-v3";
   const $ = id => document.getElementById(id);
   const SVGNS = "http://www.w3.org/2000/svg";
   function el(tag, attrs = {}, parent) {
@@ -1266,7 +1285,7 @@
         dudAction(d.pos, `${NAME(d.pos)} のヘリは使えない`);
       }
       if (p && p.pos !== d.pos) {
-        const used = DET_TYPES.find(t => p.t[t] !== d.t[t]);
+        const used = d.last;
         pushFeed(G.xLog.length, `${dName(k)} → ${NO(d.pos)} ${NAME(d.pos)}（${used ? TYPE[used].name : ""}）`);
       }
     });
@@ -1521,7 +1540,7 @@
       let detail = "";
       if (card === "bridge") detail = `${NO(target)} ${NAME(target)} を封鎖（4手）`;
       else if (card === "dog" || card === "inquiry") detail = `候補が ${G.possible.length} 駅に絞られた`;
-      else if (card === "reinforce") detail = "刑事全員に切符を追加";
+      else if (card === "reinforce") detail = "刑事全員にヘリの切符を1枚追加";
       else if (card === "heliban") detail = `すべてのヘリポートを閉鎖（${G.heliBan - G.xLog.length}手）`;
       else detail = "何も起こらなかった";
       toast(`刑事チームのカード「${c.name}」`);
@@ -1568,6 +1587,15 @@
     if (show) pushFeed(G.xLog.length, `使わなかったカード${n}枚は${CARD_LAST}手目を過ぎて失効した`);
   }
   const handSide = () => A.G && (A.G.turn === "x" ? "x" : "d");
+  // 手札を見られる側（使えるのは自分の番だけ）
+  const handViewSide = () => {
+    const G = A.G;
+    if (!G || G.over) return null;
+    if (A.role === "x") return "x";
+    if (A.role === "d") return "d";
+    if (A.role === "pass") return G.turn === "x" ? (A.cover === "x-open" ? "x" : null) : (A.cover === null ? "d" : null);
+    return null;
+  };
   const canUseHand = () => {
     const G = A.G;
     if (!G || !humanTurn()) return false;
@@ -2319,12 +2347,12 @@
     $("xcard").innerHTML = `${portrait("x")}<span class="who"><b>怪盗X</b>
       <small class="nx">${G.over ? "ゲーム終了" : nx ? `次の出現 ${nx}手目` : "出現なし"}</small>
       ${G.over ? "" : `<span class="expo ${ex.level}" title="${ex.help}"><i></i>${ex.label}</span>`}
-      <span class="chipsx"><span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
+      <span class="chipsx">${G.xt ? ["taxi", "bus", "tube", "boat"].map(t => `<span class="tk ${t} ${G.xt[t] ? "" : "zero"}" title="${TYPE[t].name}の残り">${TYPE[t].short}${G.xt[t]}</span>`).join("") : ""}<span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
     $("xcard").classList.toggle("active", G.turn === "x");
     $("dets").innerHTML = G.det.map((d, k) => `
-      <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="${A.role === "d" && k !== ME_DET ? "order" : "focusD"}" data-k="${k}" aria-label="${dName(k)}：${DET_TYPES.map(t => TYPE[t].name + d.t[t]).join("・")}">
+      <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="${A.role === "d" && k !== ME_DET ? "order" : "focusD"}" data-k="${k}" aria-label="${dName(k)}：切符は使い放題・ヘリ${d.t.heli}">
         ${portrait("d", k, "sm")}${A.role === "d" && k === ME_DET ? `<span class="me-tag">あなた</span>` : ""}${A.role === "d" && k !== ME_DET ? `<span class="me-tag order">${G.orders && G.orders[k] !== undefined ? "指示中" : "指示"}</span>` : ""}
-        <span class="tks">${DET_TYPES.map(t => `<span class="tk ${t} ${d.t[t] ? "" : "zero"}">${t === "heli" ? "H" + d.t[t] : d.t[t]}</span>`).join("")}</span>
+        <span class="tks"><span class="tk inf" title="タクシー・バス・地下鉄・水上バスは使い放題">切符∞</span><span class="tk heli ${d.t.heli ? "" : "zero"}">H${d.t.heli}</span></span>
       </button>`).join("");
   }
 
@@ -2352,7 +2380,8 @@
       const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
       if (moves.some(m => m.type === "heli")) heliBtn = `<button class="btn heli-btn" data-act="heli">ヘリ</button>`;
     }
-    const cardBtn = canUseHand() ? `<button class="btn card-btn" data-act="hand">カード${handOf(G, handSide()).length}</button>` : "";
+    const hvs = handViewSide();
+    const cardBtn = hvs ? `<button class="btn card-btn ${canUseHand() ? "ready" : "idle"}" data-act="hand" aria-label="手札を見る"><span class="cb-ic" aria-hidden="true"></span><span class="cb-t">手札</span>${handOf(G, hvs).length}</button>` : "";
     el_.innerHTML = `${who}<div class="txt"><div class="t1">${t1}</div><div class="t2">${moveTxt}</div></div>${cardBtn}${heliBtn}`;
   }
 
@@ -2367,11 +2396,12 @@
       const cls = ["slot"];
       if (e) cls.push(e.t);
       if (REVEAL.includes(i + 1)) cls.push("reveal");
+      if (CARD_TURNS.includes(i + 1)) cls.push("cardturn");
       if (!G.over && i === G.xLog.length) cls.push("now");
       let st = "";
       if (e && e.p !== null) st = NO(e.p);
       else if (e && showX) st = NO(A.sec.path[i + 1]);
-      const title = `${i + 1}手目${e ? "：" + TYPE[e.t].name : ""}${st ? "（" + NAME(st - 1) + "）" : ""}`;
+      const title = `${i + 1}手目${CARD_TURNS.includes(i + 1) ? "（カードを引く）" : ""}${e ? "：" + TYPE[e.t].name : ""}${st ? "（" + NAME(st - 1) + "）" : ""}`;
       html += `<div class="${cls.join(" ")}" title="${esc(title)}"><span class="n">${i + 1}</span>${e ? TYPE[e.t].short : ""}${st ? `<span class="st">${st}</span>` : ""}${e?.d ? `<span class="dbl">2×</span>` : ""}</div>`;
     }
     const xl = $("xlog");
@@ -2386,12 +2416,19 @@
   function renderSheet() {
     const wrap = $("sheet");
     const G = A.G;
-    if (G && A.handSheet && canUseHand()) {
-      const side = handSide(), hand = handOf(G, side);
+    if (G && A.handSheet && handViewSide()) {
+      const usable = canUseHand();
+      const side = usable ? handSide() : handViewSide(), hand = handOf(G, side);
+      const left = CARD_LAST - cardMove(G, side);
+      G.drawn = G.drawn || { x: [], d: [] };
+      const sched = CARD_TURNS.map(n => `<span class="ds ${G.drawn[side].includes(n) ? "done" : ""}">${n}手目${G.drawn[side].includes(n) ? "・引いた" : ""}</span>`).join("");
+      const note = !hand.length ? "手札はまだありません。" : left < 0 ? "使える期限（" + CARD_LAST + "手目）を過ぎました。" : usable ? "使うカードをタップ" : "カードを使えるのは自分の番だけです。";
       wrap.hidden = false;
       wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="手札">
-        <h3>${side === "x" ? "怪盗Xの手札" : "刑事チームの手札"}<span class="pill">${CARD_LAST}手目まで・あと${CARD_LAST - cardMove(G, side)}手</span></h3>
-        <div class="tickets">${hand.map((c, i) => `<button class="ticket hand-card ${side}" data-act="useCard" data-i="${i}"><img class="hc-art" src="art/cards/${c}.webp" alt=""><span class="en">${CARD[c].name}</span><span class="ja">${CARD[c].desc}</span></button>`).join("")}</div>
+        <h3>${side === "x" ? "怪盗Xの手札" : "刑事チームの手札"}<span class="pill">${left >= 0 ? `${CARD_LAST}手目まで・あと${left}手` : "期限切れ"}</span></h3>
+        <div class="draw-sched"><b>カードを引く手</b>${sched}</div>
+        <p class="hand-note">${note}</p>
+        <div class="tickets">${hand.map((c, i) => `<button class="ticket hand-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : "disabled"}><img class="hc-art" src="art/cards/${c}.webp" alt=""><span class="en">${CARD[c].name}</span><span class="ja">${CARD[c].desc}</span></button>`).join("")}</div>
         <button class="btn ghost wide" data-act="handClose">閉じる</button></div>`;
       return;
     }
@@ -2434,14 +2471,14 @@
       title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
       const opts = xMoves(G, A.sec).filter(m => m.to === to).map(m => m.type);
       tickets = ["taxi", "bus", "tube", "boat", "black"].filter(t => opts.includes(t)).map(t =>
-        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}${t === "black" ? "（乗り物を隠す）" : ""}</span>${t === "black" ? `<span class="cnt">${G.black}</span>` : ""}</button>`).join("");
+        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}${t === "black" ? "（乗り物を隠す）" : ""}</span><span class="cnt">${t === "black" ? G.black : G.xt && G.xt[t] !== undefined ? G.xt[t] : ""}</span></button>`).join("");
       if (canDouble(G)) opt = `<div class="opt-row"><div><b>2倍移動</b><div style="font-size:12px;color:var(--muted)">この後もう1駅続けて動く（残り${G.dbl}）</div></div><button class="switch" role="switch" aria-checked="${A.useDouble}" data-act="double" aria-label="2倍移動"></button></div>`;
     } else {
       title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
       const k = G.turn, d = G.det[k];
       const opts = detMoves(G, k).filter(m => m.to === to).map(m => m.type);
       tickets = MOVE_TYPES.filter(t => opts.includes(t)).map(t =>
-        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}</span><span class="cnt">${d.t[t]}</span></button>`).join("");
+        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}</span><span class="cnt">${t === "heli" ? d.t.heli : "∞"}</span></button>`).join("");
     }
     wrap.hidden = false;
     wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="切符を選ぶ">
@@ -2487,7 +2524,8 @@
         <li><b>ヘリポート</b>（H）からはヘリで飛べます。行き先は選べず、ほかのヘリポートのどこかにランダムで着陸します。島へは水上バスかヘリでしか行けません。<br>ヘリポートのうち1か所だけは <b>ガス欠</b> で飛べません。どこなのかは誰にも知らされず、飛ぼうとして初めてわかります（切符は減り、その手はその場にとどまります）。</li>
         <li>川を渡る <b>橋</b> の上にも駅（ひし形の台座）があり、タクシーとバスは橋で一度止まります。</li>
         <li>怪盗Xの居場所は秘密。刑事にわかるのは下の記録に残る <b>切符の種類</b> だけ。${REVEAL.join("・")}手目の後だけ姿を現します。</li>
-        <li>刑事の切符は有限（タクシー${DET_TICKETS.taxi}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.tube}・水上バス${DET_TICKETS.boat}・ヘリ${DET_TICKETS.heli}）。</li>
+        <li><b>切符</b>：刑事はタクシー・バス・地下鉄・水上バスが使い放題（ヘリだけ${DET_TICKETS.heli}枚）。怪盗Xの切符は有限（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・水上バス${X_TICKETS.boat}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）。切符が尽きた乗り物には乗れず、動けなくなると怪盗Xの負け。</li>
+        <li><b>手札ボタン</b>：画面上部の手番表示の横にいつも出ています。押すと手札とカードを引く手（${CARD_TURNS.join("・")}手目）が見られます。使えるときは金色に光ります。移動記録のカードを引く手には金色の小さなカード印。</li>
         <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数より1枚少ない）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
         <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引いて手札に加えます（ハズレもあり）。手札のカードは自分の番の「カード」ボタンから、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「追跡犬」「聞き込み」「ヘリ封鎖」「応援要請」、怪盗X側は「罠」「雲隠れ」「駅破壊」。CPUの刑事も自分の番にチームのカードを使います。</li>
         <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
@@ -2630,7 +2668,7 @@
         return step();
       }
       case "cardCancel": if (A.pendingCard && A.pendingCard.stage === "target") { A.pendingCard = null; render(); } return;
-      case "hand": A.handSheet = true; A.sel = null; renderSheet(); return;
+      case "hand": if (!handViewSide()) return; A.handSheet = true; A.sel = null; renderSheet(); return;
       case "handClose": A.handSheet = false; renderSheet(); return;
       case "useCard": {
         if (!canUseHand()) return;
