@@ -414,7 +414,8 @@
   @keyframes poof { 0% { opacity: .95; transform: scale(.4); } 100% { opacity: 0; transform: scale(1.9) translateY(-14px); } }
   @media (prefers-reduced-motion: reduce) { .tok.sighted, .poof { animation: none; } .poof { display: none; } }
   .mate-ring { fill: rgba(142,27,22,.25); stroke: #E3B341; stroke-width: 3; stroke-dasharray: 8 5; }
-  .mate-label { font-weight: 900; font-size: 18px; fill: #FBF5E4; paint-order: stroke; stroke: #8E1B16; stroke-width: 6px; text-anchor: middle; }
+  .mate-label { font-weight: 900; font-size: 22px; fill: #fff; text-anchor: middle; letter-spacing: .08em; }
+  .mate-badge-bg { fill: #8E1B16; stroke: #E3B341; stroke-width: 3; }
   .mate-tok.caught image { filter: grayscale(1) brightness(.7); }
   .btn.pass-btn { min-height: 38px; padding: 0 12px; font-size: 13px; }
   .ruin-fill { fill: #0E0B09; stroke: #000; stroke-width: 4; }
@@ -2293,9 +2294,14 @@
       const g = el("g", { class: "tok mate-tok", id: "tokM" }, gT);
       el("ellipse", { cx: 0, cy: 6, rx: 30, ry: 11, class: "mate-ring" }, g);
       el("image", { href: mateChar().img, x: -40, y: -126, width: 80, height: 133 }, g);
-      el("text", { x: 0, y: -132, class: "mate-label" }, g).textContent = "相棒";
+      // 「相棒」の札：拡大率に関係なく読める大きさで描く
+      const badge = el("g", { class: "mate-badge", transform: "translate(0 -138)" }, g);
+      el("rect", { x: -40, y: -20, width: 80, height: 36, rx: 18, class: "mate-badge-bg" }, badge);
+      el("path", { d: "M-8,16 L0,26 L8,16 Z", class: "mate-badge-bg" }, badge);
+      el("text", { x: 0, y: 6, class: "mate-label" }, badge).textContent = "相棒";
     }
     A.G.det.forEach((_, k) => mk("tokD" + k, "d", k));
+    rescaleMarks();
   }
 
   let lastSight = null;
@@ -2427,6 +2433,9 @@
   function rescaleMarks() {
     const k = markScale().toFixed(3);
     document.querySelectorAll("#gMarks .scaled-mark").forEach(g => g.setAttribute("transform", `translate(${g.dataset.x} ${g.dataset.y}) scale(${k})`));
+    // 相棒の札は縮小表示でも読めるように大きくする（拡大時はそのまま）
+    const mb = Math.max(1, Math.min(6, (window.innerWidth < 600 ? 58 : 66) / (80 * (V.s || 1))));
+    document.querySelectorAll(".mate-badge").forEach(g => g.setAttribute("transform", `translate(0 ${-130 - 8 * mb}) scale(${mb.toFixed(3)})`));
   }
   // 手札欄のヘリ：残り枚数と、いま飛べるかどうか
   function heliCard(G, side) {
