@@ -1017,11 +1017,12 @@
   }
   const allStuck = G => G.det.every((_, k) => detMoves(G, k).length === 0);
 
-  // ---------------- カード（5・10・17手目に両陣営が1枚引く。ハズレあり） ----------------
+  // ---------------- カード（5・10・17手目に両陣営が1枚引く。ハズレなし） ----------------
   const CARD_TURNS = [5, 10, 17];
   const CARD_LAST = 20;   // 手札のカードは20手目まで好きな時に使える
   const CARD = {
     bridge:    { side: "d", name: "橋封鎖", desc: "橋を1つ選んで封鎖する。4手のあいだ怪盗Xは通れない。" },
+    rcheck:    { side: "d", name: "ランダム検問", desc: "引いたその場で発動。ヘリポート以外のどこかの駅に検問所が敷かれ、6手のあいだ怪盗Xはその駅を通れない。" },
     checkpoint:{ side: "d", name: "検問", desc: "いま自分がいる駅に検問所を置く。6手のあいだ怪盗Xはその駅を通れない。" },
     inquiry:   { side: "d", name: "聞き込み", desc: "町の人に聞き込み。怪盗Xがいるかもしれない駅が半分に減る。" },
     heliban:   { side: "d", name: "ヘリ封鎖", desc: "引いたその場で発動。すべてのヘリポートを5手のあいだ閉鎖し、誰もヘリで飛べない。" },
@@ -1032,8 +1033,8 @@
     miss:      { side: "", name: "ハズレ", desc: "何も起こらなかった。" },
   };
   const DECK = {
-    d: [["bridge", 22], ["checkpoint", 24], ["inquiry", 19], ["heliban", 18], ["miss", 17]],
-    x: [["trap", 25], ["vanish", 25], ["destroy", 25], ["miss", 25]],
+    d: [["bridge", 22], ["checkpoint", 24], ["inquiry", 19], ["heliban", 18], ["rcheck", 17]],
+    x: [["trap", 34], ["vanish", 33], ["destroy", 33]],
   };
   // ヘリ封鎖は1ゲームに1回だけ（一度引いたら山札から外す）
   function drawCard(side, G = null) {
@@ -1054,6 +1055,14 @@
     const n = G.xLog.length;
     if (card === "bridge") G.closedX = { ...(G.closedX || {}), [target]: n + 4 };
     else if (card === "heliban") G.heliBan = n + 5;
+    else if (card === "rcheck") {
+      // ランダム検問：ヘリポート・怪盗Xの駅・破壊された駅・刑事の駅以外からランダム
+      const occ = new Set(G.det.map(d => d.pos));
+      const opts = [...Array(N).keys()].filter(i => !HELI_SET.has(i) && i !== sec.pos && !isRuin(G, i) && !occ.has(i) && !(G.checkpoints && G.checkpoints[i] !== undefined && G.xLog.length < G.checkpoints[i]));
+      target = pick(opts);
+      G.closedX = { ...(G.closedX || {}), [target]: n + 6 };
+      G.checkpoints = { ...(G.checkpoints || {}), [target]: n + 6 };
+    }
     else if (card === "checkpoint") {
       // 検問所：怪盗Xは6手のあいだその駅を通れない
       G.closedX = { ...(G.closedX || {}), [target]: n + 6 };
@@ -1070,6 +1079,7 @@
       G.possible = G.possible.filter(p => p !== target);
     }
     G.cards = [...(G.cards || []), { card, n, target: card === "trap" ? null : (target ?? null) }];
+    return target;
   }
   // CPU が選ぶ対象
   function aiCardTarget(G, sec, card) {
@@ -1670,6 +1680,7 @@
       let detail = "";
       if (card === "bridge") detail = `${NO(target)} ${NAME(target)} を封鎖（4手）`;
       else if (card === "inquiry") detail = `候補が ${G.possible.length} 駅に絞られた`;
+      else if (card === "rcheck") detail = `${NO(target)} ${NAME(target)} に検問所が敷かれた（6手のあいだ怪盗Xは通れない）`;
       else if (card === "checkpoint") detail = `${NO(target)} ${NAME(target)} に検問所を設置（6手のあいだ怪盗Xは通れない）`;
       else if (card === "reinforce") detail = "刑事全員にヘリの切符を1枚追加";
       else if (card === "heliban") detail = `すべてのヘリポートを閉鎖（${G.heliBan - G.xLog.length}手）`;
@@ -1700,6 +1711,13 @@
       applyCard(G, A.sec, card, null);
       announceCard(side, card, null);
       banner("ヘリ封鎖！", `すべてのヘリポートが${G.heliBan - G.xLog.length}手のあいだ閉鎖`, "blue", 2);
+      return;
+    }
+    if (card === "rcheck") {
+      // ランダム検問も引いたその場で自動発動
+      const t = applyCard(G, A.sec, card, null);
+      announceCard(side, card, t);
+      banner("検問！", `${NAME(t)} に検問所が敷かれた`, "blue", 2);
       return;
     }
     if (card !== "miss") handOf(G, side).push(card);
@@ -2742,7 +2760,7 @@
         <li><b>切符</b>：刑事はタクシー・バス・地下鉄・水上バスが使い放題（ヘリだけ${DET_TICKETS.heli}枚）。怪盗Xの切符は有限（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・水上バス${X_TICKETS.boat}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）。切符が尽きた乗り物には乗れず、動けなくなると怪盗Xの負け。</li>
         <li><b>手札</b>：画面の左下にいつも表示されます。自分の番で使えるときは金色に光り、カードをタップするとそのまま使えます。カードを引く手は${CARD_TURNS.join("・")}手目。移動記録のカードを引く手には金色の小さなカード印。</li>
         <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
-        <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引いて手札に加えます（ハズレもあり）。手札のカードは自分の番の「カード」ボタンから、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「聞き込み」「ヘリ封鎖」（ヘリ封鎖は引いたその場で発動し、1ゲームに1回だけ）、怪盗X側は「罠」「雲隠れ」「駅破壊」。CPUの刑事も自分の番にチームのカードを使います。</li>
+        <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引きます（ハズレはありません）。手札のカードは自分の番に左下の手札からタップして、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「聞き込み」「ヘリ封鎖」「ランダム検問」。ヘリ封鎖とランダム検問は引いたその場で発動します（ヘリ封鎖は1ゲームに1回だけ、ランダム検問はヘリポート以外のどこかの駅に検問所が敷かれます）。怪盗X側は「罠」「雲隠れ」「駅破壊」。CPUの刑事も自分の番にチームのカードを使います。</li>
         <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
         <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
         <li><b>作戦ピン</b>：刑事モードで駅を長押し（パソコンは右クリック）すると作戦ピンを立て、仲間をその駅へ向かわせたり、全員で包囲させたりできます。</li>
