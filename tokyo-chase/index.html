@@ -144,6 +144,7 @@
   .portrait.sm { width: 36px; height: 36px; }
   .portrait.lg { width: 84px; height: 84px; }
   .portrait img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; background: rgba(192,39,31,0.28); }
+  .portrait.p-d img { background: rgba(255,255,255,0.12); }
   .thief-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .thief-pick button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: inherit; font: inherit; cursor: pointer; }
   .thief-pick button[aria-pressed="true"] { border-color: #E3B341; background: rgba(227,179,65,0.16); }
@@ -312,8 +313,8 @@
   .gcard.x { background: linear-gradient(160deg, #8E1B16, #3A0B09); }
   .gcard.miss { background: linear-gradient(160deg, #5A5146, #2A241D); }
   .gc-kind { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: 0.25em; font-size: 12px; color: rgba(255,255,255,0.7); }
-  .gc-art { width: 100%; max-height: 42%; background: rgba(251,245,228,0.92); border-radius: 10px; border: 2px solid rgba(255,255,255,0.6); }
-  .hc-art { width: 96px; height: 67px; float: left; margin: 0 12px 0 0; background: rgba(251,245,228,0.92); border-radius: 8px; }
+  .gc-art { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; flex: none; background: rgba(251,245,228,0.92); border-radius: 10px; border: 2px solid rgba(255,255,255,0.6); }
+  .hc-art { width: 96px; height: 64px; object-fit: cover; float: left; margin: 0 12px 0 0; background: rgba(251,245,228,0.92); border-radius: 8px; }
   .gc-name { font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 34px; color: #fff; line-height: 1.1; }
   .gc-desc { font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.5; }
   .card-dest { fill: rgba(227, 179, 65, 0.35); stroke: #E3B341; }
@@ -1164,7 +1165,9 @@
   // ======================================================================
 
   // 生成画像を使うときはここにファイル名を入れる（例: map: "art/map.jpg"）
-  const ART = { map: "art/london-map.webp", x: null, d: [null, null, null, null, null], title: null };
+  // 刑事の画像（全身は3:5の透過画像、足元が下辺の中央。face は顔アイコン用の正方形）
+  const DETECTIVES = [1, 2, 3, 4, 5].map(n => ({ img: `art/detectives/detective-${n}.webp`, face: `art/detectives/detective-${n}-face.webp` }));
+  const ART = { map: "art/london-map.webp", x: null, d: DETECTIVES.map(d => d.face), title: null };
   // 怪盗Xのキャラ（全身は3:5の透過画像、足元が下辺の中央。face は顔アイコン用の正方形）
   const THIEVES = [
     { name: "ジャック", sub: "すばしっこい小悪党", img: "art/thieves/thief-1.webp", face: "art/thieves/thief-1-face.webp" },
@@ -1174,7 +1177,7 @@
   const THIEF_KEY = "london-chase-thief";
   const thief = () => THIEVES[A.thief] || THIEVES[0];
 
-  const DCOL = ["#3B82F6", "#F97316", "#A855F7", "#14B8A6", "#E879F9"];
+  const DCOL = ["#3B82F6", "#F97316", "#EC4899", "#14B8A6", "#A855F7"];
   const AI_DELAY = 650;
   const SAVE_KEY = "london-chase-save-v2";
   const $ = id => document.getElementById(id);
@@ -1190,7 +1193,7 @@
 
   function portrait(kind, k = 0, cls = "") {
     const src = kind === "x" ? (ART.x || thief().face) : ART.d[k];
-    if (src) return `<span class="portrait ${cls}"><img src="${src}" alt=""></span>`;
+    if (src) return `<span class="portrait p-${kind} ${cls}"><img src="${src}" alt=""></span>`;
     const color = kind === "x" ? "#2A2530" : DCOL[k];
     const bg = kind === "x" ? "rgba(192,39,31,0.28)" : "rgba(255,255,255,0.08)";
     return `<svg class="portrait ${cls}" viewBox="-30 -114 60 60" aria-hidden="true"><defs><clipPath id="pc-${kind}${k}${cls}"><circle cx="0" cy="-84" r="29"></circle></clipPath></defs><circle cx="0" cy="-84" r="29" fill="${bg}"></circle><g clip-path="url(#pc-${kind}${k}${cls})"><use href="${kind === "x" ? "#fig-x" : "#fig-d"}" x="-36" y="-112" width="72" height="120" style="color:${color}"></use></g>${kind === "d" ? `<text x="17" y="-61" class="pawn-num" style="font-size:13px">${k + 1}</text>` : ""}</svg>`;
@@ -2003,17 +2006,23 @@
     const mk = (id, kind, k) => {
       const g = el("g", { class: "tok", id }, gT);
       el("ellipse", { cx: 0, cy: 6, rx: 34, ry: 13, class: "ring", visibility: "hidden" }, g);
-      const u = kind === "x" && thief().img
-        ? el("image", { href: thief().img, x: -46, y: -144, width: 92, height: 153 }, g)
+      const src = kind === "x" ? thief().img : DETECTIVES[k] && DETECTIVES[k].img;
+      const u = src
+        ? el("image", { href: src, x: -46, y: -144, width: 92, height: 153 }, g)
         : el("use", { href: kind === "x" ? "#fig-x" : "#fig-d", x: -36, y: -112, width: 72, height: 120 }, g);
       u.style.color = kind === "x" ? "#2A2530" : DCOL[k];
+      const top = src ? -144 : -112;
       if (kind === "d") {
-        el("text", { x: 0, y: -46, class: "pawn-num" }, g).textContent = k + 1;
-        const b = el("g", { class: "bubble q" }, el("g", { transform: "translate(26 -112)" }, g));
+        if (src) {
+          // 画像の駒は足元に番号バッジ（刑事の色）
+          el("circle", { cx: 34, cy: -2, r: 13, fill: DCOL[k], stroke: "#fff", "stroke-width": 3 }, g);
+          el("text", { x: 34, y: 3.5, class: "pawn-num" }, g).textContent = k + 1;
+        } else el("text", { x: 0, y: -46, class: "pawn-num" }, g).textContent = k + 1;
+        const b = el("g", { class: "bubble q" }, el("g", { transform: `translate(30 ${top})` }, g));
         el("path", { class: "bb", d: "M-20,-44 h40 a8,8 0 0 1 8,8 v28 a8,8 0 0 1 -8,8 h-12 l-12,12 l2,-12 h-18 a8,8 0 0 1 -8,-8 v-28 a8,8 0 0 1 8,-8 Z" }, b);
         el("text", { x: 0, y: -13 }, b).textContent = "?";
         // セリフは駅名より手前に描く
-        const tk = el("g", { class: "talk" }, el("g", { transform: "translate(0 -118)" }, el("g", { id: "talkD" + k, class: "talk-pos" }, $("gTalk"))));
+        const tk = el("g", { class: "talk" }, el("g", { transform: `translate(0 ${top - 6})` }, el("g", { id: "talkD" + k, class: "talk-pos" }, $("gTalk"))));
         tk.style.display = "none";
         el("path", { class: "tb" }, tk);
         el("text", { x: 0, y: -29 }, tk);
@@ -2382,7 +2391,7 @@
       wrap.hidden = false;
       wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="手札">
         <h3>${side === "x" ? "怪盗Xの手札" : "刑事チームの手札"}<span class="pill">${CARD_LAST}手目まで・あと${CARD_LAST - cardMove(G, side)}手</span></h3>
-        <div class="tickets">${hand.map((c, i) => `<button class="ticket hand-card ${side}" data-act="useCard" data-i="${i}"><svg class="hc-art" viewBox="0 0 200 140" aria-hidden="true"><use href="#card-${c}"></use></svg><span class="en">${CARD[c].name}</span><span class="ja">${CARD[c].desc}</span></button>`).join("")}</div>
+        <div class="tickets">${hand.map((c, i) => `<button class="ticket hand-card ${side}" data-act="useCard" data-i="${i}"><img class="hc-art" src="art/cards/${c}.webp" alt=""><span class="en">${CARD[c].name}</span><span class="ja">${CARD[c].desc}</span></button>`).join("")}</div>
         <button class="btn ghost wide" data-act="handClose">閉じる</button></div>`;
       return;
     }
@@ -2512,7 +2521,7 @@
         <div class="label-c">${pc.side === "x" ? "怪盗Xのカード" : "刑事チームのカード"}・${G.xLog.length + (pc.side === "x" ? 1 : 0)}手目</div>
         <div class="gcard ${pc.card === "miss" ? "miss" : pc.side}">
           <div class="gc-kind">${pc.card === "miss" ? "MISS" : pc.side === "x" ? "THIEF CARD" : "DETECTIVE CARD"}</div>
-          <svg class="gc-art" viewBox="0 0 200 140" aria-hidden="true"><use href="#card-${pc.card}"></use></svg>
+          <img class="gc-art" src="art/cards/${pc.card}.webp" alt="">
           <div class="gc-name">${c.name}</div>
           <div class="gc-desc">${c.desc}</div>
         </div>
