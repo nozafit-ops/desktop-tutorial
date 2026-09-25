@@ -1035,8 +1035,9 @@
     d: [["bridge", 22], ["checkpoint", 24], ["inquiry", 19], ["heliban", 18], ["miss", 17]],
     x: [["trap", 25], ["vanish", 25], ["destroy", 25], ["miss", 25]],
   };
-  function drawCard(side) {
-    const deck = DECK[side];
+  // ヘリ封鎖は1ゲームに1回だけ（一度引いたら山札から外す）
+  function drawCard(side, G = null) {
+    const deck = DECK[side].filter(([c]) => !(c === "heliban" && G && G.helibanDrawn));
     let r = Math.random() * deck.reduce((s, c) => s + c[1], 0);
     for (const [c, w] of deck) if ((r -= w) < 0) return c;
     return "miss";
@@ -1619,7 +1620,7 @@
         if (CARD_TURNS.includes(n) && !G.drawn.d.includes(n)) {
           if (A.role === "pass" && A.cover !== null) { save(); render(); return; }
           G.drawn.d.push(n);
-          const card = drawCard("d");
+          const card = drawCard("d", G);
           gainCard("d", card);
           if (A.role === "d" || A.role === "pass") { A.pendingCard = { side: "d", card, stage: "reveal" }; save(); render(); return; }
         }
@@ -1694,6 +1695,7 @@
     const G = A.G;
     const mine = side === "x" ? (A.role === "x" || (A.role === "pass" && A.cover === "x-open")) : A.role !== "x";
     if (card === "heliban") {
+      G.helibanDrawn = true;
       // ヘリ封鎖は引いたその場で自動発動
       applyCard(G, A.sec, card, null);
       announceCard(side, card, null);
@@ -2741,7 +2743,7 @@
         <li><b>切符</b>：刑事はタクシー・バス・地下鉄・水上バスが使い放題（ヘリだけ${DET_TICKETS.heli}枚）。怪盗Xの切符は有限（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・水上バス${X_TICKETS.boat}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）。切符が尽きた乗り物には乗れず、動けなくなると怪盗Xの負け。</li>
         <li><b>手札</b>：画面の左下にいつも表示されます。自分の番で使えるときは金色に光り、カードをタップするとそのまま使えます。カードを引く手は${CARD_TURNS.join("・")}手目。移動記録のカードを引く手には金色の小さなカード印。</li>
         <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
-        <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引いて手札に加えます（ハズレもあり）。手札のカードは自分の番の「カード」ボタンから、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「聞き込み」「ヘリ封鎖」（ヘリ封鎖は引いたその場で発動）、怪盗X側は「罠」「雲隠れ」「駅破壊」。CPUの刑事も自分の番にチームのカードを使います。</li>
+        <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引いて手札に加えます（ハズレもあり）。手札のカードは自分の番の「カード」ボタンから、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「聞き込み」「ヘリ封鎖」（ヘリ封鎖は引いたその場で発動し、1ゲームに1回だけ）、怪盗X側は「罠」「雲隠れ」「駅破壊」。CPUの刑事も自分の番にチームのカードを使います。</li>
         <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
         <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
         <li><b>作戦ピン</b>：刑事モードで駅を長押し（パソコンは右クリック）すると作戦ピンを立て、仲間をその駅へ向かわせたり、全員で包囲させたりできます。</li>
