@@ -56,6 +56,11 @@ Write your name on line 6, save it, and then head back to GitHub Desktop.
 - `tokyo-chase/art/thieves/`：怪盗Xのキャラ画像3体（ジャック・ブルーノ・ヴァイオレット）。全身 `thief-N.webp`（480×800、透過、足元が下辺の中央）と顔アイコン `thief-N-face.webp`（256×256）。タイトル画面の「怪盗Xのキャラ」で選ぶと、盤上の駒と顔アイコンがその画像になる
 - `tokyo-chase/art/detectives/`：刑事1〜5のキャラ画像。全身 `detective-N.webp`（480×800、透過）と顔アイコン `detective-N-face.webp`（256×256）。盤上の駒と顔アイコンに使い、駒の足元に刑事の色の番号バッジ
 - `tokyo-chase/art/cards/*.webp`：カードの絵（768×512）。カードを引いたときと手札に表示（同じ名前の `.svg` は図形版の予備）
+- `tokyo-chase/art/results/`：結果画面の背景（確保・逃走成功・合流成功）。キャラの画像はゲームの中で上に重ねる
+- `tokyo-chase/art/title/`：タイトル画面の背景とロゴ
+- `tokyo-chase/art/icons/`：ヘリのアイコン、アプリのアイコン（ブラウザのタブとホーム画面）
+- `promo/`：noteの見出し画像とXの投稿画像（`.jpg` は軽くしたもの）
+- 各フォルダの `.png` は作ったときの元画像で、ゲームでは軽くした `.webp` を使う
 - `tokyo-chase/art/cards/`：カードの絵（SVG・200×140）。橋封鎖・追跡犬・聞き込み・ヘリ封鎖・応援要請・罠・雲隠れ・駅破壊・ハズレ。ゲームではカードを引いたときと手札に表示
 
 ### 画像の差し替え

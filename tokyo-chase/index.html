@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- ARTIFACT-START -->
 <title>ロンドン・チェイス</title>
+<link rel="icon" type="image/png" href="art/icons/favicon-64.png">
+<link rel="apple-touch-icon" href="art/icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Zen+Old+Mincho:wght@700;900&display=swap">
@@ -165,7 +167,9 @@
   .thief-pick b { font-size: 14px; }
   .thief-pick.det-pick { grid-template-columns: repeat(5, 1fr); gap: 5px; }
   .det-pick img { width: 52px; height: 52px; background: rgba(255,255,255,0.12); }
-  .det-pick b { font-size: 11.5px; white-space: nowrap; }
+  .det-pick b { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .thief-pick button { min-width: 0; }
+  @media (max-width: 520px) { .det-pick b { font-size: 10px; letter-spacing: -.02em; } .det-pick img { width: 44px; height: 44px; } }
   .det-pick span { font-size: 9.5px; }
   .fl-sub { display: block; font-size: 10px; opacity: .7; font-weight: 400; }
   .thief-pick span { font-size: 10.5px; opacity: .75; line-height: 1.3; text-align: center; }
@@ -271,7 +275,9 @@
 
   /* 全面スクリーン（タイトル・受け渡し・結果） */
   .screen { position: absolute; inset: 0; z-index: 30; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 20px 16px; }
-  .screen.title { background: radial-gradient(120% 90% at 50% 20%, #2B3A55 0%, #141B29 55%, #0A0D14 100%); }
+  .screen.title { background: linear-gradient(rgba(10,13,20,.35), rgba(10,13,20,.55)), url("art/title/title-bg.webp") center / cover no-repeat, #141B29; }
+  .logo .logo-img { width: min(360px, 82%); height: auto; filter: drop-shadow(0 4px 10px rgba(0,0,0,.6)); margin: 2px 0 -2px; }
+  .logo h1.sub { font-size: clamp(18px, 5vw, 24px); letter-spacing: .2em; }
   .screen.cover { background: rgba(10, 8, 6, 0.96); }
   .screen.dim { background: rgba(10, 8, 6, 0.72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
   .skyline { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 42%; pointer-events: none; }
@@ -337,8 +343,10 @@
   /* 結果画面の演出 */
   .result-card { overflow: hidden; }
   .rs-scene { position: relative; height: 230px; margin: -6px -6px 6px; border-radius: 14px; overflow: hidden; }
-  .rs-scene.escape { background: radial-gradient(ellipse at 70% 20%, #3A4A78 0%, #1B2140 55%, #0E1024 100%); }
-  .rs-scene.caught { background: radial-gradient(circle at 50% 60%, #FFE9A8 0%, #E3B341 40%, #8E5A10 100%); }
+  .rs-scene { background: #1B2140 center / cover no-repeat; }
+  .rs-scene.escape { background-image: url("art/results/result-escape.webp"); }
+  .rs-scene.escape.meet { background-image: url("art/results/result-meet.webp"); }
+  .rs-scene.caught { background-image: url("art/results/result-caught.webp"); }
   .rs-scene img { position: absolute; bottom: 6px; height: 170px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
   .rs-moon { position: absolute; right: 26px; top: 18px; width: 54px; height: 54px; border-radius: 50%; background: #FFF4C8; box-shadow: 0 0 30px 10px rgba(255,244,200,.35); }
   .rs-fog { position: absolute; left: -20%; right: -20%; height: 60px; border-radius: 50%; background: rgba(220,225,240,.22); filter: blur(8px); }
@@ -442,7 +450,7 @@
   .hb-card span { font-size: 11px; font-weight: 900; white-space: nowrap; }
   .hb-card.heli { background: #4A3A8C; }
   .hb-card.heli .hb-heli { width: 100%; aspect-ratio: 3 / 2; border-radius: 5px; background: #E8E2F6; color: #6B4FB8; display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .hb-card.heli .hb-heli svg { width: 60%; }
+  .hb-card.heli .hb-heli img { width: 62%; height: auto; aspect-ratio: auto; background: none; }
   .hb-card.heli .hb-heli b { font-size: 14px; color: #3B2C6E; }
   .hb-card.heli.go { border-color: #E3B341; animation: cardReady 1.4s ease-in-out infinite; }
   .hb-card.heli.off { opacity: .6; cursor: default; }
@@ -1354,7 +1362,7 @@
     { name: "ハリス刑事", sub: "叩き上げのベテラン" },
     { name: "ローズ巡査", sub: "行動派の新鋭" },
     { name: "ミミ巡査", sub: "町の人気者" },
-    { name: "ジョンソン巡査", sub: "頼れる力持ち" },
+    { name: "ジョンソン", sub: "頼れる力持ち" },
   ].map((d, i) => ({ ...d, img: `art/detectives/detective-${i + 1}.webp`, face: `art/detectives/detective-${i + 1}-face.webp` }));
   const ART = { map: "art/london-map.webp", x: null, d: [null, null, null, null, null], title: null };
   const DET_KEY = "london-chase-detective";
@@ -2423,7 +2431,7 @@
     const can = humanTurn() && (G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn)).some(m => m.type === "heli");
     const why = !left ? "切符なし" : heliBanned(G) ? "封鎖中" : can ? "タップで飛ぶ" : "H駅で使える";
     return `<button class="hb-card heli ${can ? "go" : "off"}" ${can ? `data-act="heli"` : "disabled"} title="ヘリ：${why}">
-      <span class="hb-heli"><svg viewBox="0 0 60 40" aria-hidden="true"><path d="M8 20 q0-10 14-10 h8 q14 0 14 10 q0 7-10 7 h-16 q-10 0-10-7z" fill="currentColor"/><path d="M42 16 l14-3 v6 l-14 2z" fill="currentColor"/><path d="M26 10 v-5 M8 5 h36 M16 27 v5 M34 27 v5 M12 32 h26" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><b>×${left}</b></span>
+      <span class="hb-heli"><img src="art/icons/heli.webp" alt=""><b>×${left}</b></span>
       <span>${why}</span></button>`;
   }
   function renderHandbar() {
@@ -2790,10 +2798,10 @@
       const sv = loadSave();
       sc.hidden = false;
       sc.classList.add("title");
-      sc.innerHTML = `${skylineSVG()}<div class="fog"></div>
+      sc.innerHTML = `<div class="fog"></div>
         <div class="card">
           <div class="logo"><div class="faces">${portrait("x", 0, "lg")}${[0, 1, 2].map(k => portrait("d", k, "lg")).join("")}</div>
-            <div class="en">LONDON · MDCCCXCV</div><h1>ロンドン・チェイス</h1><p>霧の街に消えた怪盗Xを、刑事たちが追う</p></div>
+            <img class="logo-img" src="art/title/title-logo.webp" alt="LONDON CHASE"><h1 class="sub">ロンドン・チェイス</h1><p>霧の街に消えた怪盗Xを、刑事たちが追う</p></div>
           <div class="menu">
             ${sv ? `<button class="btn" data-act="resume">つづきから<span class="s">${sv.G.xLog.length}/${MAX_MOVES}手・${sv.role === "x" ? "怪盗X" : sv.role === "d" ? "刑事" : "パス&プレイ"}</span></button>` : ""}
             <button class="btn ${sv ? "ghost" : ""}" data-act="start" data-role="x">${portrait("x")}怪盗Xで遊ぶ<span class="s">CPUの刑事から逃げる</span></button>
@@ -2841,12 +2849,12 @@
       const title = xWin ? (G.reason === "meet" ? "合流成功！" : "逃走成功！") : "確保！";
       const dets = G.det.map((_, k) => detChar(k).img);
       const scene = xWin
-        ? `<div class="rs-scene escape"><div class="rs-moon"></div><div class="rs-fog f1"></div><div class="rs-fog f2"></div>
+        ? `<div class="rs-scene escape ${G.reason === "meet" ? "meet" : ""}"><div class="rs-fog f1"></div>
             ${G.reason === "meet" && G.mate ? `<img class="rs-mate" src="${mateChar().img}" alt="">` : ""}
             <img class="rs-hero" src="${thief().img}" alt="">
             ${dets.slice(0, 3).map((src, i) => `<img class="rs-lose d${i}" src="${src}" alt="">`).join("")}
             <div class="rs-stamp gold">${title}</div></div>`
-        : `<div class="rs-scene caught"><div class="rs-rays"></div>
+        : `<div class="rs-scene caught">
             ${dets.slice(0, 4).map((src, i) => `<img class="rs-det d${i}" src="${src}" alt="">`).join("")}
             <img class="rs-thief" src="${thief().img}" alt="">
             <svg class="rs-cuffs" viewBox="0 0 80 40" aria-hidden="true"><circle cx="18" cy="20" r="13" fill="none" stroke="#C9CDD4" stroke-width="6"/><circle cx="62" cy="20" r="13" fill="none" stroke="#C9CDD4" stroke-width="6"/><path d="M31 20 h18" stroke="#C9CDD4" stroke-width="5" stroke-dasharray="5 3"/></svg>
