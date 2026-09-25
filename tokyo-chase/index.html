@@ -881,7 +881,7 @@
   const TUBE = [["サークル線（外周）", [39, 35, 5, 26, 76, 30, 2, 32, 31, 78, 90, 79, 39]], ["セントラル線", [32, 66, 6, 48, 19, 69]], ["ノーザン線", [78, 46, 6, 74, 47, 5]], ["ジュビリー線", [52, 65, 6, 22, 59]]];
   const BUS = [[19, 20], [89, 73, 23, 13, 14, 25, 62, 87, 28, 11, 60], [8, 77, 62], [66, 74, 89, 49, 21], [12, 86, 54, 6], [22, 73, 68], [50, 90, 11, 6], [66, 13, 36, 24], [3, 55, 37], [81, 79, 58], [2, 24, 51], [56, 21, 85], [78, 88, 63], [59, 64, 82]];
   const BOAT = [61, 62, 93, 48, 89, 94, 35, 92];
-  const HELI = [3, 81, 44, 40, 86, 93];
+  const HELI = [3, 81, 44, 40, 86, 93, 82, 10];
   const RIVER = [[-176.5, 236.2, 120.0], [-127.6, 275.1, 120.0], [-77.8, 312.0, 120.0], [-27.0, 346.7, 120.0], [25.1, 379.0, 120.0], [78.4, 408.6, 120.0], [133.0, 435.4, 120.0], [188.9, 459.4, 120.0], [246.2, 480.7, 120.0], [304.6, 499.4, 120.0], [364.2, 515.8, 120.0], [424.8, 530.0, 120.0], [486.2, 542.4, 120.0], [548.3, 553.4, 120.0], [610.9, 563.4, 120.0], [673.7, 572.8, 120.0], [736.5, 582.2, 120.0], [799.2, 592.0, 120.0], [861.5, 602.6, 120.0], [923.1, 614.5, 120.0], [984.0, 628.0, 120.1], [1044.0, 643.6, 120.8], [1102.8, 661.5, 123.5], [1160.4, 681.9, 132.4], [1216.8, 705.0, 155.2], [1271.9, 730.8, 200.1], [1325.6, 759.5, 266.0], [1378.1, 790.9, 333.0], [1429.3, 824.8, 368.9], [1479.5, 861.0, 352.8], [1528.7, 899.3, 294.4], [1577.1, 939.3, 224.6], [1624.9, 980.6, 170.3], [1672.2, 1022.7, 139.3], [1719.4, 1065.3, 126.0], [1766.5, 1107.9, 121.5], [1813.9, 1150.0, 120.3], [1861.8, 1191.1, 120.1], [1910.3, 1230.8, 120.4], [1959.6, 1268.8, 122.0], [2010.0, 1304.7, 127.7], [2061.4, 1338.2, 143.8], [2114.1, 1369.1, 179.2], [2168.0, 1397.3, 238.0], [2223.3, 1422.8, 308.1], [2279.9, 1445.4, 360.2], [2337.7, 1465.4, 365.6], [2396.8, 1482.9, 321.1], [2456.9, 1498.1, 251.8], [2517.9, 1511.4, 189.2], [2579.7, 1523.0, 149.1], [2642.0, 1533.4, 129.8], [2704.7, 1543.1, 122.6], [2767.6, 1552.5, 120.6], [2830.4, 1562.0, 120.1], [2892.9, 1572.1, 120.0], [2954.9, 1583.3, 120.0], [3016.2, 1596.0, 120.0], [3076.6, 1610.5, 120.0], [3136.0, 1627.2, 120.0], [3194.3, 1646.3, 120.0]];
   const ISLANDS = [[1439.5, 831.8, 190, 78, 35.9], [2314.5, 1457.7, 170, 70, 18.0]];
   const BRIDGE_ST = [95, 96, 97, 98, 99];
@@ -910,17 +910,18 @@
   const DET_TYPES = ["taxi", "bus", "tube", "boat", "heli"];
   const MOVE_TYPES = ["taxi", "bus", "tube", "boat"];
 
-  const MAX_MOVES = 24;
-  const REVEAL = [3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 24];
+  const MAX_MOVES = 21;
+  const REVEAL = [3, 6, 9, 12, 15, 18, 21];
   // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
   const DET_TICKETS = { heli: 1 };
-  const X_TICKETS = { taxi: 16, bus: 12, tube: 8, boat: 4 };
+  const X_TICKETS = { taxi: 10, bus: 7, tube: 4, boat: 2 };
   const dHas = (d, type) => type === "heli" ? d.t.heli > 0 : true;
   const xHas = (G, type) => type === "black" ? G.black > 0 : type === "heli" ? G.heli > 0 : !G.xt || G.xt[type] > 0;
   const X_DOUBLE = 4;
   // 相棒：怪盗Xが相棒と同じ駅に着いたら逃走成功。相棒は誰からも見え、刑事が踏むと確保される
-  const MATE_MIN = 7;     // 怪盗Xとの最初の距離（手数）
-  const MATE_EVERY = 2;   // 相棒は何手ごとに1駅動くか
+  const MATE_MIN = 9;     // 怪盗Xとの最初の距離（手数）
+  const MATE_FROM = 5;    // 相棒はこの手目の移動のあとに現れる
+  const MATE_EVERY = 3;   // 相棒は何手ごとに1駅動くか
   const X_HELI = 1;
   const DEFAULT_DETS = 4;
 
@@ -970,16 +971,12 @@
     }
     const startable = ids.filter(p => det.every(d => D[p][d.pos] >= 2));
     const xStart = startable[0];
-    let mate = null;
-    if (withMate) {
-      const far = ids.filter(p => p !== xStart && D[xStart][p] >= MATE_MIN && det.every(d => D[p][d.pos] >= 3));
-      const pos = far.length ? far[0] : ids.filter(p => p !== xStart && det.every(d => d.pos !== p)).sort((a, b) => D[xStart][b] - D[xStart][a])[0];
-      mate = { pos, path: [pos], out: false };
-    }
+    // 相棒は MATE_FROM 手目に現れる（それまでは G.mate は null）
+    const mate = null;
     const G = {
       seq: 1, turn: "x", det, xLog: [], xt: { ...X_TICKETS }, black: detCount, dbl: X_DOUBLE, heli: X_HELI, doubling: false,
       // ガス欠のヘリポート（誰にも知らされない）。飛ぼうとして初めてわかる
-      dud: pick(HELI), dudFound: false, mate,
+      dud: pick(HELI), dudFound: false, mate, withMate,
       possible: startable.slice().sort((a, b) => a - b), lastSeen: null,
       over: false, winner: null, reason: "",
     };
@@ -1041,15 +1038,25 @@
     G.possible = rev ? [to] : nextPossible(G, type);
     if (rev) G.lastSeen = { pos: to, n };
     if (mateActive(G) && to === G.mate.pos) { finish(G, "x", "meet"); return to; }
+    if (G.withMate !== false && !G.mate && G.xLog.length >= MATE_FROM) spawnMate(G, sec);
     if (useDouble) { G.dbl--; G.doubling = true; }
     else { G.doubling = false; mateStep(G, sec); if (!G.over) G.turn = 0; }
     G.seq++;
     return to;
   }
   const mateActive = G => !!G.mate && !G.mate.out;
+  // 相棒の登場：怪盗Xから MATE_MIN 手以上、刑事から3手以上離れた駅（島・破壊駅は除く）
+  function spawnMate(G, sec) {
+    const occ = G.det.map(d => d.pos);
+    const ok = p => p !== sec.pos && !ISLAND_ST.has(p) && !isRuin(G, p) && occ.every(o => o !== p);
+    let cands = shuffle([...Array(N).keys()]).filter(p => ok(p) && D[sec.pos][p] >= MATE_MIN && occ.every(o => D[p][o] >= 3));
+    if (!cands.length) cands = [...Array(N).keys()].filter(ok).sort((a, b) => D[sec.pos][b] - D[sec.pos][a]).slice(0, 5);
+    const pos = cands[0];
+    G.mate = { pos, path: [pos], out: false, since: G.xLog.length };
+  }
   // 相棒の移動：怪盗Xの本当の居場所へ向かう（刑事の隣はなるべく避ける）
   function mateStep(G, sec) {
-    if (!mateActive(G) || G.over || G.xLog.length % MATE_EVERY !== 0) return;
+    if (!mateActive(G) || G.over || G.xLog.length === G.mate.since || G.xLog.length % MATE_EVERY !== 0) return;
     const m = G.mate, occ = new Set(G.det.map(d => d.pos));
     const risk = q => G.det.some(d => D[d.pos][q] <= 1) ? 3 : 0;
     const opts = [...new Set(ADJ[m.pos].map(e => e.to))].filter(q => !occ.has(q) && !isClosed(G.closedX, q, G));
@@ -1384,7 +1391,7 @@
 
   const DCOL = ["#3B82F6", "#F97316", "#EC4899", "#14B8A6", "#A855F7"];
   const AI_DELAY = 650;
-  const SAVE_KEY = "london-chase-save-v3";
+  const SAVE_KEY = "london-chase-save-v4";
   const $ = id => document.getElementById(id);
   try { if (localStorage.getItem("london-chase-hud-hidden") === "1") document.body.classList.add("hud-hidden"); } catch (e) {}
   const SVGNS = "http://www.w3.org/2000/svg";
@@ -1477,6 +1484,13 @@
         pushFeed(G.xLog.length, `${dName(k)} → ${NO(d.pos)} ${NAME(d.pos)}（${used ? TYPE[used].name : ""}）`);
       }
     });
+    if (G.mate && !prev.mate) {
+      // 相棒の登場
+      buildTokens();
+      pushFeed(G.xLog.length, `怪盗Xの相棒が ${NO(G.mate.pos)} ${NAME(G.mate.pos)} に現れた！`, true);
+      banner("相棒登場！", `${NAME(G.mate.pos)} に怪盗Xの相棒が現れた`, "", 2);
+      say(nearestDet([G.mate.pos]), "仲間がいたのか！", "hot", 2600);
+    }
     if (G.mate && prev.mate) {
       if (!prev.mate.out && G.mate.out) {
         const k = G.mate.by ?? 0;
@@ -2862,7 +2876,7 @@
         <li><b>仲間の狙い</b>：刑事モードでは、CPUの仲間が次に動く駅が点線の矢印と「次は◯◯」で表示されます。</li>
         <li>刑事の駒の吹き出しは、刑事がどこまで怪盗Xをつかんでいるかの合図です。<b>？</b>は見失っている、<b>！</b>は捕捉している。怪盗Xの札には「見失われている／追われている／発見されている」が表示されます。</li>
         <li>刑事の番に怪盗Xのいる駅へ入った時点で <b>確保（逮捕）</b>。最後の手でも確保が優先です。刑事どうしは同じ駅に重なってもかまいません。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
-        <li><b>相棒</b>：怪盗Xには相棒がいます（最初は怪盗Xから${MATE_MIN}駅以上離れた場所）。相棒は誰からも見え、${MATE_EVERY}手ごとに1駅、怪盗Xのほうへ自動で動きます。怪盗Xが相棒と同じ駅に着いた時点で <b>合流成功＝怪盗Xの勝ち</b>。刑事が相棒の駅に入ると相棒を確保でき、もう合流はできません。</li>
+        <li><b>相棒</b>：${MATE_FROM}手目になると怪盗Xの相棒が現れます（怪盗Xから${MATE_MIN}駅以上離れた場所）。相棒は誰からも見え、${MATE_EVERY}手ごとに1駅、怪盗Xのほうへ自動で動きます。怪盗Xが相棒と同じ駅に着いた時点で <b>合流成功＝怪盗Xの勝ち</b>。刑事が相棒の駅に入ると相棒を確保でき、もう合流はできません。</li>
         <li><b>パス</b>：自分の番に「パス」を押すと、その場にとどまれます（切符は使いません）。怪盗Xのパスは記録に「休」と残ります。2倍移動の途中と、どこへも動けないときはパスできません。</li>
         <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは画面上部の手番表示にある「ヘリ」ボタンから。</li>
       </ol><button class="btn wide" data-act="title">戻る</button></div>`;
