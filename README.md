@@ -55,7 +55,6 @@ Write your name on line 6, save it, and then head back to GitHub Desktop.
 - `tokyo-chase/art/detectives/`：刑事1〜5のキャラ画像。全身 `detective-N.webp`（480×800、透過）と顔アイコン `detective-N-face.webp`（256×256）。盤上の駒と顔アイコンに使い、駒の足元に刑事の色の番号バッジ
 - `tokyo-chase/art/cards/*.webp`：カードの絵（768×512）。カードを引いたときと手札に表示（同じ名前の `.svg` は図形版の予備）
 - `tokyo-chase/art/cards/`：カードの絵（SVG・200×140）。橋封鎖・追跡犬・聞き込み・ヘリ封鎖・応援要請・罠・雲隠れ・駅破壊・ハズレ。ゲームではカードを引いたときと手札に表示
-- タイトル画面の「古地図の下絵を保存」から、コードで描いた下絵を書き出せます。
 
 ### 画像の差し替え
 `ART`（`map`・`x`・`d`・`title`）に画像ファイルを指定すると、盤面の背景や人物の肖像を差し替えられます。現在は `map` に `art/london-map.webp` を指定しています。画像を読み込めないときはコードで描いた古地図を使います。
