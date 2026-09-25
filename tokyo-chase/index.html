@@ -2437,10 +2437,17 @@
       <span class="hb-heli"><img src="art/icons/heli.webp" alt=""><b>×${left}</b></span>
       <span>${why}</span></button>`;
   }
+  // ログ・シート・画面が開いたり閉じたりしたら手札欄の表示を合わせる
+  queueMicrotask(() => {
+    const mo = new MutationObserver(() => renderHandbar());
+    ["drawer", "sheet", "screen"].forEach(id => { const e = document.getElementById(id); if (e) mo.observe(e, { attributes: true, attributeFilter: ["hidden"] }); });
+  });
   function renderHandbar() {
     const host = $("handbar"), G = A.G;
     const side = A.screen === "game" ? handViewSide() : null;
-    if (!G || !side) { host.hidden = true; return; }
+    // ログ・シート・カード画面などを開いている間は手札欄をしまう
+    const covered = !$("drawer").hidden || !$("sheet").hidden || !$("screen").hidden;
+    if (!G || !side || covered) { host.hidden = true; return; }
     const hand = handOf(G, side), usable = canUseHand() && handSide() === side;
     const left = CARD_LAST - cardMove(G, side);
     G.drawn = G.drawn || { x: [], d: [] };
@@ -3049,7 +3056,7 @@
       case "pinClear": A.G.pin = null; A.G.orders = {}; A.pinSheet = null; toast("作戦ピンと指示を外しました"); save(); render(); return;
       case "pinClose": A.pinSheet = null; renderSheet(); return;
       case "hint": A.hints = !A.hints; render(); return;
-      case "log": $("drawer").hidden = !$("drawer").hidden; return;
+      case "log": $("drawer").hidden = !$("drawer").hidden; renderHandbar(); return;
       case "cancel": A.sel = null; A.useDouble = false; render(); return;
       case "double": A.useDouble = !A.useDouble; renderSheet(); return;
       case "passTurn": {
