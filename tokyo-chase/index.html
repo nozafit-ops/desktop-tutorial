@@ -2721,7 +2721,6 @@
             ${sv ? `<button class="btn" data-act="resume">つづきから<span class="s">${sv.G.xLog.length}/${MAX_MOVES}手・${sv.role === "x" ? "怪盗X" : sv.role === "d" ? "刑事" : "パス&プレイ"}</span></button>` : ""}
             <button class="btn ${sv ? "ghost" : ""}" data-act="start" data-role="x">${portrait("x")}怪盗Xで遊ぶ<span class="s">CPUの刑事から逃げる</span></button>
             <button class="btn ghost" data-act="start" data-role="d">${portrait("d", 0)}刑事で遊ぶ<span class="s">刑事1を操作・仲間はCPU</span></button>
-            <button class="btn ghost" data-act="start" data-role="pass">${portrait("d", 1)}みんなで遊ぶ<span class="s">1台を回すパス&プレイ</span></button>
           </div>
           <div class="field"><label>刑事のキャラ<small class="fl-sub">刑事モードのあなた</small></label><div class="thief-pick det-pick">${DETECTIVES.map((t, i) => `<button data-act="detPick" data-i="${i}" aria-pressed="${A.detPick === i}"><img src="${t.face}" alt=""><b>${t.name}</b><span>${t.sub}</span></button>`).join("")}</div></div>
           <div class="field"><label>怪盗Xのキャラ</label><div class="thief-pick">${THIEVES.map((t, i) => `<button data-act="thief" data-i="${i}" aria-pressed="${A.thief === i}"><img src="${t.face}" alt=""><b>${t.name}</b><span>${t.sub}</span></button>`).join("")}</div></div>
