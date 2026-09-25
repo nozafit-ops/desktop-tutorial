@@ -334,6 +334,40 @@
   .gcard.x { background: linear-gradient(160deg, #8E1B16, #3A0B09); }
   .gcard.miss { background: linear-gradient(160deg, #5A5146, #2A241D); }
   .gc-kind { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: 0.25em; font-size: 12px; color: rgba(255,255,255,0.7); }
+  /* 結果画面の演出 */
+  .result-card { overflow: hidden; }
+  .rs-scene { position: relative; height: 230px; margin: -6px -6px 6px; border-radius: 14px; overflow: hidden; }
+  .rs-scene.escape { background: radial-gradient(ellipse at 70% 20%, #3A4A78 0%, #1B2140 55%, #0E1024 100%); }
+  .rs-scene.caught { background: radial-gradient(circle at 50% 60%, #FFE9A8 0%, #E3B341 40%, #8E5A10 100%); }
+  .rs-scene img { position: absolute; bottom: 6px; height: 170px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
+  .rs-moon { position: absolute; right: 26px; top: 18px; width: 54px; height: 54px; border-radius: 50%; background: #FFF4C8; box-shadow: 0 0 30px 10px rgba(255,244,200,.35); }
+  .rs-fog { position: absolute; left: -20%; right: -20%; height: 60px; border-radius: 50%; background: rgba(220,225,240,.22); filter: blur(8px); }
+  .rs-fog.f1 { bottom: 20px; animation: fog 6s ease-in-out infinite alternate; }
+  .rs-fog.f2 { bottom: 60px; opacity: .6; animation: fog 8s ease-in-out infinite alternate-reverse; }
+  @keyframes fog { from { transform: translateX(-6%); } to { transform: translateX(6%); } }
+  .rs-hero { left: 50%; height: 200px !important; transform: translateX(-50%); animation: heroIn .9s cubic-bezier(.2,1.4,.4,1) both; }
+  .rs-mate { left: 64%; height: 180px !important; animation: heroIn .9s .2s cubic-bezier(.2,1.4,.4,1) both; }
+  .rs-scene.escape:has(.rs-mate) .rs-hero { left: 40%; }
+  .rs-lose { height: 90px !important; opacity: .55; filter: grayscale(.6) brightness(.7) !important; bottom: 4px !important; }
+  .rs-lose.d0 { left: 4%; } .rs-lose.d1 { left: 16%; } .rs-lose.d2 { right: 6%; }
+  @keyframes heroIn { from { transform: translate(-50%, 40px) scale(.7); opacity: 0; } to { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+  .rs-mate { transform: translateX(-50%); }
+  .rs-rays { position: absolute; inset: -50%; background: repeating-conic-gradient(rgba(255,255,255,.28) 0 8deg, transparent 8deg 20deg); animation: rays 14s linear infinite; }
+  @keyframes rays { to { transform: rotate(360deg); } }
+  .rs-thief { left: 50%; height: 150px !important; transform: translateX(-50%) rotate(-6deg); filter: grayscale(.25) drop-shadow(0 6px 8px rgba(0,0,0,.45)) !important; animation: thiefShake .5s .6s ease-in-out 3; }
+  @keyframes thiefShake { 50% { transform: translateX(-50%) rotate(6deg); } }
+  .rs-det { height: 175px !important; animation: detIn .7s cubic-bezier(.2,1.3,.4,1) both; }
+  .rs-det.d0 { left: 2%; } .rs-det.d1 { left: 17%; animation-delay: .12s; } .rs-det.d2 { right: 17%; animation-delay: .24s; } .rs-det.d3 { right: 2%; animation-delay: .36s; }
+  @keyframes detIn { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .rs-cuffs { position: absolute; left: 50%; bottom: 70px; width: 70px; transform: translateX(-50%); animation: cuffs .6s .8s cubic-bezier(.2,1.6,.4,1) both; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
+  @keyframes cuffs { from { transform: translateX(-50%) scale(0) rotate(-90deg); } to { transform: translateX(-50%) scale(1) rotate(0); } }
+  .rs-stamp { position: absolute; left: 50%; top: 16px; transform: translateX(-50%) rotate(-6deg); font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 36px; letter-spacing: .06em; padding: 2px 18px; border-radius: 10px; white-space: nowrap; animation: stamp .5s .5s cubic-bezier(.2,1.8,.4,1) both; }
+  .rs-stamp.red { color: #fff; background: #C0271F; border: 4px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
+  .rs-stamp.gold { color: #3B2C1E; background: #E3B341; border: 4px solid #FFF4C8; box-shadow: 0 0 24px rgba(227,179,65,.6); }
+  @keyframes stamp { from { transform: translateX(-50%) rotate(-6deg) scale(2.4); opacity: 0; } to { transform: translateX(-50%) rotate(-6deg) scale(1); opacity: 1; } }
+  .rs-scene.escape .rs-hero { height: 165px !important; } .rs-scene.escape .rs-mate { height: 150px !important; }
+  @media (max-width: 520px) { .rs-scene { height: 210px; } .rs-scene img { height: 130px; } .rs-scene.escape .rs-hero { height: 128px !important; } .rs-scene.escape .rs-mate { height: 118px !important; } .rs-det { height: 125px !important; } .rs-thief { height: 108px !important; } .rs-stamp { font-size: 26px; top: 10px; } .rs-lose { height: 70px !important; } }
+  @media (prefers-reduced-motion: reduce) { .rs-scene *, .rs-scene img { animation: none !important; } }
   .gc-art { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; flex: none; background: rgba(251,245,228,0.92); border-radius: 10px; border: 2px solid rgba(255,255,255,0.6); }
   .hc-art { width: 96px; height: 64px; object-fit: cover; float: left; margin: 0 12px 0 0; background: rgba(251,245,228,0.92); border-radius: 8px; }
   .gc-name { font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 34px; color: #fff; line-height: 1.1; }
@@ -406,6 +440,13 @@
   .handbar.ready .hb-card { border-color: #E3B341; }
   .hb-card img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 5px; background: #FBF5E4; }
   .hb-card span { font-size: 11px; font-weight: 900; white-space: nowrap; }
+  .hb-card.heli { background: #4A3A8C; }
+  .hb-card.heli .hb-heli { width: 100%; aspect-ratio: 3 / 2; border-radius: 5px; background: #E8E2F6; color: #6B4FB8; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .hb-card.heli .hb-heli svg { width: 60%; }
+  .hb-card.heli .hb-heli b { font-size: 14px; color: #3B2C6E; }
+  .hb-card.heli.go { border-color: #E3B341; animation: cardReady 1.4s ease-in-out infinite; }
+  .hb-card.heli.off { opacity: .6; cursor: default; }
+  .hb-card.heli span:last-child { font-size: 9.5px; }
   .hb-empty { font-size: 12px; color: #BFB4A0; padding: 4px 2px; }
   @media (max-width: 520px) { .handbar { left: 8px; bottom: 8px; padding: 6px 8px; } .hb-card { width: 64px; } .hb-card span { font-size: 10px; } }
   .draw-sched { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; margin: 2px 0 6px; }
@@ -2376,6 +2417,15 @@
     const k = markScale().toFixed(3);
     document.querySelectorAll("#gMarks .scaled-mark").forEach(g => g.setAttribute("transform", `translate(${g.dataset.x} ${g.dataset.y}) scale(${k})`));
   }
+  // 手札欄のヘリ：残り枚数と、いま飛べるかどうか
+  function heliCard(G, side) {
+    const left = side === "x" ? G.heli : (G.det[A.role === "d" ? ME_DET : (G.turn === "x" ? 0 : G.turn)] || {}).t?.heli ?? 0;
+    const can = humanTurn() && (G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn)).some(m => m.type === "heli");
+    const why = !left ? "切符なし" : heliBanned(G) ? "封鎖中" : can ? "タップで飛ぶ" : "H駅で使える";
+    return `<button class="hb-card heli ${can ? "go" : "off"}" ${can ? `data-act="heli"` : "disabled"} title="ヘリ：${why}">
+      <span class="hb-heli"><svg viewBox="0 0 60 40" aria-hidden="true"><path d="M8 20 q0-10 14-10 h8 q14 0 14 10 q0 7-10 7 h-16 q-10 0-10-7z" fill="currentColor"/><path d="M42 16 l14-3 v6 l-14 2z" fill="currentColor"/><path d="M26 10 v-5 M8 5 h36 M16 27 v5 M34 27 v5 M12 32 h26" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><b>×${left}</b></span>
+      <span>${why}</span></button>`;
+  }
   function renderHandbar() {
     const host = $("handbar"), G = A.G;
     const side = A.screen === "game" ? handViewSide() : null;
@@ -2387,7 +2437,7 @@
     host.hidden = false;
     host.classList.toggle("ready", usable && hand.length > 0);
     host.innerHTML = `<div class="hb-head"><b>${side === "x" ? "怪盗Xの手札" : "刑事の手札"}</b><span>${left >= 0 ? `${CARD_LAST}手目まで` : "期限切れ"}${next ? `・次は${next}手目` : ""}</span></div>
-      <div class="hb-cards">${hand.length ? hand.map((c, i) => `<button class="hb-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : `data-act="hand"`} title="${esc(CARD[c].desc)}"><img src="art/cards/${c}.webp" alt=""><span>${CARD[c].name}</span></button>`).join("") : `<span class="hb-empty">なし</span>`}</div>`;
+      <div class="hb-cards">${heliCard(G, side)}${hand.length ? hand.map((c, i) => `<button class="hb-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : `data-act="hand"`} title="${esc(CARD[c].desc)}"><img src="art/cards/${c}.webp" alt=""><span>${CARD[c].name}</span></button>`).join("") : `<span class="hb-empty">なし</span>`}</div>`;
   }
 
   function renderMap() {
@@ -2622,7 +2672,7 @@
     let heliBtn = "";
     if (humanTurn()) {
       const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
-      if (moves.some(m => m.type === "heli")) heliBtn = `<button class="btn heli-btn" data-act="heli">ヘリ</button>`;
+      // ヘリは左下の手札欄に表示する
       if (G.turn !== "x" || (!G.doubling && moves.length)) heliBtn += `<button class="btn ghost pass-btn" data-act="passTurn">パス</button>`;
     }
     el_.innerHTML = `${who}<div class="txt"><div class="t1">${t1}</div><div class="t2">${moveTxt}</div></div>${heliBtn}`;
@@ -2788,7 +2838,20 @@
       const reason = { meet: "怪盗Xが相棒と合流して逃走に成功しました。", escape: `${MAX_MOVES}手を逃げ切りました。`, stuck: "刑事が全員、使える切符を失いました。", caught: "刑事が怪盗Xのいる駅に踏み込みました。", trapped: "怪盗Xは四方を塞がれて動けなくなりました。" }[G.reason] || "";
       sc.hidden = false;
       sc.classList.add("dim");
-      sc.innerHTML = `<div class="card"><div class="faces">${xWin ? portrait("x", 0, "lg") : G.det.map((_, k) => portrait("d", k, "lg")).join("")}</div>
+      const title = xWin ? (G.reason === "meet" ? "合流成功！" : "逃走成功！") : "確保！";
+      const dets = G.det.map((_, k) => detChar(k).img);
+      const scene = xWin
+        ? `<div class="rs-scene escape"><div class="rs-moon"></div><div class="rs-fog f1"></div><div class="rs-fog f2"></div>
+            ${G.reason === "meet" && G.mate ? `<img class="rs-mate" src="${mateChar().img}" alt="">` : ""}
+            <img class="rs-hero" src="${thief().img}" alt="">
+            ${dets.slice(0, 3).map((src, i) => `<img class="rs-lose d${i}" src="${src}" alt="">`).join("")}
+            <div class="rs-stamp gold">${title}</div></div>`
+        : `<div class="rs-scene caught"><div class="rs-rays"></div>
+            ${dets.slice(0, 4).map((src, i) => `<img class="rs-det d${i}" src="${src}" alt="">`).join("")}
+            <img class="rs-thief" src="${thief().img}" alt="">
+            <svg class="rs-cuffs" viewBox="0 0 80 40" aria-hidden="true"><circle cx="18" cy="20" r="13" fill="none" stroke="#C9CDD4" stroke-width="6"/><circle cx="62" cy="20" r="13" fill="none" stroke="#C9CDD4" stroke-width="6"/><path d="M31 20 h18" stroke="#C9CDD4" stroke-width="5" stroke-dasharray="5 3"/></svg>
+            <div class="rs-stamp red">${title}</div></div>`;
+      sc.innerHTML = `<div class="card result-card">${scene}
         <h2>${you === null ? (xWin ? "怪盗Xの逃走成功" : "怪盗X、逮捕！") : you ? "あなたの勝ち！" : "あなたの負け…"}</h2>
         <p class="c">${G.xLog.length}手目で決着。${reason}</p>
         <div class="row"><button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="title">タイトルへ</button></div>
