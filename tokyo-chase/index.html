@@ -111,7 +111,20 @@
     -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 6px 24px rgba(0,0,0,0.35);
   }
-  .top { top: 10px; left: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .top { top: 10px; left: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; transition: transform .3s ease; }
+  /* 携帯：画面上部のUIをプルタブで隠せる */
+  .pulltab { display: none; }
+  @media (max-width: 760px) {
+    .pulltab { display: flex; align-items: center; gap: 6px; position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); pointer-events: auto;
+      height: 26px; padding: 0 14px; border-radius: 0 0 12px 12px; border: 1px solid var(--rule); border-top: none; background: var(--hud-solid); color: #F4ECDC; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 14px rgba(0,0,0,.35); }
+    .pt-arrow { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 7px solid currentColor; }
+    .pt-t { display: none; max-width: 52vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    body.hud-hidden .top { transform: translateY(calc(-100% - 12px)); }
+    body.hud-hidden .pt-arrow { border-bottom: none; border-top: 7px solid currentColor; }
+    body.hud-hidden .pt-t { display: inline; }
+    body.hud-hidden .pulltab { bottom: -34px; height: 30px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .top { transition: none; } }
   .toprow { display: flex; gap: 8px; align-items: stretch; }
   .toprow > * { pointer-events: auto; }
   .toprow.second .xlog { flex: 1; min-width: 0; }
@@ -150,6 +163,11 @@
   .thief-pick button[aria-pressed="true"] { border-color: #E3B341; background: rgba(227,179,65,0.16); }
   .thief-pick img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: rgba(192,39,31,0.28); }
   .thief-pick b { font-size: 14px; }
+  .thief-pick.det-pick { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .det-pick img { width: 52px; height: 52px; background: rgba(255,255,255,0.12); }
+  .det-pick b { font-size: 11.5px; white-space: nowrap; }
+  .det-pick span { font-size: 9.5px; }
+  .fl-sub { display: block; font-size: 10px; opacity: .7; font-weight: 400; }
   .thief-pick span { font-size: 10.5px; opacity: .75; line-height: 1.3; text-align: center; }
   .dets { display: flex; gap: 6px; padding: 6px; overflow-x: auto; scrollbar-width: none; margin-left: auto; }
   .dets::-webkit-scrollbar { display: none; }
@@ -279,6 +297,8 @@
   .field { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .field label { font-size: 13px; color: var(--muted); white-space: nowrap; }
   .field .seg { flex: 1; max-width: 260px; }
+  .field .thief-pick { flex: 1; min-width: 0; }
+  @media (max-width: 560px) { .field:has(.thief-pick) { flex-direction: column; align-items: stretch; gap: 6px; } .field:has(.thief-pick) .fl-sub { display: inline; margin-left: 6px; } }
   .rules { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
   .rules b { color: var(--gold); }
   .card h2 { margin: 0; font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 26px; text-align: center; text-wrap: balance; }
@@ -664,6 +684,7 @@
       <div class="panel prompt" id="prompt"></div>
       <div class="panel xlog" id="xlog" aria-label="怪盗Xの移動記録"></div>
     </div>
+    <button class="pulltab" id="pullTab" data-act="toggleHud" aria-label="上部の表示を隠す" aria-expanded="true"><span class="pt-arrow" aria-hidden="true"></span><span class="pt-t"></span></button>
   </div>
 
   <div class="hud side panel">
@@ -1252,8 +1273,17 @@
 
   // 生成画像を使うときはここにファイル名を入れる（例: map: "art/map.jpg"）
   // 刑事の画像（全身は3:5の透過画像、足元が下辺の中央。face は顔アイコン用の正方形）
-  const DETECTIVES = [1, 2, 3, 4, 5].map(n => ({ img: `art/detectives/detective-${n}.webp`, face: `art/detectives/detective-${n}-face.webp` }));
-  const ART = { map: "art/london-map.webp", x: null, d: DETECTIVES.map(d => d.face), title: null };
+  const DETECTIVES = [
+    { name: "グレイ警部", sub: "冷静な切れ者" },
+    { name: "ハリス刑事", sub: "叩き上げのベテラン" },
+    { name: "ローズ巡査", sub: "行動派の新鋭" },
+    { name: "ミミ巡査", sub: "町の人気者" },
+    { name: "ジョンソン巡査", sub: "頼れる力持ち" },
+  ].map((d, i) => ({ ...d, img: `art/detectives/detective-${i + 1}.webp`, face: `art/detectives/detective-${i + 1}-face.webp` }));
+  const ART = { map: "art/london-map.webp", x: null, d: [null, null, null, null, null], title: null };
+  const DET_KEY = "london-chase-detective";
+  // 選んだキャラが刑事1（あなた）。残りは順番に刑事2以降
+  const detChar = k => DETECTIVES[((A.detPick || 0) + k) % DETECTIVES.length];
   // 怪盗Xのキャラ（全身は3:5の透過画像、足元が下辺の中央。face は顔アイコン用の正方形）
   const THIEVES = [
     { name: "ジャック", sub: "すばしっこい小悪党", img: "art/thieves/thief-1.webp", face: "art/thieves/thief-1-face.webp" },
@@ -1268,6 +1298,7 @@
   const AI_DELAY = 650;
   const SAVE_KEY = "london-chase-save-v3";
   const $ = id => document.getElementById(id);
+  try { if (localStorage.getItem("london-chase-hud-hidden") === "1") document.body.classList.add("hud-hidden"); } catch (e) {}
   const SVGNS = "http://www.w3.org/2000/svg";
   function el(tag, attrs = {}, parent) {
     const e = document.createElementNS(SVGNS, tag);
@@ -1279,7 +1310,7 @@
   const dName = k => "刑事" + (k + 1);
 
   function portrait(kind, k = 0, cls = "") {
-    const src = kind === "m" ? mateChar().face : kind === "x" ? (ART.x || thief().face) : ART.d[k];
+    const src = kind === "m" ? mateChar().face : kind === "x" ? (ART.x || thief().face) : (ART.d[k] || detChar(k).face);
     if (src) return `<span class="portrait p-${kind} ${cls}"><img src="${src}" alt=""></span>`;
     const color = kind === "x" ? "#2A2530" : DCOL[k];
     const bg = kind === "x" ? "rgba(192,39,31,0.28)" : "rgba(255,255,255,0.08)";
@@ -1292,6 +1323,7 @@
   const A = {
     role: null,        // "x" | "d" | "pass"
     detCount: DEFAULT_DETS,
+    detPick: (() => { try { return Math.min(4, Math.max(0, Number(localStorage.getItem(DET_KEY)) || 0)); } catch (e) { return 0; } })(),
     thief: (() => { try { return Math.min(2, Math.max(0, Number(localStorage.getItem(THIEF_KEY)) || 0)); } catch (e) { return 0; } })(),
     G: null,
     sec: null,
@@ -1495,7 +1527,7 @@
   function save() {
     try {
       if (!A.G || A.G.over) localStorage.removeItem(SAVE_KEY);
-      else localStorage.setItem(SAVE_KEY, JSON.stringify({ role: A.role, detCount: A.detCount, thief: A.thief, G: A.G, sec: A.sec, feed: A.feed.slice(0, 60), cover: A.cover === "x-open" ? "x" : A.cover }));
+      else localStorage.setItem(SAVE_KEY, JSON.stringify({ role: A.role, detCount: A.detCount, thief: A.thief, detPick: A.detPick, G: A.G, sec: A.sec, feed: A.feed.slice(0, 60), cover: A.cover === "x-open" ? "x" : A.cover }));
     } catch (e) {}
   }
   function loadSave() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) { return null; } }
@@ -1521,7 +1553,7 @@
     clearTimeout(timer);
     SPEECH.clear();
     lastSight = null;
-    Object.assign(A, { role: s.role, detCount: s.detCount, thief: s.thief || 0, G: s.G, sec: s.sec, feed: s.feed || [], sel: null, useDouble: false, screen: "game", busy: false, cover: s.cover || null });
+    Object.assign(A, { role: s.role, detCount: s.detCount, thief: s.thief || 0, detPick: s.detPick || 0, G: s.G, sec: s.sec, feed: s.feed || [], sel: null, useDouble: false, screen: "game", busy: false, cover: s.cover || null });
     buildTokens();
     fitView(false);
     step();
@@ -2116,7 +2148,7 @@
     const mk = (id, kind, k) => {
       const g = el("g", { class: "tok", id }, gT);
       el("ellipse", { cx: 0, cy: 6, rx: 34, ry: 13, class: "ring", visibility: "hidden" }, g);
-      const src = kind === "x" ? thief().img : DETECTIVES[k] && DETECTIVES[k].img;
+      const src = kind === "x" ? thief().img : detChar(k).img;
       const u = src
         ? el("image", { href: src, x: -46, y: -144, width: 92, height: 153 }, g)
         : el("use", { href: kind === "x" ? "#fig-x" : "#fig-d", x: -36, y: -112, width: 72, height: 120 }, g);
@@ -2261,6 +2293,9 @@
     renderSheet();
     renderEdge();
     renderHandbar();
+    // 隠しているときはプルタブに手番だけ出す
+    const t1 = document.querySelector("#prompt .t1");
+    $("pullTab").querySelector(".pt-t").textContent = t1 ? t1.textContent : "";
     const hb = $("hintBtn");
     hb.hidden = A.role === "x";
     hb.setAttribute("aria-pressed", String(A.hints));
@@ -2633,6 +2668,7 @@
             <button class="btn ghost" data-act="start" data-role="d">${portrait("d", 0)}刑事で遊ぶ<span class="s">刑事1を操作・仲間はCPU</span></button>
             <button class="btn ghost" data-act="start" data-role="pass">${portrait("d", 1)}みんなで遊ぶ<span class="s">1台を回すパス&プレイ</span></button>
           </div>
+          <div class="field"><label>刑事のキャラ<small class="fl-sub">刑事モードのあなた</small></label><div class="thief-pick det-pick">${DETECTIVES.map((t, i) => `<button data-act="detPick" data-i="${i}" aria-pressed="${A.detPick === i}"><img src="${t.face}" alt=""><b>${t.name}</b><span>${t.sub}</span></button>`).join("")}</div></div>
           <div class="field"><label>怪盗Xのキャラ</label><div class="thief-pick">${THIEVES.map((t, i) => `<button data-act="thief" data-i="${i}" aria-pressed="${A.thief === i}"><img src="${t.face}" alt=""><b>${t.name}</b><span>${t.sub}</span></button>`).join("")}</div></div>
           <div class="field"><label>刑事の人数</label><div class="seg">${[4, 5].map(n => `<button data-act="dets" data-n="${n}" aria-pressed="${A.detCount === n}">${n}人</button>`).join("")}</div></div>
           <p class="c" style="font-size:12px;margin-top:-6px">4人が標準。5人にすると怪盗Xは苦しくなります</p>
@@ -2772,10 +2808,19 @@
       case "resume": { const s = loadSave(); if (s) resume(s); return; }
       case "again": return startGame(A.role);
       case "title": clearTimeout(timer); A.screen = "title"; A.sel = null; renderScreen(); renderSheet(); return;
+      case "toggleHud": {
+        const hidden = document.body.classList.toggle("hud-hidden");
+        try { localStorage.setItem("london-chase-hud-hidden", hidden ? "1" : "0"); } catch (e) {}
+        b.setAttribute("aria-expanded", String(!hidden));
+        b.setAttribute("aria-label", hidden ? "上部の表示を出す" : "上部の表示を隠す");
+        setTimeout(() => { clampView(); applyView(); layoutEdge(); }, 330);
+        return;
+      }
       case "menu": clearTimeout(timer); save(); A.screen = "title"; A.sel = null; renderScreen(); renderSheet(); return;
       case "rules": A.screen = "rules"; renderScreen(); return;
       case "exportBg": exportBackground(b.dataset.fmt); return;
       case "dets": A.detCount = Number(b.dataset.n); renderScreen(); return;
+      case "detPick": A.detPick = Number(b.dataset.i); try { localStorage.setItem(DET_KEY, String(A.detPick)); } catch (e) {} renderScreen(); return;
       case "thief": A.thief = Number(b.dataset.i); try { localStorage.setItem(THIEF_KEY, String(A.thief)); } catch (e) {} renderScreen(); return;
       case "result": A.screen = "result"; renderScreen(); return;
       case "closeResult": A.screen = "game"; renderScreen(); fitView(); return;
