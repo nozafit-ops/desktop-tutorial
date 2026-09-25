@@ -1804,6 +1804,7 @@
     world.setAttribute("transform", `translate(${V.tx.toFixed(1)} ${V.ty.toFixed(1)}) scale(${V.s.toFixed(4)})`);
     mapEl.classList.toggle("z0", V.s < 0.62);
     mapEl.classList.toggle("z1", V.s >= 0.62 && V.s < 1.15);
+    rescaleMarks();
     layoutEdge();
   }
   function setView(s, tx, ty) { V.s = s; V.tx = tx; V.ty = ty; clampView(); applyView(); }
@@ -1837,6 +1838,18 @@
     const { w, h } = vpSize();
     const [, x, y] = STATIONS[i];
     animateView(s, w / 2 - x * s, (hudTop() + h) / 2 - y * s + 20);
+  }
+  // 指定した駅がすべて画面に入るように表示する
+  function fitStations(list) {
+    const { w, h } = vpSize();
+    const xs = list.map(i => STATIONS[i][1]), ys = list.map(i => STATIONS[i][2]);
+    // 上のUIと下の手札の間に収める
+    const hbEl = $("handbar"), hbTop = hbEl && !hbEl.hidden ? hbEl.getBoundingClientRect().top - mapEl.getBoundingClientRect().top : h;
+    const top = hudTop() + 50, bottom = Math.min(h, hbTop) - 20, pad = 70;
+    const bw = Math.max(...xs) - Math.min(...xs) + pad * 2, bh = Math.max(...ys) - Math.min(...ys) + pad * 2;
+    const s = Math.max(0.2, Math.min(1.1, w / bw, (bottom - top) / bh));
+    const cx = (Math.max(...xs) + Math.min(...xs)) / 2, cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+    animateView(s, w / 2 - cx * s, (top + bottom) / 2 - cy * s);
   }
   function ensureVisible(i) {
     const { w, h } = vpSize();
@@ -2302,8 +2315,15 @@
   }
 
   // 手札はいつも画面の左下に表示。使えるときは金色に光り、タップで使う
-  // 盤を縮小表示しているときは目印を大きめに描く
-  const markScale = () => Math.min(2.2, Math.max(1, 0.6 / (V.s || 1)));
+  // 目印は拡大率に関係なく、画面上でほぼ同じ大きさに見えるように描く（スマホは小さめ）
+  const markScale = () => {
+    const px = window.innerWidth < 600 ? 26 : 46;   // 照準の外側の輪の、画面上の半径
+    return Math.min(2.4, Math.max(0.3, px / (60 * (V.s || 1))));
+  };
+  function rescaleMarks() {
+    const k = markScale().toFixed(3);
+    document.querySelectorAll("#gMarks .scaled-mark").forEach(g => g.setAttribute("transform", `translate(${g.dataset.x} ${g.dataset.y}) scale(${k})`));
+  }
   function renderHandbar() {
     const host = $("handbar"), G = A.G;
     const side = A.screen === "game" ? handViewSide() : null;
@@ -2361,7 +2381,7 @@
       for (const t of A.pendingCard.opts) {
         const [x, y] = P(t);
         el("circle", { cx: x, cy: y, r: 36, class: "dest card-dest" }, gD);
-        const g = el("g", { class: "card-aim", transform: `translate(${x} ${y}) scale(${ms})` }, gM);
+        const g = el("g", { class: "card-aim scaled-mark", "data-x": x, "data-y": y, transform: `translate(${x} ${y}) scale(${ms})` }, gM);
         el("circle", { r: 60, class: "ca-ring" }, g);
         el("circle", { r: 44, class: "ca-ring2" }, g);
         el("path", { d: "M-76,0 h22 M54,0 h22 M0,-76 v22 M0,54 v22", class: "ca-tick" }, g);
@@ -2376,7 +2396,7 @@
     for (const [st, until] of Object.entries(G.closedX || {})) {
       if (G.xLog.length >= until) continue;
       const [x, y] = P(Number(st));
-      const bg = el("g", { transform: `translate(${x} ${y}) scale(${markScale()})` }, gM);
+      const bg = el("g", { class: "scaled-mark", "data-x": x, "data-y": y, transform: `translate(${x} ${y}) scale(${markScale()})` }, gM);
       el("circle", { r: 52, class: "block-ring" }, bg);
       el("rect", { x: -56, y: -16, width: 112, height: 32, rx: 6, class: "barricade" }, bg);
       el("path", { d: "M-44,-16 l24,32 M-8,-16 l24,32 M28,-16 l16,21", class: "barricade-stripe" }, bg);
@@ -2850,7 +2870,7 @@
           if (!opts.length) { toast("いまは使える場所がありません"); renderSheet(); return; }
           A.pendingCard = { side, card, stage: "target", opts, handIndex: i };
           render();
-          if (card === "destroy") centerOn(A.sec.pos); else fitView();
+          if (card === "destroy") fitStations([A.sec.pos, ...opts]); else fitView();
           return;
         }
         handOf(A.G, side).splice(i, 1);
