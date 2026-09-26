@@ -1,0 +1,3155 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- ARTIFACT-START -->
+<title>ロンドン・チェイス</title>
+<link rel="icon" type="image/png" href="art/icons/favicon-64.png">
+<link rel="apple-touch-icon" href="art/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Zen+Old+Mincho:wght@700;900&display=swap">
+<style>
+  /* ボードゲームアプリ風の単一テーマ：夜のテーブルに広げた古地図 */
+  :root {
+    color-scheme: dark;
+    --ground: #120E0A;
+    --hud: rgba(22, 17, 12, 0.86);
+    --hud-solid: #1C1610;
+    --hud-2: #2A2118;
+    --ink: #F4EAD6;
+    --muted: #B9A98E;
+    --rule: rgba(227, 179, 65, 0.28);
+    --gold: #E3B341;
+    --gold-deep: #A87A18;
+    --map-ink: #3B2C1E;
+    --paper: #FBF5E4;
+    --taxi: #F2B51D;
+    --bus: #16935B;
+    --tube: #D2362C;
+    --ferry: #2F7FB0;
+    --heli: #7C3AED;
+    --black: #0B0906;
+    --xrim: #C0271F;
+    --good: #5FBF7A;
+    --r: 14px;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+  button:disabled { cursor: not-allowed; opacity: 0.4; }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  #app { position: relative; height: 100%; overflow: hidden; }
+
+  /* ---------------- 盤面 ---------------- */
+  #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; background: #2A2016; cursor: grab; }
+  #map.dragging { cursor: grabbing; }
+  .edge { fill: none; stroke-linecap: round; }
+  .edge.taxi { stroke: var(--taxi); stroke-width: 6; }
+  .edge.taxi.casing { stroke: #7A5A0E; stroke-width: 9; opacity: 0.55; }
+  .edge.bus { stroke: var(--bus); stroke-width: 10; }
+  .edge.bus.casing { stroke: #0B4F31; stroke-width: 13; opacity: 0.5; }
+  .edge.tube { stroke: var(--tube); stroke-width: 13; }
+  .edge.tube.casing { stroke: #6E1510; stroke-width: 16; opacity: 0.55; }
+  .edge.tube.dash { stroke: #FFE9E3; stroke-width: 3.5; stroke-dasharray: 12 12; stroke-linecap: butt; }
+  .edge.boat { stroke: var(--ferry); stroke-width: 7; stroke-dasharray: 18 10; }
+  .edge.boat.casing { stroke: #FBF5E4; stroke-width: 11; stroke-dasharray: none; opacity: 0.8; }
+  .wedge.boat { fill: var(--ferry); }
+  .helipad { fill: rgba(124, 58, 237, 0.16); stroke: var(--heli); stroke-width: 4; stroke-dasharray: 10 6; }
+  .heli-h { font-family: Georgia, serif; font-weight: 700; font-size: 26px; fill: #fff; paint-order: stroke; stroke: var(--heli); stroke-width: 9px; stroke-linejoin: round; text-anchor: middle; pointer-events: none; }
+  .bridge-pt { fill: #CDB98C; stroke: #3B2C1E; stroke-width: 3; }
+  .dud-x { stroke: #E5484D; stroke-width: 7; stroke-linecap: round; }
+  .dud-label { font-weight: 900; font-size: 19px; fill: #fff; paint-order: stroke; stroke: #E5484D; stroke-width: 7px; stroke-linejoin: round; text-anchor: middle; }
+  .pawn-num { font-weight: 900; font-size: 15px; fill: #fff; text-anchor: middle; paint-order: stroke; stroke: rgba(0,0,0,0.55); stroke-width: 3px; }
+  .tok .ring { fill: none; stroke: #FFF6D8; stroke-width: 5; }
+  .stn-base { fill: var(--paper); }
+  .stn-rim { fill: none; stroke: var(--map-ink); stroke-width: 3; }
+  .wedge.taxi { fill: var(--taxi); }
+  .wedge.bus { fill: var(--bus); }
+  .wedge.tube { fill: var(--tube); }
+  .stn-num { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 15px; fill: var(--map-ink); text-anchor: middle; pointer-events: none; }
+  .stn-label {
+    font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 17px; fill: var(--map-ink);
+    paint-order: stroke; stroke: var(--paper); stroke-width: 6px; stroke-linejoin: round;
+    text-anchor: middle; pointer-events: none;
+  }
+  #map.z0 .stn-label { display: none; }
+  #map.z1 .stn-label:not(.hot) { display: none; }
+  #map.z0 .stn-label.hot { display: inline; font-size: 24px; stroke-width: 8px; }
+  .dest { fill: rgba(255, 244, 200, 0.35); stroke: #FFF6D8; stroke-width: 5; }
+  .dest-outer { fill: none; stroke: var(--map-ink); stroke-width: 3; }
+  .dest.pulse, .dest-outer.pulse { animation: pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .sel { fill: none; stroke: var(--xrim); stroke-width: 6; }
+  .poss { fill: var(--xrim); opacity: 0.28; }
+  .lastseen { fill: none; stroke: var(--xrim); stroke-width: 4; stroke-dasharray: 8 6; }
+  .lastseen-label { font-weight: 900; font-size: 20px; fill: var(--xrim); paint-order: stroke; stroke: var(--paper); stroke-width: 6px; text-anchor: middle; }
+  .trail { fill: none; stroke: var(--xrim); stroke-width: 6; stroke-dasharray: 14 9; opacity: 0.9; }
+  .tok { transition: transform 0.55s cubic-bezier(.3,.7,.2,1); pointer-events: none; }
+
+  @media (prefers-reduced-motion: reduce) { .tok { transition: none; } .dest.pulse, .dest-outer.pulse { animation: none; } }
+
+  /* ---------------- HUD ---------------- */
+  .hud { position: absolute; z-index: 5; }
+  .panel {
+    background: var(--hud);
+    border: 1px solid var(--rule);
+    border-radius: var(--r);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  .top { top: 10px; left: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; transition: transform .3s ease; }
+  /* 携帯：画面上部のUIをプルタブで隠せる */
+  .pulltab { display: none; }
+  @media (max-width: 760px) {
+    .pulltab { display: flex; align-items: center; gap: 6px; position: absolute; left: 50%; bottom: -30px; transform: translateX(-50%); pointer-events: auto;
+      height: 26px; padding: 0 14px; border-radius: 0 0 12px 12px; border: 1px solid var(--rule); border-top: none; background: var(--hud-solid); color: #F4ECDC; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 14px rgba(0,0,0,.35); }
+    .pt-arrow { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 7px solid currentColor; }
+    .pt-t { display: none; max-width: 52vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    body.hud-hidden .top { transform: translateY(calc(-100% - 12px)); }
+    body.hud-hidden .pt-arrow { border-bottom: none; border-top: 7px solid currentColor; }
+    body.hud-hidden .pt-t { display: inline; }
+    body.hud-hidden .pulltab { bottom: -34px; height: 30px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .top { transition: none; } }
+  .toprow { display: flex; gap: 8px; align-items: stretch; }
+  .toprow > * { pointer-events: auto; }
+  .toprow.second .xlog { flex: 1; min-width: 0; }
+  .iconbtn {
+    width: 46px; min-height: 46px; display: grid; place-items: center; border-radius: 12px;
+  }
+  .iconbtn svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .xcard { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; min-width: 0; }
+  .xcard .who { display: flex; flex-direction: column; min-width: 0; }
+  .xcard b { font-size: 15px; line-height: 1.2; }
+  .xcard small { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .expo { display: inline-flex; align-items: center; gap: 5px; margin-top: 3px; padding: 2px 8px 2px 6px; border-radius: 999px; font-size: 11px; font-weight: 900; white-space: nowrap; }
+  .expo i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+  .expo.found { background: rgba(229, 72, 77, 0.2); color: #FF6B6B; animation: blink 1s ease-in-out infinite; }
+  .expo.near { background: rgba(242, 153, 58, 0.2); color: #F5A524; }
+  .expo.lost { background: rgba(95, 191, 122, 0.18); color: #6FD08C; }
+  @keyframes blink { 50% { opacity: 0.55; } }
+  .bubble { pointer-events: none; transform-box: fill-box; transform-origin: 50% 100%; }
+  .bubble.pop { animation: pop 0.35s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes pop { from { transform: scale(0.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .bubble .bb { stroke: #3B2C1E; stroke-width: 2.5; }
+  .bubble.q .bb { fill: #FBF5E4; }
+  .bubble.ex .bb { fill: #E5484D; }
+  .bubble text { font-family: Georgia, serif; font-weight: 900; font-size: 30px; text-anchor: middle; }
+  .bubble.q text { fill: #3B2C1E; }
+  .bubble.ex text { fill: #fff; }
+  @media (prefers-reduced-motion: reduce) { .bubble.pop, .expo.found { animation: none; } }
+  .xcard .chipsx { display: flex; gap: 4px; margin-top: 2px; }
+  .portrait { width: 46px; height: 46px; border-radius: 50%; flex: none; display: block; overflow: visible; }
+  .portrait.sm { width: 36px; height: 36px; }
+  .portrait.lg { width: 84px; height: 84px; }
+  .portrait img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; background: rgba(192,39,31,0.28); }
+  .portrait.p-d img { background: rgba(255,255,255,0.12); }
+  .thief-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .thief-pick button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: inherit; font: inherit; cursor: pointer; }
+  .thief-pick button[aria-pressed="true"] { border-color: #E3B341; background: rgba(227,179,65,0.16); }
+  .thief-pick img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: rgba(192,39,31,0.28); }
+  .thief-pick b { font-size: 14px; }
+  .thief-pick.det-pick { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .det-pick img { width: 52px; height: 52px; background: rgba(255,255,255,0.12); }
+  .det-pick b { font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .thief-pick button { min-width: 0; }
+  @media (max-width: 520px) { .det-pick b { font-size: 10px; letter-spacing: -.02em; } .det-pick img { width: 44px; height: 44px; } }
+  .det-pick span { font-size: 9.5px; }
+  .fl-sub { display: block; font-size: 10px; opacity: .7; font-weight: 400; }
+  .thief-pick span { font-size: 10.5px; opacity: .75; line-height: 1.3; text-align: center; }
+  .dets { display: flex; gap: 6px; padding: 6px; overflow-x: auto; scrollbar-width: none; margin-left: auto; }
+  .dets::-webkit-scrollbar { display: none; }
+  .det {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 4px 3px; border-radius: 10px;
+    border: 2px solid transparent; min-width: 58px;
+  }
+  .det.active { border-color: var(--gold); background: rgba(227,179,65,0.12); }
+  .det .tks { display: flex; gap: 2px; }
+  .det { position: relative; }
+  .me-tag { position: absolute; top: -2px; right: -2px; font-size: 9px; font-weight: 900; padding: 1px 5px; border-radius: 999px; background: var(--gold); color: #1A140C; }
+  .tk { font-size: 10px; font-weight: 900; min-width: 16px; height: 16px; border-radius: 4px; display: grid; place-items: center; padding: 0 3px; color: #1A140C; font-variant-numeric: tabular-nums; }
+  .tk.taxi { background: var(--taxi); }
+  .tk.bus { background: var(--bus); color: #fff; }
+  .tk.tube { background: var(--tube); color: #fff; }
+  .tk.boat { background: var(--ferry); color: #fff; }
+  .tk.heli { background: var(--heli); color: #fff; }
+  .tk.inf { background: #E8E0CC; color: #1A140C; padding: 0 5px; }
+  .tk.black { background: var(--black); color: #fff; border: 1px solid #8A7A60; }
+  .tk.double { background: var(--paper); color: #1A140C; }
+  .tk.zero { opacity: 0.3; }
+
+  .side { right: 10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; padding: 6px; }
+  .side .iconbtn:active, .top .iconbtn:active { background: rgba(255,255,255,0.08); }
+  .side .iconbtn[aria-pressed="true"] { background: var(--gold); }
+  .side .iconbtn[aria-pressed="true"] svg { stroke: #1A140C; }
+
+  .bottom { left: 10px; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .bottom > * { pointer-events: auto; }
+  .prompt { display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; flex: none; max-width: 46%; }
+  .prompt .txt { flex: 1; min-width: 0; }
+  .prompt .t1 { font-weight: 900; font-size: 15px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prompt .t2 { color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--hud-2); color: var(--muted); white-space: nowrap; }
+  .pill.gold { background: var(--gold); color: #1A140C; }
+  .btn.heli-btn { background: var(--heli); color: #fff; }
+  .btn {
+    min-height: 44px; padding: 0 16px; border-radius: 12px; font-weight: 900; font-size: 15px;
+    background: var(--gold); color: #1A140C; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn.ghost { background: var(--hud-2); color: var(--ink); border: 1px solid var(--rule); }
+  .btn.wide { width: 100%; }
+
+  .xlog { display: flex; gap: 4px; padding: 6px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; }
+  .xlog::-webkit-scrollbar { display: none; }
+  .slot {
+    position: relative; flex: none; width: 44px; height: 50px; border-radius: 8px;
+    background: var(--hud-2); border: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px;
+  }
+  .slot .n { position: absolute; top: 2px; left: 5px; font-size: 9px; color: var(--muted); font-weight: 700; }
+  .slot.reveal { border: 2px solid var(--xrim); }
+  .slot.reveal::after { content: ""; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--xrim); }
+  .slot.now { box-shadow: 0 0 0 2px var(--gold); }
+  .slot.taxi { background: var(--taxi); color: #1A140C; }
+  .slot.bus { background: var(--bus); }
+  .slot.tube { background: var(--tube); }
+  .slot.black { background: var(--black); }
+  .slot.boat { background: var(--ferry); }
+  .slot.heli { background: var(--heli); }
+  .slot.taxi .n { color: rgba(0,0,0,0.55); }
+  .slot.bus .n, .slot.tube .n, .slot.black .n, .slot.boat .n, .slot.heli .n { color: rgba(255,255,255,0.7); }
+  .slot .st { font-size: 10px; line-height: 1; margin-top: 2px; }
+  .slot .dbl { position: absolute; bottom: 2px; right: 3px; font-size: 8px; }
+
+  /* 切符を選ぶシート */
+  .sheet-wrap { position: absolute; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0.35); }
+  .sheet {
+    width: min(560px, calc(100% - 20px)); margin-bottom: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+    background: var(--hud-solid); border: 1px solid var(--rule); border-radius: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    animation: up 0.2s ease-out;
+  }
+  @keyframes up { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .sheet h3 { margin: 0; font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+  .sheet h3 .no { background: var(--paper); color: var(--map-ink); border-radius: 999px; padding: 1px 10px; font-size: 14px; }
+  .tickets { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  .ticket {
+    position: relative; min-height: 92px; border-radius: 12px; padding: 10px 12px; text-align: left;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.25), 0 4px 0 rgba(0,0,0,0.35);
+    overflow: hidden;
+  }
+  .ticket::before { content: ""; position: absolute; left: -8px; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: var(--hud-solid); transform: translateY(-50%); }
+  .ticket::after { content: ""; position: absolute; right: -8px; top: 50%; width: 16px; height: 16px; border-radius: 50%; background: var(--hud-solid); transform: translateY(-50%); }
+  .ticket .en { font-family: "IM Fell English SC", Georgia, serif; font-size: 20px; letter-spacing: 0.06em; line-height: 1; }
+  .ticket .ja { font-size: 12px; font-weight: 700; opacity: 0.85; }
+  .ticket .cnt { position: absolute; right: 12px; bottom: 8px; font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .ticket.taxi { background: var(--taxi); color: #1A140C; }
+  .ticket.bus { background: var(--bus); color: #fff; }
+  .ticket.tube { background: var(--tube); color: #fff; }
+  .ticket.boat { background: var(--ferry); color: #fff; }
+  .ticket.heli { background: var(--heli); color: #fff; }
+  .ticket.black { background: var(--black); color: #fff; box-shadow: inset 0 0 0 2px #8A7A60, 0 4px 0 rgba(0,0,0,0.35); }
+  .ticket:active:not(:disabled) { transform: translateY(2px); }
+  .opt-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--hud-2); border-radius: 12px; padding: 8px 12px; }
+  .switch { width: 52px; height: 32px; border-radius: 999px; background: #4A3D2E; position: relative; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: left 0.15s; }
+  .switch[aria-checked="true"] { background: var(--gold); }
+  .switch[aria-checked="true"]::after { left: 23px; }
+
+  /* 全面スクリーン（タイトル・受け渡し・結果） */
+  .screen { position: absolute; inset: 0; z-index: 30; overflow-y: auto; display: flex; align-items: center; justify-content: center; padding: 20px 16px; }
+  .screen.title { background: linear-gradient(rgba(10,13,20,.35), rgba(10,13,20,.55)), url("art/title/title-bg.webp") center / cover no-repeat, #141B29; }
+  .logo .logo-img { width: min(360px, 82%); height: auto; filter: drop-shadow(0 4px 10px rgba(0,0,0,.6)); margin: 2px 0 -2px; }
+  .logo h1.sub { font-size: clamp(18px, 5vw, 24px); letter-spacing: .2em; }
+  .screen.cover { background: rgba(10, 8, 6, 0.96); }
+  .screen.dim { background: rgba(10, 8, 6, 0.72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  .skyline { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 42%; pointer-events: none; }
+  .fog { position: absolute; inset: 0; background: radial-gradient(60% 30% at 30% 80%, rgba(200,210,230,0.12), transparent), radial-gradient(50% 25% at 75% 70%, rgba(200,210,230,0.1), transparent); pointer-events: none; }
+  .card {
+    position: relative; width: min(520px, 100%); padding: 22px 20px; display: flex; flex-direction: column; gap: 14px;
+    background: rgba(20, 16, 12, 0.88); border: 1px solid var(--rule); border-radius: 22px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .logo { text-align: center; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+  .logo .en { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: 0.35em; color: var(--gold); font-size: 13px; }
+  .logo h1 { margin: 0; font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: clamp(30px, 8vw, 44px); letter-spacing: 0.06em; line-height: 1.15; }
+  .logo p { margin: 0; color: var(--muted); font-size: 13px; }
+  .faces { display: flex; justify-content: center; }
+  .faces .portrait { width: 56px; height: 56px; border: 3px solid var(--hud-solid); }
+  .faces .portrait + .portrait { margin-left: -12px; }
+  .menu { display: flex; flex-direction: column; gap: 10px; }
+  .menu .btn { min-height: 54px; font-size: 16px; justify-content: flex-start; padding: 0 14px; }
+  .menu .btn .portrait { width: 36px; height: 36px; }
+  .menu .btn span.s { font-weight: 400; font-size: 12px; opacity: 0.8; margin-left: auto; }
+  .seg { display: flex; background: var(--hud-2); border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button { flex: 1; min-height: 38px; border-radius: 9px; font-weight: 700; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--gold); color: #1A140C; }
+  .field { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .field label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .field .seg { flex: 1; max-width: 260px; }
+  .field .thief-pick { flex: 1; min-width: 0; }
+  @media (max-width: 560px) { .field:has(.thief-pick) { flex-direction: column; align-items: stretch; gap: 6px; } .field:has(.thief-pick) .fl-sub { display: inline; margin-left: 6px; } }
+  .rules { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+  .rules b { color: var(--gold); }
+  .card h2 { margin: 0; font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 26px; text-align: center; text-wrap: balance; }
+  .card p.c { margin: 0; text-align: center; color: var(--muted); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row .btn { flex: 1; }
+
+  /* 画面外の駒を指す矢印 */
+  #edge { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .edge-arrow {
+    position: absolute; left: 0; top: 0; width: 56px; height: 56px; margin: -28px 0 0 -28px;
+    pointer-events: auto; display: grid; place-items: center; border-radius: 50%;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.45));
+  }
+  .edge-arrow svg.dir { position: absolute; inset: 0; width: 56px; height: 56px; overflow: visible; }
+  .edge-arrow .portrait { width: 38px; height: 38px; position: relative; }
+  .edge-arrow .ea-d {
+    position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; font-weight: 900; padding: 1px 6px; border-radius: 999px; white-space: nowrap;
+    background: var(--hud-solid); color: var(--ink); border: 1px solid var(--rule);
+  }
+  .edge-arrow .ea-d.hot { background: #E5484D; color: #fff; border-color: #E5484D; }
+  /* カード */
+  .label-c { text-align: center; font-size: 12px; letter-spacing: 0.12em; color: var(--muted); font-weight: 700; }
+  .gcard {
+    position: relative; margin: 0 auto; width: min(260px, 80%); aspect-ratio: 5 / 7; border-radius: 16px; padding: 18px 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center;
+    border: 3px solid #F4ECDC; box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 0 0 6px rgba(255,255,255,0.08);
+    animation: flip 0.5s ease-out;
+  }
+  @keyframes flip { from { transform: perspective(600px) rotateY(90deg); } to { transform: perspective(600px) rotateY(0); } }
+  .gcard.d { background: linear-gradient(160deg, #2F5FB8, #1C3570); }
+  .gcard.x { background: linear-gradient(160deg, #8E1B16, #3A0B09); }
+  .gcard.miss { background: linear-gradient(160deg, #5A5146, #2A241D); }
+  .gc-kind { font-family: "IM Fell English SC", Georgia, serif; letter-spacing: 0.25em; font-size: 12px; color: rgba(255,255,255,0.7); }
+  /* 結果画面の演出 */
+  .result-card { overflow: hidden; }
+  .rs-scene { position: relative; height: 230px; margin: -6px -6px 6px; border-radius: 14px; overflow: hidden; }
+  .rs-scene { background: #1B2140 center / cover no-repeat; }
+  .rs-scene.escape { background-image: url("art/results/result-escape.webp"); }
+  .rs-scene.escape.meet { background-image: url("art/results/result-meet.webp"); }
+  .rs-scene.caught { background-image: url("art/results/result-caught.webp"); }
+  .rs-scene img { position: absolute; bottom: 6px; height: 170px; filter: drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
+  .rs-moon { position: absolute; right: 26px; top: 18px; width: 54px; height: 54px; border-radius: 50%; background: #FFF4C8; box-shadow: 0 0 30px 10px rgba(255,244,200,.35); }
+  .rs-fog { position: absolute; left: -20%; right: -20%; height: 60px; border-radius: 50%; background: rgba(220,225,240,.22); filter: blur(8px); }
+  .rs-fog.f1 { bottom: 20px; animation: fog 6s ease-in-out infinite alternate; }
+  .rs-fog.f2 { bottom: 60px; opacity: .6; animation: fog 8s ease-in-out infinite alternate-reverse; }
+  @keyframes fog { from { transform: translateX(-6%); } to { transform: translateX(6%); } }
+  .rs-hero { left: 50%; height: 200px !important; transform: translateX(-50%); animation: heroIn .9s cubic-bezier(.2,1.4,.4,1) both; }
+  .rs-mate { left: 64%; height: 180px !important; animation: heroIn .9s .2s cubic-bezier(.2,1.4,.4,1) both; }
+  .rs-scene.escape:has(.rs-mate) .rs-hero { left: 40%; }
+  .rs-lose { height: 90px !important; opacity: .55; filter: grayscale(.6) brightness(.7) !important; bottom: 4px !important; }
+  .rs-lose.d0 { left: 4%; } .rs-lose.d1 { left: 16%; } .rs-lose.d2 { right: 6%; }
+  @keyframes heroIn { from { transform: translate(-50%, 40px) scale(.7); opacity: 0; } to { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+  .rs-mate { transform: translateX(-50%); }
+  .rs-rays { position: absolute; inset: -50%; background: repeating-conic-gradient(rgba(255,255,255,.28) 0 8deg, transparent 8deg 20deg); animation: rays 14s linear infinite; }
+  @keyframes rays { to { transform: rotate(360deg); } }
+  .rs-thief { left: 50%; height: 150px !important; transform: translateX(-50%) rotate(-6deg); filter: grayscale(.25) drop-shadow(0 6px 8px rgba(0,0,0,.45)) !important; animation: thiefShake .5s .6s ease-in-out 3; }
+  @keyframes thiefShake { 50% { transform: translateX(-50%) rotate(6deg); } }
+  .rs-det { height: 175px !important; animation: detIn .7s cubic-bezier(.2,1.3,.4,1) both; }
+  .rs-det.d0 { left: 2%; } .rs-det.d1 { left: 17%; animation-delay: .12s; } .rs-det.d2 { right: 17%; animation-delay: .24s; } .rs-det.d3 { right: 2%; animation-delay: .36s; }
+  @keyframes detIn { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .rs-cuffs { position: absolute; left: 50%; bottom: 70px; width: 70px; transform: translateX(-50%); animation: cuffs .6s .8s cubic-bezier(.2,1.6,.4,1) both; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
+  @keyframes cuffs { from { transform: translateX(-50%) scale(0) rotate(-90deg); } to { transform: translateX(-50%) scale(1) rotate(0); } }
+  .rs-full { position: absolute; inset: 0; width: 100%; height: 100% !important; object-fit: cover; bottom: 0 !important; filter: none !important; z-index: 3; }
+  .rs-scene.full > :not(.rs-full) { display: none; }
+  .rs-stamp-row { display: flex; justify-content: center; margin: -26px 0 2px; position: relative; z-index: 4; }
+  .rs-stamp { display: inline-block; transform: rotate(-4deg); font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 36px; letter-spacing: .06em; padding: 2px 18px; border-radius: 10px; white-space: nowrap; animation: stamp .5s .5s cubic-bezier(.2,1.8,.4,1) both; }
+  .rs-stamp.red { color: #fff; background: #C0271F; border: 4px solid #fff; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
+  .rs-stamp.gold { color: #3B2C1E; background: #E3B341; border: 4px solid #FFF4C8; box-shadow: 0 0 24px rgba(227,179,65,.6); }
+  @keyframes stamp { from { transform: rotate(-4deg) scale(2.4); opacity: 0; } to { transform: rotate(-4deg) scale(1); opacity: 1; } }
+  .rs-scene.escape .rs-hero { height: 165px !important; } .rs-scene.escape .rs-mate { height: 150px !important; }
+  @media (max-width: 520px) { .rs-scene { height: 210px; } .rs-scene img { height: 130px; } .rs-scene.escape .rs-hero { height: 128px !important; } .rs-scene.escape .rs-mate { height: 118px !important; } .rs-det { height: 125px !important; } .rs-thief { height: 108px !important; } .rs-stamp { font-size: 26px; } .rs-lose { height: 70px !important; } }
+  @media (prefers-reduced-motion: reduce) { .rs-scene *, .rs-scene img { animation: none !important; } }
+  .gc-art { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; flex: none; background: rgba(251,245,228,0.92); border-radius: 10px; border: 2px solid rgba(255,255,255,0.6); }
+  .hc-art { width: 96px; height: 64px; object-fit: cover; float: left; margin: 0 12px 0 0; background: rgba(251,245,228,0.92); border-radius: 8px; }
+  .gc-name { font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 34px; color: #fff; line-height: 1.1; }
+  .gc-desc { font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.5; }
+  .card-dest { fill: rgba(229, 72, 77, 0.35); stroke: #E5484D; }
+  .barricade { fill: #fff; stroke: #C0271F; stroke-width: 5; }
+  .barricade-stripe { stroke: #E5484D; stroke-width: 11; }
+  .cp-ring { fill: rgba(47,95,184,.18); stroke: #2F5FB8; stroke-width: 8; stroke-dasharray: 14 8; }
+  .cp-bar { fill: #fff; stroke: #1C3570; stroke-width: 3; }
+  .cp-stripe { stroke: #E5484D; stroke-width: 6; }
+  .cp-leg { stroke: #1C3570; stroke-width: 5; stroke-linecap: round; }
+  .block-ring { fill: rgba(229,72,77,.18); stroke: #E5484D; stroke-width: 8; }
+  .mark-label.cp { stroke: #1C3570; }
+  .mark-label.big { font-size: 24px; stroke-width: 8px; }
+  #gMarks { pointer-events: none; }
+  .card-aim { pointer-events: none; animation: aimPulse 1s ease-in-out infinite; transform-box: fill-box; }
+  .ca-ring { fill: rgba(229,72,77,.22); stroke: #E5484D; stroke-width: 10; }
+  .ca-ring2 { fill: none; stroke: #fff; stroke-width: 4; stroke-dasharray: 10 8; }
+  .ca-tick { stroke: #E5484D; stroke-width: 10; stroke-linecap: round; }
+  .ca-tag { fill: #C0271F; stroke: #fff; stroke-width: 3; }
+  .ca-text { font-weight: 900; font-size: 20px; fill: #fff; text-anchor: middle; }
+  @keyframes aimPulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+  @media (prefers-reduced-motion: reduce) { .card-aim { animation: none; } }
+  .heliban-x { stroke: #6B4FB8; stroke-width: 9; stroke-linecap: round; opacity: .85; }
+  .foot { fill: #3B2417; }
+  .foot.x-over { fill: #8E1B16; }
+  .foot-no { font-weight: 900; font-size: 17px; fill: #FBF5E4; paint-order: stroke; stroke: #8E1B16; stroke-width: 6px; text-anchor: middle; }
+  .seen-trail { fill: none; stroke: #8E1B16; stroke-width: 4; stroke-dasharray: 3 12; stroke-linecap: round; opacity: .7; }
+  .tok.sighted { animation: sightIn .5s ease-out; }
+  .tok.x-sighted image, .tok.x-sighted use { filter: drop-shadow(0 0 6px #E5484D) drop-shadow(0 0 2px #fff); }
+  @keyframes sightIn { from { opacity: 0; } to { opacity: 1; } }
+  .poof { fill: #CFC8BA; stroke: #8A847A; stroke-width: 2; transform-box: fill-box; transform-origin: 50% 50%; animation: poof 1.1s ease-out forwards; }
+  @keyframes poof { 0% { opacity: .95; transform: scale(.4); } 100% { opacity: 0; transform: scale(1.9) translateY(-14px); } }
+  @media (prefers-reduced-motion: reduce) { .tok.sighted, .poof { animation: none; } .poof { display: none; } }
+  .mate-ring { fill: rgba(142,27,22,.25); stroke: #E3B341; stroke-width: 3; stroke-dasharray: 8 5; }
+  .mate-label { font-weight: 900; font-size: 22px; fill: #fff; text-anchor: middle; letter-spacing: .08em; }
+  .mate-badge-bg { fill: #8E1B16; stroke: #E3B341; stroke-width: 3; }
+  .mate-tok.caught image { filter: grayscale(1) brightness(.7); }
+  .btn.pass-btn { min-height: 38px; padding: 0 12px; font-size: 13px; }
+  .ruin-fill { fill: #0E0B09; stroke: #000; stroke-width: 4; }
+  .ruin-crack { fill: none; stroke: #5A4A3A; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .find-arrow { fill: #E5484D; stroke: #FBF5E4; stroke-width: 4; stroke-linejoin: round; animation: findPulse 0.9s ease-in-out infinite; }
+  .find-ring { fill: none; stroke: #E5484D; stroke-width: 7; stroke-dasharray: 16 10; animation: findPulse 0.9s ease-in-out infinite; }
+  @keyframes findPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .tok.x-found { animation: xBlink 0.55s steps(2, jump-none) infinite; }
+  @keyframes xBlink { 0% { opacity: 1; filter: drop-shadow(0 0 10px #E5484D) drop-shadow(0 0 4px #E5484D); } 100% { opacity: 0.25; filter: none; } }
+  .edge-arrow.found .dir { animation: findPulse 0.7s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { .find-arrow, .find-ring, .tok.x-found, .edge-arrow.found .dir { animation: none; } }
+  .rubble { fill: rgba(40, 30, 20, 0.55); stroke: #2A1E12; stroke-width: 3; }
+  .rubble-x { stroke: #E5484D; stroke-width: 7; stroke-linecap: round; }
+  .trap-mark { fill: #9A9A9A; stroke: #2A1E12; stroke-width: 2.5; stroke-linejoin: round; }
+  .mark-label { font-weight: 900; font-size: 17px; fill: #fff; paint-order: stroke; stroke-width: 6px; stroke-linejoin: round; text-anchor: middle; }
+  .mark-label.block { stroke: #C0271F; }
+  .mark-label.ruin { stroke: #2A1E12; }
+  .pin-mark { fill: #E3B341; stroke: #2A1E12; stroke-width: 3; }
+  .aim-line { fill: none; stroke-width: 6; stroke-dasharray: 2 9; stroke-linecap: round; opacity: 0.95; }
+  .aim-label { font-weight: 900; font-size: 15px; paint-order: stroke; stroke: #FBF5E4; stroke-width: 6px; stroke-linejoin: round; text-anchor: middle; pointer-events: none; }
+  .btn.card-btn.idle { background: #3A4A6A; color: #D8E0F0; }
+  .btn.card-btn.ready { box-shadow: 0 0 0 3px rgba(227,179,65,.7); animation: cardReady 1.4s ease-in-out infinite; }
+  @keyframes cardReady { 50% { box-shadow: 0 0 0 6px rgba(227,179,65,.25); } }
+  .cb-ic { display: inline-block; width: 12px; height: 16px; border-radius: 2px; border: 2px solid currentColor; margin-right: 6px; vertical-align: -3px; background: linear-gradient(135deg, transparent 45%, currentColor 45% 55%, transparent 55%); }
+  @media (max-width: 520px) { .btn.card-btn { padding: 0 9px; } .cb-t { display: none; } }
+  .handbar { position: fixed; left: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 30; max-width: min(460px, calc(100vw - 90px));
+    background: var(--hud-solid, #1E1812); color: #F4ECDC; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 8px 10px; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  .handbar.ready { border-color: #E3B341; box-shadow: 0 0 0 3px rgba(227,179,65,.45), 0 8px 24px rgba(0,0,0,.4); }
+  .hb-head { display: flex; gap: 8px; align-items: baseline; font-size: 12px; margin-bottom: 6px; }
+  .hb-head span { color: #BFB4A0; font-size: 11px; }
+  .hb-cards { display: flex; gap: 6px; overflow-x: auto; }
+  .hb-card { flex: none; width: 78px; padding: 3px; border-radius: 8px; border: 2px solid rgba(255,255,255,.2); background: #2F5FB8; color: #fff; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .hb-card.x { background: #8E1B16; }
+  .handbar.ready .hb-card { border-color: #E3B341; }
+  .hb-card img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 5px; background: #FBF5E4; }
+  .hb-card span { font-size: 11px; font-weight: 900; white-space: nowrap; }
+  .hb-card.heli { background: #4A3A8C; }
+  .hb-card.heli .hb-heli { width: 100%; aspect-ratio: 3 / 2; border-radius: 5px; background: #E8E2F6; color: #6B4FB8; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .hb-card.heli .hb-heli img { width: 62%; height: auto; aspect-ratio: auto; background: none; }
+  .hb-card.heli .hb-heli b { font-size: 14px; color: #3B2C6E; }
+  .hb-card.heli.go { border-color: #E3B341; animation: cardReady 1.4s ease-in-out infinite; }
+  .hb-card.heli.off { opacity: .6; cursor: default; }
+  .hb-card.heli span:last-child { font-size: 9.5px; }
+  .hb-empty { font-size: 12px; color: #BFB4A0; padding: 4px 2px; }
+  @media (max-width: 520px) { .handbar { left: 8px; bottom: 8px; padding: 6px 8px; } .hb-card { width: 64px; } .hb-card span { font-size: 10px; } }
+  .draw-sched { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; margin: 2px 0 6px; }
+  .draw-sched b { margin-right: 4px; color: var(--muted); font-weight: 700; }
+  .draw-sched .ds { padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); }
+  .draw-sched .ds.done { background: rgba(227,179,65,.2); border-color: #E3B341; }
+  .hand-note { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  .ticket.hand-card[disabled] { opacity: .75; cursor: default; }
+  .slot.cardturn::after { content: ""; position: absolute; right: 2px; bottom: 2px; width: 8px; height: 11px; border-radius: 2px; background: #E3B341; border: 1px solid #7A5A10; }
+  @media (prefers-reduced-motion: reduce) { .btn.card-btn.ready { animation: none; } }
+  .btn.card-btn { background: #2F5FB8; color: #fff; min-height: 38px; padding: 0 12px; font-size: 13px; }
+  .ticket.hand-card { min-height: 96px; }
+  .ticket.hand-card .en { font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 22px; letter-spacing: 0; }
+  .ticket.hand-card .ja { font-size: 11px; line-height: 1.4; margin-top: 4px; }
+  .ticket.hand-card.d { background: linear-gradient(160deg, #2F5FB8, #1C3570); color: #fff; }
+  .ticket.hand-card.x { background: linear-gradient(160deg, #8E1B16, #3A0B09); color: #fff; }
+  .ticket.pin-all { background: #8E6A12; color: #fff; }
+  .order-line { fill: none; stroke-width: 5; stroke-dasharray: 4 10; stroke-linecap: round; opacity: 0.9; }
+  .order-flag { stroke: #2A1E12; stroke-width: 2.5; stroke-linejoin: round; }
+  .me-tag.order { background: #3B82F6; color: #fff; }
+  .ticket.order-go { background: #2F5FB8; color: #fff; }
+  .ticket.order-free { background: #4A3D2E; color: #fff; }
+  .talk-pos { transition: transform 0.55s cubic-bezier(.3,.7,.2,1); }
+  @media (prefers-reduced-motion: reduce) { .talk-pos { transition: none; } }
+  .talk { pointer-events: none; transform-box: fill-box; transform-origin: 50% 100%; }
+  .talk.pop { animation: pop 0.35s cubic-bezier(.2,1.6,.4,1); }
+  .talk .tb { fill: #FBF5E4; stroke: #3B2C1E; stroke-width: 3; }
+  .talk.hot .tb { fill: #E5484D; }
+  .talk.sad .tb { fill: #D9D2C0; }
+  .talk text { font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 26px; text-anchor: middle; fill: #3B2C1E; }
+  .talk.hot text { fill: #fff; }
+  .dud-heli { animation: dudHop 1.6s ease-in-out 1 forwards; transform-box: fill-box; transform-origin: 50% 100%; }
+  .dh-body { fill: #6B4FB8; stroke: #2A1E12; stroke-width: 3; stroke-linejoin: round; }
+  .dh-glass { fill: #CFE7F5; stroke: #2A1E12; stroke-width: 2; }
+  .dh-skid, .dh-rotor { fill: none; stroke: #2A1E12; stroke-width: 4; stroke-linecap: round; }
+  .dh-rotor { animation: dudRotor 1.6s linear 1 forwards; transform-box: fill-box; transform-origin: 50% 50%; }
+  .dh-smoke { fill: #8A847A; opacity: 0; transform-box: fill-box; transform-origin: 50% 50%; animation: dudSmoke 2.4s ease-out forwards; }
+  .dh-smoke.s1 { animation-delay: .35s; } .dh-smoke.s2 { animation-delay: .7s; }
+  .dh-text { font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 30px; text-anchor: middle; fill: #fff; paint-order: stroke; stroke: #3B2C1E; stroke-width: 7px; opacity: 0; animation: dudText 2.6s ease forwards .5s; }
+  @keyframes dudHop { 0% { transform: translateY(0); } 25% { transform: translateY(-34px); } 32% { transform: translateY(-30px) rotate(-6deg); } 40% { transform: translateY(-34px) rotate(6deg); } 48% { transform: translateY(-28px) rotate(-4deg); } 70% { transform: translateY(0) rotate(0); } 78% { transform: translateY(-8px); } 100% { transform: translateY(0) rotate(8deg); } }
+  @keyframes dudRotor { 0% { transform: scaleX(1); } 10% { transform: scaleX(.2); } 20% { transform: scaleX(1); } 30% { transform: scaleX(.2); } 40% { transform: scaleX(1); } 55% { transform: scaleX(.5); } 100% { transform: scaleX(1); } }
+  @keyframes dudSmoke { 0% { opacity: 0; transform: translate(0, 0) scale(.4); } 20% { opacity: .75; } 100% { opacity: 0; transform: translate(26px, -60px) scale(1.6); } }
+  @keyframes dudText { 0% { opacity: 0; transform: translateY(10px); } 15% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-12px); } }
+  @media (prefers-reduced-motion: reduce) { .dud-heli, .dh-rotor, .dh-smoke, .dh-text { animation: none; } .dh-text { opacity: 1; } }
+  #banner { position: fixed; left: 0; right: 0; top: 34%; z-index: 60; display: flex; justify-content: center; pointer-events: none; }
+  #banner .bn { background: linear-gradient(180deg, #8E1B16, #5E0F0B); color: #FBF5E4; border: 3px solid #E8C872; border-radius: 14px;
+    padding: 10px 34px 12px; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.45); animation: bannerIn 1.9s ease forwards; }
+  #banner .bn.blue { background: linear-gradient(180deg, #2F5FB8, #1C3570); }
+  #banner .bn.gray { background: linear-gradient(180deg, #5A5248, #37312A); }
+  #banner .bn b { display: block; font-family: "Zen Old Mincho", serif; font-weight: 900; font-size: 44px; letter-spacing: .08em; line-height: 1.2; }
+  #banner .bn small { display: block; font-size: 14px; margin-top: 2px; }
+  @keyframes bannerIn { 0% { transform: scale(.4); opacity: 0; } 12% { transform: scale(1.12); opacity: 1; } 20% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
+  @media (prefers-reduced-motion: reduce) { .talk.pop, #banner .bn { animation: none; } }
+  .toast {
+    position: absolute; left: 50%; top: 84px; transform: translateX(-50%); z-index: 25;
+    padding: 8px 14px; border-radius: 999px; background: var(--hud-solid); border: 1px solid var(--rule);
+    font-weight: 700; font-size: 13px; white-space: nowrap; pointer-events: none; animation: fade 2.4s forwards;
+  }
+  @keyframes fade { 0% { opacity: 0; transform: translate(-50%, -6px); } 10%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+  .drawer { position: absolute; z-index: 22; left: 10px; bottom: 10px; width: min(380px, calc(100% - 20px)); max-height: 60%; display: flex; flex-direction: column; padding: 12px; gap: 8px; }
+  .drawer ul { list-style: none; margin: 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; user-select: text; -webkit-user-select: text; }
+  .drawer li { display: flex; gap: 8px; }
+  .drawer li .r { color: var(--muted); min-width: 34px; font-variant-numeric: tabular-nums; }
+  .drawer li.hot { color: var(--gold); font-weight: 700; }
+
+  @media (max-width: 640px) {
+    .toprow.first { flex-wrap: wrap; }
+    .toprow.first .xcard { flex: 1; }
+    .dets { order: 3; width: 100%; margin-left: 0; justify-content: space-between; padding: 4px; }
+    .det { min-width: 0; flex: 1; padding: 3px 2px; }
+    .tk { min-width: 14px; font-size: 9px; padding: 0 2px; }
+    .side { top: auto; bottom: 16px; transform: none; padding: 4px; gap: 2px; }
+    .side .iconbtn { width: 40px; min-height: 40px; }
+    .menu .btn span.s { display: none; }
+    .portrait { width: 40px; height: 40px; }
+    .portrait.sm { width: 30px; height: 30px; }
+    .prompt { max-width: 44%; padding: 4px 8px 4px 4px; }
+    .prompt .t1 { font-size: 13px; }
+    .prompt .btn { min-height: 34px; padding: 0 10px; font-size: 13px; }
+    .slot { width: 32px; height: 40px; font-size: 12px; }
+    .xlog { padding: 4px; }
+  }
+</style>
+<!-- ARTIFACT-HEAD-END -->
+</head>
+<body>
+<!-- ARTIFACT-BODY-START -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="pawnShade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000" stop-opacity="0.35"></stop>
+      <stop offset="0.28" stop-color="#fff" stop-opacity="0.45"></stop>
+      <stop offset="0.45" stop-color="#fff" stop-opacity="0.08"></stop>
+      <stop offset="1" stop-color="#000" stop-opacity="0.45"></stop>
+    </linearGradient>
+    <radialGradient id="pawnHead" cx="0.35" cy="0.3" r="0.75">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.75"></stop>
+      <stop offset="0.35" stop-color="#fff" stop-opacity="0.1"></stop>
+      <stop offset="1" stop-color="#000" stop-opacity="0.45"></stop>
+    </radialGradient>
+    <!-- 人形の駒（コートの色は color で指定） -->
+    <symbol id="fig-d" viewBox="-36 -112 72 120">
+      <ellipse cy="4" rx="28" ry="8" fill="#000" opacity="0.35"></ellipse>
+      <ellipse cy="0" rx="24" ry="7.5" fill="#3B2C1E"></ellipse>
+      <ellipse cy="-3.5" rx="23" ry="7" fill="#6B4E32" stroke="#2A1E12" stroke-width="1.2"></ellipse>
+      <rect x="-9.5" y="-34" width="7.5" height="30" rx="3" fill="#2B2B33"></rect>
+      <rect x="2" y="-34" width="7.5" height="30" rx="3" fill="#2B2B33"></rect>
+      <ellipse cx="-6" cy="-4" rx="6" ry="3" fill="#15110D"></ellipse>
+      <ellipse cx="6" cy="-4" rx="6" ry="3" fill="#15110D"></ellipse>
+      <path d="M-14,-70 Q-20,-66 -20,-55 L-22,-27 Q0,-20 22,-27 L20,-55 Q20,-66 14,-70 Z" fill="currentColor"></path>
+      <path d="M-14,-70 Q-20,-66 -20,-55 L-22,-27 Q0,-20 22,-27 L20,-55 Q20,-66 14,-70 Z" fill="url(#pawnShade)" stroke="#000" stroke-opacity="0.5" stroke-width="1.3"></path>
+      <path d="M0,-69 L0,-24" stroke="#000" stroke-opacity="0.35" stroke-width="1.2"></path>
+      <path d="M-20,-44 Q0,-40 20,-44" stroke="#2A1E12" stroke-width="3" fill="none" opacity="0.7"></path>
+      <path d="M-18,-64 Q-26,-50 -23,-36" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round"></path>
+      <path d="M18,-64 Q26,-50 23,-36" stroke="currentColor" stroke-width="8" fill="none" stroke-linecap="round"></path>
+      <path d="M-18,-64 Q-26,-50 -23,-36 M18,-64 Q26,-50 23,-36" stroke="#000" stroke-opacity="0.25" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="0 3 30"></path>
+      <circle cx="-23" cy="-34" r="4" fill="#F1C7A0" stroke="#7A5234" stroke-width="0.8"></circle>
+      <circle cx="23" cy="-34" r="4" fill="#F1C7A0" stroke="#7A5234" stroke-width="0.8"></circle>
+      <path d="M-7,-70 L0,-60 L7,-70 Z" fill="#F4ECDC" stroke="#000" stroke-opacity="0.35" stroke-width="0.8"></path>
+      <circle cy="-80" r="11.5" fill="#F1C7A0"></circle>
+      <circle cy="-80" r="11.5" fill="url(#pawnHead)" opacity="0.55" stroke="#7A5234" stroke-width="1"></circle>
+      <circle cx="-4" cy="-80" r="1.5" fill="#2A1E12"></circle>
+      <circle cx="4" cy="-80" r="1.5" fill="#2A1E12"></circle>
+      <path d="M-3,-74 Q0,-72 3,-74" stroke="#7A3A2A" stroke-width="1.3" fill="none" stroke-linecap="round"></path>
+      <ellipse cy="-88" rx="17" ry="4" fill="#2A2118"></ellipse>
+      <path d="M-10,-88 Q-11,-103 0,-103 Q11,-103 10,-88 Z" fill="#2A2118"></path>
+      <path d="M-10.5,-91.5 L10.5,-91.5 L10,-88 L-10,-88 Z" fill="currentColor"></path>
+      <path d="M-7,-100 Q-3,-102 1,-101" stroke="#fff" stroke-opacity="0.35" stroke-width="2" fill="none" stroke-linecap="round"></path>
+    </symbol>
+    <symbol id="fig-x" viewBox="-36 -112 72 120">
+      <ellipse cy="4" rx="28" ry="8" fill="#000" opacity="0.35"></ellipse>
+      <ellipse cy="0" rx="24" ry="7.5" fill="#3B2C1E"></ellipse>
+      <ellipse cy="-3.5" rx="23" ry="7" fill="#6B4E32" stroke="#2A1E12" stroke-width="1.2"></ellipse>
+      <path d="M-16,-70 Q-30,-50 -28,-18 Q0,-12 28,-18 Q30,-50 16,-70 Z" fill="#8E1B16"></path>
+      <path d="M-16,-70 Q-30,-50 -28,-18 Q-14,-15 -12,-17 L-14,-60 Z M16,-70 Q30,-50 28,-18 Q14,-15 12,-17 L14,-60 Z" fill="#15131A"></path>
+      <rect x="-9.5" y="-34" width="7.5" height="30" rx="3" fill="#1B1920"></rect>
+      <rect x="2" y="-34" width="7.5" height="30" rx="3" fill="#1B1920"></rect>
+      <ellipse cx="-6" cy="-4" rx="6" ry="3" fill="#0A0A0A"></ellipse>
+      <ellipse cx="6" cy="-4" rx="6" ry="3" fill="#0A0A0A"></ellipse>
+      <path d="M-13,-70 Q-18,-66 -18,-55 L-19,-28 Q0,-22 19,-28 L18,-55 Q18,-66 13,-70 Z" fill="currentColor"></path>
+      <path d="M-13,-70 Q-18,-66 -18,-55 L-19,-28 Q0,-22 19,-28 L18,-55 Q18,-66 13,-70 Z" fill="url(#pawnShade)" stroke="#000" stroke-opacity="0.5" stroke-width="1.3"></path>
+      <path d="M-6,-70 L0,-58 L6,-70 Z" fill="#F4ECDC"></path>
+      <path d="M-4,-66 L0,-64 L4,-66 L4,-62 L0,-64 L-4,-62 Z" fill="#C0271F"></path>
+      <text x="0" y="-36" font-family="Georgia, serif" font-weight="700" font-size="15" text-anchor="middle" fill="#E3B341">X</text>
+      <circle cy="-80" r="11.5" fill="#F1C7A0"></circle>
+      <circle cy="-80" r="11.5" fill="url(#pawnHead)" opacity="0.55" stroke="#7A5234" stroke-width="1"></circle>
+      <rect x="-12" y="-84" width="24" height="7" rx="3.5" fill="#0B0A0E"></rect>
+      <circle cx="-4.5" cy="-80.5" r="1.8" fill="#fff"></circle>
+      <circle cx="4.5" cy="-80.5" r="1.8" fill="#fff"></circle>
+      <path d="M-4,-73 Q1,-70.5 4.5,-73.5" stroke="#7A3A2A" stroke-width="1.4" fill="none" stroke-linecap="round"></path>
+      <ellipse cy="-89" rx="17" ry="4" fill="#0B0A0E"></ellipse>
+      <rect x="-9.5" y="-110" width="19" height="21" rx="2" fill="#0B0A0E"></rect>
+      <rect x="-9.5" y="-95" width="19" height="4" fill="#C0271F"></rect>
+      <path d="M-6,-107 L-6,-97" stroke="#fff" stroke-opacity="0.3" stroke-width="2" stroke-linecap="round"></path>
+    </symbol>
+    <!-- カードの絵（200×140） -->
+    <symbol id="card-bridge" viewBox="0 0 200 140">
+      <rect x="0" y="92" width="200" height="48" fill="#3E7FB8"></rect>
+      <path d="M0,104 q25,-6 50,0 t50,0 t50,0 t50,0" stroke="#A9D2EE" stroke-width="3" fill="none"></path>
+      <path d="M10,70 L190,70 L190,80 L10,80 Z" fill="#8A6A48" stroke="#3B2C1E" stroke-width="3"></path>
+      <path d="M30,80 Q100,20 170,80" fill="none" stroke="#6B4E32" stroke-width="6"></path>
+      <path d="M40,80 v24 M160,80 v24 M100,80 v24" stroke="#6B4E32" stroke-width="8"></path>
+      <g transform="translate(100 56)"><rect x="-54" y="-10" width="108" height="20" rx="4" fill="#fff" stroke="#3B2C1E" stroke-width="3"></rect>
+        <path d="M-46,-10 l14,20 M-18,-10 l14,20 M10,-10 l14,20 M38,-10 l14,20" stroke="#C0271F" stroke-width="9"></path>
+        <path d="M-44,10 v18 M44,10 v18" stroke="#3B2C1E" stroke-width="5"></path></g>
+      <circle cx="100" cy="28" r="16" fill="#C0271F" stroke="#fff" stroke-width="3"></circle>
+      <rect x="90" y="25" width="20" height="6" fill="#fff"></rect>
+    </symbol>
+    <symbol id="card-dog" viewBox="0 0 200 140">
+      <g fill="#6B4E32" stroke="#2A1E12" stroke-width="3" stroke-linejoin="round">
+        <path d="M40,74 Q44,54 70,54 L120,54 Q134,54 138,66 L150,80 Q162,86 170,84 Q178,86 176,94 Q172,100 160,98 L144,94 L136,104 L136,120 L126,120 L124,104 L76,104 L74,120 L64,120 L62,100 Q44,96 40,74 Z"></path>
+        <path d="M44,74 Q26,62 22,44" fill="none" stroke-width="7" stroke-linecap="round"></path>
+        <path d="M128,60 Q120,82 134,92 Q142,84 136,64 Z" fill="#4A3522"></path>
+      </g>
+      <circle cx="146" cy="72" r="3" fill="#15110D"></circle>
+      <circle cx="172" cy="90" r="5" fill="#15110D"></circle>
+      <path d="M78,62 Q100,70 122,62" stroke="#C0271F" stroke-width="5" fill="none"></path>
+      <g fill="#3B2417" opacity=".8"><ellipse cx="186" cy="118" rx="5" ry="4"></ellipse><ellipse cx="172" cy="128" rx="5" ry="4"></ellipse><ellipse cx="188" cy="134" rx="5" ry="4"></ellipse></g>
+      <path d="M150,40 q6,-8 12,0 M160,30 q6,-8 12,0 M172,42 q6,-8 12,0" stroke="#F4ECDC" stroke-width="3" fill="none" stroke-linecap="round"></path>
+    </symbol>
+    <symbol id="card-inquiry" viewBox="0 0 200 140">
+      <use href="#fig-d" x="22" y="18" width="72" height="120" style="color:#3B82F6"></use>
+      <g transform="translate(142 78)"><circle cy="-30" r="13" fill="#F1C7A0" stroke="#7A5234" stroke-width="1.5"></circle>
+        <path d="M-12,-40 Q0,-54 12,-40 Q14,-46 0,-50 Q-14,-46 -12,-40 Z" fill="#8A5A3C"></path>
+        <path d="M-18,-14 Q-20,-18 -14,-18 L14,-18 Q20,-18 18,-14 L22,40 L-22,40 Z" fill="#7A9A5A" stroke="#2A1E12" stroke-width="2"></path>
+        <circle cx="-4" cy="-31" r="1.6" fill="#2A1E12"></circle><circle cx="4" cy="-31" r="1.6" fill="#2A1E12"></circle></g>
+      <g transform="translate(118 24)"><path d="M-30,-18 h60 a8,8 0 0 1 8,8 v18 a8,8 0 0 1 -8,8 h-22 l-10,12 l-2,-12 h-26 a8,8 0 0 1 -8,-8 v-18 a8,8 0 0 1 8,-8 Z" fill="#FBF5E4" stroke="#3B2C1E" stroke-width="3"></path>
+        <text x="0" y="6" font-family="Georgia, serif" font-weight="900" font-size="22" text-anchor="middle" fill="#3B2C1E">?!</text></g>
+    </symbol>
+    <symbol id="card-heliban" viewBox="0 0 200 140">
+      <g transform="translate(100 74)">
+        <path d="M-40,-4 q0,-26 32,-26 h10 q28,0 28,24 q0,16 -24,16 h-24 q-22,0 -22,-14 Z" fill="#6B4FB8" stroke="#2A1E12" stroke-width="3"></path>
+        <path d="M30,-10 L78,-18 L80,-2 L30,0 Z" fill="#6B4FB8" stroke="#2A1E12" stroke-width="3"></path>
+        <path d="M-18,-8 h16 v-16 h-6 q-10,0 -10,10 Z" fill="#CFE7F5" stroke="#2A1E12" stroke-width="2"></path>
+        <path d="M-26,12 v8 M22,12 v8 M-36,20 h70 M0,-30 v-10 M-60,-40 h120" stroke="#2A1E12" stroke-width="5" stroke-linecap="round" fill="none"></path>
+      </g>
+      <circle cx="100" cy="70" r="58" fill="none" stroke="#C0271F" stroke-width="12"></circle>
+      <path d="M59,29 L141,111" stroke="#C0271F" stroke-width="12"></path>
+    </symbol>
+    <symbol id="card-reinforce" viewBox="0 0 200 140">
+      <g stroke="#2A1E12" stroke-width="3">
+        <rect x="30" y="40" width="96" height="56" rx="6" fill="#E3B341" transform="rotate(-12 78 68)"></rect>
+        <rect x="46" y="46" width="96" height="56" rx="6" fill="#16935A" transform="rotate(-2 94 74)"></rect>
+        <rect x="62" y="52" width="96" height="56" rx="6" fill="#D9342B" transform="rotate(8 110 80)"></rect>
+      </g>
+      <text x="110" y="92" transform="rotate(8 110 80)" font-family="Georgia, serif" font-weight="900" font-size="22" text-anchor="middle" fill="#fff">TICKET</text>
+      <circle cx="164" cy="34" r="22" fill="#FBF5E4" stroke="#2A1E12" stroke-width="3"></circle>
+      <path d="M164,22 v24 M152,34 h24" stroke="#16935A" stroke-width="7" stroke-linecap="round"></path>
+    </symbol>
+    <symbol id="card-trap" viewBox="0 0 200 140">
+      <ellipse cx="100" cy="112" rx="80" ry="16" fill="#000" opacity=".3"></ellipse>
+      <ellipse cx="100" cy="100" rx="64" ry="18" fill="#5A5248" stroke="#2A1E12" stroke-width="3"></ellipse>
+      <path d="M40,96 L52,60 L62,90 L74,52 L86,88 L100,48 L114,88 L126,52 L138,90 L148,60 L160,96" fill="#B8B2A6" stroke="#2A1E12" stroke-width="3" stroke-linejoin="round"></path>
+      <path d="M40,100 Q100,124 160,100" fill="none" stroke="#2A1E12" stroke-width="4"></path>
+      <circle cx="100" cy="100" r="9" fill="#C0271F" stroke="#2A1E12" stroke-width="2"></circle>
+      <path d="M160,100 q26,-4 30,-26" fill="none" stroke="#2A1E12" stroke-width="4" stroke-dasharray="6 4"></path>
+    </symbol>
+    <symbol id="card-vanish" viewBox="0 0 200 140">
+      <use href="#fig-x" x="64" y="4" width="72" height="120" opacity=".45"></use>
+      <g fill="#E8E4DA" stroke="#9A948A" stroke-width="3">
+        <path d="M20,112 q-14,-24 12,-30 q2,-24 30,-18 q14,-22 40,-8 q24,-16 42,6 q30,-6 30,22 q22,10 6,28 Z"></path>
+        <path d="M40,86 q10,-14 26,-6 M110,70 q14,-12 28,0" fill="none"></path>
+      </g>
+      <path d="M150,28 q10,-10 20,0 M160,18 q8,-8 16,0" stroke="#FBF5E4" stroke-width="3" fill="none" stroke-linecap="round"></path>
+    </symbol>
+    <symbol id="card-destroy" viewBox="0 0 200 140">
+      <path d="M100,8 L114,44 L152,26 L134,62 L178,70 L134,82 L154,118 L114,98 L100,132 L86,98 L46,118 L66,82 L22,70 L66,62 L48,26 L86,44 Z" fill="#F2A53A" stroke="#C0271F" stroke-width="4" stroke-linejoin="round"></path>
+      <circle cx="100" cy="70" r="30" fill="#0E0B09" stroke="#000" stroke-width="3"></circle>
+      <path d="M84,58 L98,70 L90,84 M98,70 L112,64 L120,76 M112,64 L108,50" stroke="#8A7A6A" stroke-width="3" fill="none" stroke-linecap="round"></path>
+      <path d="M86,56 L114,84 M114,56 L86,84" stroke="#E5484D" stroke-width="7" stroke-linecap="round"></path>
+    </symbol>
+    <symbol id="card-miss" viewBox="0 0 200 140">
+      <g transform="rotate(-8 100 70)"><rect x="62" y="22" width="76" height="100" rx="8" fill="#D9D2C0" stroke="#5A5146" stroke-width="3"></rect>
+        <path d="M70,40 L130,110 M130,40 L70,110" stroke="#8A847A" stroke-width="2" opacity=".6"></path></g>
+      <text x="100" y="92" font-family="Georgia, serif" font-weight="900" font-size="54" text-anchor="middle" fill="#5A5146">…</text>
+      <path d="M150,30 q8,6 4,16 M160,24 q10,8 6,20" stroke="#D9D2C0" stroke-width="3" fill="none" stroke-linecap="round"></path>
+    </symbol>
+    <!-- ボードゲームの駒（色は color で指定） -->
+    <symbol id="pawn" viewBox="-30 -70 60 80">
+      <ellipse cy="3" rx="25" ry="7" fill="#000" opacity="0.35"></ellipse>
+      <path d="M-22,-3 A22,7 0 0 0 22,-3 L22,-8 C22,-12 14,-14 11,-15 C8,-24 6,-32 6,-39 L-6,-39 C-6,-32 -8,-24 -11,-15 C-14,-14 -22,-12 -22,-8 Z" fill="currentColor"></path>
+      <path d="M-22,-3 A22,7 0 0 0 22,-3 L22,-8 C22,-12 14,-14 11,-15 C8,-24 6,-32 6,-39 L-6,-39 C-6,-32 -8,-24 -11,-15 C-14,-14 -22,-12 -22,-8 Z" fill="url(#pawnShade)" stroke="#000" stroke-opacity="0.55" stroke-width="1.4"></path>
+      <ellipse cy="-40" rx="11.5" ry="4" fill="currentColor"></ellipse>
+      <ellipse cy="-40" rx="11.5" ry="4" fill="url(#pawnShade)" stroke="#000" stroke-opacity="0.55" stroke-width="1.2"></ellipse>
+      <circle cy="-54" r="12.5" fill="currentColor"></circle>
+      <circle cy="-54" r="12.5" fill="url(#pawnHead)" stroke="#000" stroke-opacity="0.55" stroke-width="1.2"></circle>
+    </symbol>
+    <symbol id="pawn-x" viewBox="-30 -70 60 80">
+      <use href="#pawn" x="-30" y="-70" width="60" height="80"></use>
+      <ellipse cy="-40" rx="11.5" ry="4" fill="#C0271F" stroke="#000" stroke-opacity="0.5" stroke-width="1"></ellipse>
+      <text x="0" y="-19" font-family="Georgia, serif" font-weight="700" font-size="17" text-anchor="middle" fill="#E3B341">X</text>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="app">
+  <svg id="map" aria-label="ロンドンの盤面。ドラッグで移動、ピンチやホイールで拡大できます">
+    <g id="world">
+      <image id="bgimg" x="0" y="0" width="3000" height="1900" preserveAspectRatio="none"></image>
+      <g id="gEdges"></g>
+      <g id="gPoss"></g>
+      <g id="gTrail"></g>
+      <g id="gDest"></g>
+      <g id="gStations"></g>
+      <g id="gMarks"></g>
+      <g id="gTokens"></g>
+      <g id="gLabels"></g>
+      <g id="gTalk"></g>
+    </g>
+  </svg>
+
+  <div class="hud top">
+    <div class="toprow first">
+      <button class="panel iconbtn" data-act="menu" aria-label="メニュー">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      <button class="panel xcard" id="xcard" data-act="focusX"></button>
+      <div class="panel dets" id="dets"></div>
+    </div>
+    <div class="toprow second">
+      <div class="panel prompt" id="prompt"></div>
+      <div class="panel xlog" id="xlog" aria-label="怪盗Xの移動記録"></div>
+    </div>
+    <button class="pulltab" id="pullTab" data-act="toggleHud" aria-label="上部の表示を隠す" aria-expanded="true"><span class="pt-arrow" aria-hidden="true"></span><span class="pt-t"></span></button>
+  </div>
+
+  <div class="hud side panel">
+    <button class="iconbtn" data-act="zoomIn" aria-label="拡大"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button>
+    <button class="iconbtn" data-act="zoomOut" aria-label="縮小"><svg viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button>
+    <button class="iconbtn" data-act="fit" aria-label="全体を表示"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+    <button class="iconbtn" data-act="focusTurn" aria-label="手番のコマへ移動"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></button>
+    <button class="iconbtn" id="hintBtn" data-act="hint" aria-pressed="true" aria-label="推理ヒント（怪盗Xがいるかもしれない駅）"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg></button>
+    <button class="iconbtn" data-act="log" aria-label="ログ"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"></path></svg></button>
+  </div>
+
+  <div class="panel drawer" id="drawer" hidden>
+    <div class="row" style="justify-content:space-between;align-items:center"><b>ログ</b><button class="btn ghost" data-act="log" style="min-height:36px;flex:none">閉じる</button></div>
+    <ul id="feed"></ul>
+  </div>
+
+  <div class="sheet-wrap" id="sheet" hidden></div>
+  <div class="screen" id="screen" hidden></div>
+  <div id="edge" aria-label="画面外の駒"></div>
+  <div id="toastHost"></div>
+  <div id="banner" aria-live="assertive"></div>
+  <div id="handbar" class="handbar" hidden></div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ======================================================================
+  // CORE-START  盤面データ・ルール・CPU（DOMに依存しない）
+  // ======================================================================
+  const W = 3000, H = 1900;
+  const STATIONS = [
+    ["スイス・コテージ", 1003.2, 349.5],
+    ["キングス・クロス", 1925.6, 214.6],
+    ["クラパム・コモン", 253.6, 962.8],
+    ["ハイゲート", 287.0, 246.0],
+    ["ウィンブルドン", 1287.1, 1512.2],
+    ["テムズミード", 1859.4, 1720.1],
+    ["ユーストン", 1717.4, 772.3],
+    ["トッテナム・コート・ロード", 2510.9, 588.1],
+    ["フィンズベリー・パーク", 496.8, 292.6],
+    ["ルイシャム", 959.9, 1493.7],
+    ["ロンドン・ブリッジ", 599.6, 1090.4],
+    ["パディントン", 1891.7, 730.5],
+    ["ハックニー", 1634.6, 198.0],
+    ["ペッカム", 975.9, 1097.2],
+    ["サリー・キーズ", 778.4, 1078.0],
+    ["シデナム", 1571.1, 1595.2],
+    ["シェパーズ・ブッシュ", 2121.3, 554.7],
+    ["ウォータールー", 518.6, 931.0],
+    ["ストックウェル", 200.6, 1239.3],
+    ["オックスフォード・サーカス", 2246.1, 1075.6],
+    ["アールズ・コート", 2050.7, 1112.3],
+    ["ナイン・エルムズ", 2458.7, 1714.9],
+    ["キュー", 1427.0, 1232.3],
+    ["エルサム", 1177.9, 1240.1],
+    ["ケニントン", 256.3, 1411.4],
+    ["ロザーハイズ", 875.1, 804.3],
+    ["リッチモンド", 1101.7, 1610.8],
+    ["ファリンドン", 2790.8, 349.6],
+    ["エンジェル", 1751.3, 541.9],
+    ["テンプル", 2777.7, 1277.6],
+    ["ブリクストン", 382.0, 1181.0],
+    ["ケンティッシュ・タウン", 782.1, 351.0],
+    ["クラパム・ジャンクション", 376.1, 715.4],
+    ["ヴォクソール", 161.9, 1593.9],
+    ["サウス・ケンジントン", 2427.4, 367.7],
+    ["リバプール・ストリート", 2524.6, 1287.5],
+    ["バーモンジー", 561.1, 1417.7],
+    ["ベルサイズ・パーク", 1092.7, 139.8],
+    ["グリニッジ", 820.9, 1281.1],
+    ["バンク", 2787.4, 859.2],
+    ["ベクスリー", 2732.4, 1789.4],
+    ["ホルボーン", 2460.0, 914.7],
+    ["ノース・グリニッジ", 1903.9, 1513.0],
+    ["ホワイト・シティ", 2133.9, 382.4],
+    ["カナダ・ウォーター", 459.6, 1655.2],
+    ["キャンバーウェル", 1087.7, 878.0],
+    ["ホロウェイ", 1331.2, 404.9],
+    ["フォレスト・ヒル", 1656.3, 1438.9],
+    ["ラドブローク・グローブ", 1817.3, 959.6],
+    ["ヌンヘッド", 2100.1, 1629.7],
+    ["オールド・ストリート", 2746.9, 536.5],
+    ["ダリッジ", 709.2, 1728.3],
+    ["ベイカー・ストリート", 2126.5, 123.5],
+    ["エレファント&キャッスル", 271.3, 1784.3],
+    ["ハックニー・ウィック", 1575.9, 500.1],
+    ["ストーク・ニューイントン", 796.3, 116.4],
+    ["ハーン・ヒル", 2029.4, 1779.8],
+    ["メイダ・ヴェール", 1469.8, 95.7],
+    ["コヴェント・ガーデン", 2906.6, 1103.4],
+    ["ウーリッジ", 895.5, 1699.2],
+    ["ケンジントン", 2155.2, 865.5],
+    ["サザーク", 634.3, 716.5],
+    ["セント・ジョンズ・ウッド", 1180.0, 521.8],
+    ["ノッティング・ヒル", 2295.9, 225.9],
+    ["トゥーティング", 1206.9, 1797.0],
+    ["リージェンツ・パーク", 1927.6, 439.9],
+    ["ブラックヒース", 1204.7, 1036.2],
+    ["ウォルワース", 2256.9, 1802.2],
+    ["ノーウッド", 1454.2, 1719.3],
+    ["セント・ポール", 2640.9, 1225.9],
+    ["ハムステッド", 120.2, 171.6],
+    ["ブラックフライアーズ", 2899.1, 680.4],
+    ["バービカン", 2484.9, 1098.3],
+    ["バラム", 1456.0, 1453.5],
+    ["ストレタム", 1655.1, 1220.7],
+    ["マーブル・アーチ", 2273.1, 713.5],
+    ["ニュー・クロス", 751.6, 1452.4],
+    ["カムデン・タウン", 859.9, 456.5],
+    ["キルバーン", 1285.4, 198.5],
+    ["ショーディッチ", 2644.3, 748.1],
+    ["ハガーストン", 1759.3, 283.8],
+    ["ボンド・ストリート", 2603.9, 300.2],
+    ["チャールトン", 1667.5, 1758.6],
+    ["ブロックリー", 1003.2, 1277.0],
+    ["バラ", 712.4, 890.1],
+    ["モーデン", 2909.4, 1745.2],
+    ["ハイベリー", 1500.8, 320.9],
+    ["ダルストン", 1403.3, 577.9],
+    ["ストラトフォード", 1780.2, 93.1],
+    ["キャットフォード", 1804.6, 1327.4],
+    ["ハマースミス", 2325.1, 515.1],
+    ["バーンズ", 1128.0, 1425.1],
+    ["レスター・スクエア", 2883.1, 1428.0],
+    ["カビット・タウン", 1439.5, 831.8],
+    ["ボートハウス", 2364.6, 1474.0],
+    ["パトニー橋", 35.7, 385.1],
+    ["バタシー橋", 486.2, 542.4],
+    ["ウェストミンスター橋", 971.9, 625.1],
+    ["タワー・ブリッジ", 1813.9, 1150.0],
+    ["ブラックウォール橋", 2755.0, 1550.6],
+  ];
+  const TAXI = [[0, 37], [0, 62], [0, 77], [1, 52], [1, 65], [1, 80], [1, 88], [2, 30], [2, 95], [3, 8], [3, 70], [4, 26], [4, 73], [4, 91], [5, 42], [5, 56], [5, 82], [6, 11], [7, 34], [7, 50], [7, 79], [7, 90], [8, 31], [8, 96], [9, 38], [9, 59], [9, 76], [9, 83], [9, 91], [10, 14], [10, 17], [10, 30], [10, 84], [11, 28], [11, 48], [12, 57], [12, 80], [12, 86], [12, 88], [13, 14], [13, 38], [13, 45], [13, 83], [14, 38], [14, 84], [15, 47], [15, 68], [15, 73], [15, 82], [16, 43], [16, 75], [16, 90], [17, 32], [17, 61], [17, 84], [18, 24], [18, 30], [19, 20], [19, 60], [19, 72], [20, 60], [21, 40], [21, 67], [22, 23], [22, 73], [22, 74], [23, 83], [23, 91], [24, 33], [25, 45], [25, 61], [25, 84], [25, 97], [26, 59], [26, 64], [26, 91], [27, 50], [27, 81], [28, 54], [28, 65], [28, 80], [29, 35], [29, 58], [29, 69], [29, 92], [31, 55], [31, 77], [32, 61], [32, 96], [33, 53], [34, 63], [34, 81], [34, 90], [35, 69], [35, 72], [36, 44], [36, 76], [37, 55], [37, 78], [38, 76], [38, 83], [39, 71], [39, 79], [40, 85], [40, 99], [41, 72], [41, 79], [42, 49], [42, 89], [43, 52], [43, 63], [43, 65], [43, 90], [44, 53], [45, 66], [46, 62], [46, 78], [46, 86], [46, 87], [47, 73], [47, 74], [47, 89], [48, 98], [49, 56], [49, 67], [50, 71], [50, 79], [51, 59], [52, 63], [54, 80], [54, 86], [54, 87], [56, 67], [57, 78], [57, 86], [58, 69], [60, 75], [61, 84], [62, 87], [64, 68], [68, 82], [69, 72], [70, 95], [71, 79], [74, 98], [75, 90], [77, 97], [78, 86], [80, 88], [83, 91], [92, 99]];
+  const TUBE = [["サークル線（外周）", [39, 35, 5, 26, 76, 30, 2, 32, 31, 78, 90, 79, 39]], ["セントラル線", [32, 66, 6, 48, 19, 69]], ["ノーザン線", [78, 46, 6, 74, 47, 5]], ["ジュビリー線", [52, 65, 6, 22, 59]]];
+  const BUS = [[19, 20], [89, 73, 23, 13, 14, 25, 62, 87, 28, 11, 60], [8, 77, 62], [66, 74, 89, 49, 21], [12, 86, 54, 6], [22, 73, 68], [50, 90, 11, 6], [66, 13, 36, 24], [3, 55, 37], [81, 79, 58], [2, 24, 51], [56, 21, 85], [78, 88, 63], [59, 64, 82]];
+  const BOAT = [61, 62, 93, 48, 89, 94, 35, 92];
+  const HELI = [3, 81, 44, 40, 86, 93, 82, 10];
+  const RIVER = [[-176.5, 236.2, 120.0], [-127.6, 275.1, 120.0], [-77.8, 312.0, 120.0], [-27.0, 346.7, 120.0], [25.1, 379.0, 120.0], [78.4, 408.6, 120.0], [133.0, 435.4, 120.0], [188.9, 459.4, 120.0], [246.2, 480.7, 120.0], [304.6, 499.4, 120.0], [364.2, 515.8, 120.0], [424.8, 530.0, 120.0], [486.2, 542.4, 120.0], [548.3, 553.4, 120.0], [610.9, 563.4, 120.0], [673.7, 572.8, 120.0], [736.5, 582.2, 120.0], [799.2, 592.0, 120.0], [861.5, 602.6, 120.0], [923.1, 614.5, 120.0], [984.0, 628.0, 120.1], [1044.0, 643.6, 120.8], [1102.8, 661.5, 123.5], [1160.4, 681.9, 132.4], [1216.8, 705.0, 155.2], [1271.9, 730.8, 200.1], [1325.6, 759.5, 266.0], [1378.1, 790.9, 333.0], [1429.3, 824.8, 368.9], [1479.5, 861.0, 352.8], [1528.7, 899.3, 294.4], [1577.1, 939.3, 224.6], [1624.9, 980.6, 170.3], [1672.2, 1022.7, 139.3], [1719.4, 1065.3, 126.0], [1766.5, 1107.9, 121.5], [1813.9, 1150.0, 120.3], [1861.8, 1191.1, 120.1], [1910.3, 1230.8, 120.4], [1959.6, 1268.8, 122.0], [2010.0, 1304.7, 127.7], [2061.4, 1338.2, 143.8], [2114.1, 1369.1, 179.2], [2168.0, 1397.3, 238.0], [2223.3, 1422.8, 308.1], [2279.9, 1445.4, 360.2], [2337.7, 1465.4, 365.6], [2396.8, 1482.9, 321.1], [2456.9, 1498.1, 251.8], [2517.9, 1511.4, 189.2], [2579.7, 1523.0, 149.1], [2642.0, 1533.4, 129.8], [2704.7, 1543.1, 122.6], [2767.6, 1552.5, 120.6], [2830.4, 1562.0, 120.1], [2892.9, 1572.1, 120.0], [2954.9, 1583.3, 120.0], [3016.2, 1596.0, 120.0], [3076.6, 1610.5, 120.0], [3136.0, 1627.2, 120.0], [3194.3, 1646.3, 120.0]];
+  const ISLANDS = [[1439.5, 831.8, 190, 78, 35.9], [2314.5, 1457.7, 170, 70, 18.0]];
+  const BRIDGE_ST = [95, 96, 97, 98, 99];
+  const BRIDGES = [[35.7, 385.1], [486.2, 542.4], [971.9, 625.1], [1813.9, 1150.0], [2755.0, 1550.6], [3088.6, 1613.7]];
+  const N = STATIONS.length;
+  const NAME = i => STATIONS[i][0];
+  const NO = i => i + 1;
+  const HELI_SET = new Set(HELI);
+  const ISLAND_ST = new Set(STATIONS.map((_, i) => i).filter(i => {
+    return ISLANDS.some(([cx, cy, rx, ry, ang]) => {
+      const a = -ang * Math.PI / 180, x = STATIONS[i][1] - cx, y = STATIONS[i][2] - cy;
+      const xr = x * Math.cos(a) - y * Math.sin(a), yr = x * Math.sin(a) + y * Math.cos(a);
+      return (xr / rx) ** 2 + (yr / ry) ** 2 <= 1;
+    });
+  }));
+
+  const TYPE = {
+    taxi:  { name: "タクシー", en: "Taxi", short: "タ" },
+    bus:   { name: "バス", en: "Bus", short: "バ" },
+    tube:  { name: "地下鉄", en: "Underground", short: "地" },
+    boat:  { name: "水上バス", en: "River Bus", short: "船" },
+    heli:  { name: "ヘリ", en: "Helicopter", short: "H" },
+    black: { name: "黒チケット", en: "Black", short: "黒" },
+    pass:  { name: "パス", en: "Pass", short: "休" },
+  };
+  const DET_TYPES = ["taxi", "bus", "tube", "boat", "heli"];
+  const MOVE_TYPES = ["taxi", "bus", "tube", "boat"];
+
+  const MAX_MOVES = 21;
+  const REVEAL = [3, 6, 9, 12, 15, 18, 21];
+  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
+  const DET_TICKETS = { heli: 1 };
+  const X_TICKETS = { taxi: 10, bus: 7, tube: 4, boat: 2 };
+  const dHas = (d, type) => type === "heli" ? d.t.heli > 0 : true;
+  const xHas = (G, type) => type === "black" ? G.black > 0 : type === "heli" ? G.heli > 0 : !G.xt || G.xt[type] > 0;
+  const X_DOUBLE = 4;
+  // 相棒：怪盗Xが相棒と同じ駅に着いたら逃走成功。相棒は誰からも見え、刑事が踏むと確保される
+  const MATE_MIN = 9;     // 怪盗Xとの最初の距離（手数）
+  const MATE_FROM = 5;    // 相棒はこの手目の移動のあとに現れる
+  const MATE_EVERY = 3;   // 相棒は何手ごとに1駅動くか
+  const X_HELI = 1;
+  const DEFAULT_DETS = 4;
+
+  // 区間ごとの交通手段
+  const edgeTypes = new Map(); // "a-b" -> Map(type -> 路線名[])
+  function addEdge(a, b, type, line) {
+    if (a === b) return;
+    const key = a < b ? a + "-" + b : b + "-" + a;
+    if (!edgeTypes.has(key)) edgeTypes.set(key, new Map());
+    const m = edgeTypes.get(key);
+    if (!m.has(type)) m.set(type, []);
+    if (line && !m.get(type).includes(line)) m.get(type).push(line);
+  }
+  for (const [a, b] of TAXI) addEdge(a, b, "taxi", "タクシー");
+  for (const [line, seq] of TUBE) for (let k = 0; k < seq.length - 1; k++) addEdge(seq[k], seq[k + 1], "tube", line);
+  BUS.forEach((seq, r) => { for (let k = 0; k < seq.length - 1; k++) addEdge(seq[k], seq[k + 1], "bus", `バス ${r + 1}番`); });
+  for (let k = 0; k < BOAT.length - 1; k++) addEdge(BOAT[k], BOAT[k + 1], "boat", "テムズ水上バス");
+
+  const ADJ = Array.from({ length: N }, () => []);
+  for (const [key, types] of edgeTypes) {
+    const [a, b] = key.split("-").map(Number);
+    for (const t of types.keys()) { ADJ[a].push({ to: b, type: t }); ADJ[b].push({ to: a, type: t }); }
+  }
+  // ヘリを除いた最短手数
+  const D = Array.from({ length: N }, (_, s) => {
+    const d = new Array(N).fill(Infinity);
+    d[s] = 0;
+    const q = [s];
+    while (q.length) {
+      const u = q.shift();
+      for (const e of ADJ[u]) if (d[e.to] === Infinity) { d[e.to] = d[u] + 1; q.push(e.to); }
+    }
+    return d;
+  });
+  const dd = (a, b) => Math.min(D[a][b], 9);
+
+  const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  function newGame(detCount, withMate = true) {
+    const ids = shuffle([...Array(N).keys()]).filter(p => !ISLAND_ST.has(p));
+    const det = [];
+    for (const p of ids) {
+      if (det.length >= detCount) break;
+      if (det.every(d => D[p][d.pos] >= 3)) det.push({ pos: p, t: { ...DET_TICKETS } });
+    }
+    const startable = ids.filter(p => det.every(d => D[p][d.pos] >= 2));
+    const xStart = startable[0];
+    // 相棒は MATE_FROM 手目に現れる（それまでは G.mate は null）
+    const mate = null;
+    const G = {
+      seq: 1, turn: "x", det, xLog: [], xt: { ...X_TICKETS }, black: detCount, dbl: X_DOUBLE, heli: X_HELI, doubling: false,
+      // ガス欠のヘリポート（誰にも知らされない）。飛ぼうとして初めてわかる
+      dud: pick(HELI), dudFound: false, mate, withMate,
+      possible: startable.slice().sort((a, b) => a - b), lastSeen: null,
+      over: false, winner: null, reason: "",
+    };
+    return { G, sec: { pos: xStart, path: [xStart], dudKnown: false } };
+  }
+
+  // 怪盗Xの手：{to, type}。ヘリは to = -1（着陸地点はランダム）
+  // 封鎖・破壊された駅（until 手目になるまで入れない）
+  // 破壊された駅（G.ruin）は最後まで誰も通れない。封鎖は期限つき
+  const isRuin = (G, st) => !!G.ruin && G.ruin.includes(st);
+  const heliBanned = G => G.heliBan !== undefined && G.xLog.length < G.heliBan;
+  const isClosed = (map, st, G) => isRuin(G, st) || (!!map && map[st] !== undefined && G.xLog.length < map[st]);
+
+  function xMoves(G, sec) {
+    const occ = new Set(G.det.map(d => d.pos));
+    const out = [], blackTo = new Set();
+    for (const e of ADJ[sec.pos]) {
+      if (occ.has(e.to) || isClosed(G.closedX, e.to, G)) continue;
+      if (xHas(G, e.type)) out.push({ to: e.to, type: e.type });
+      if (G.black > 0 && !blackTo.has(e.to)) { blackTo.add(e.to); out.push({ to: e.to, type: "black" }); }
+    }
+    const xKnowsDud = (sec.dudKnown || G.dudFound) && sec.pos === G.dud;
+    if (G.heli > 0 && HELI_SET.has(sec.pos) && !xKnowsDud && !heliBanned(G) && heliTargets(G, sec.pos, true).length) out.push({ to: -1, type: "heli" });
+    return out;
+  }
+  function heliTargets(G, from, forX, k = -1) {
+    // 怪盗Xは刑事のいるヘリポートには降りない。刑事どうしは重なってよい
+    const occ = new Set(forX ? G.det.map(d => d.pos) : []);
+    return HELI.filter(h => h !== from && !occ.has(h) && !isClosed(forX ? G.closedX : G.closedD, h, G));
+  }
+  const canDouble = G => G.dbl > 0 && !G.doubling && G.xLog.length <= MAX_MOVES - 2;
+
+  function nextPossible(G, type) {
+    const occ = new Set(G.det.map(d => d.pos));
+    if (type === "heli") return HELI.filter(h => !occ.has(h) && !isClosed(G.closedX, h, G));
+    if (type === "pass") return G.possible.filter(p => !occ.has(p));
+    const nx = new Set();
+    for (const s of G.possible) for (const e of ADJ[s]) {
+      if ((type === "black" || e.type === type) && !occ.has(e.to) && !isClosed(G.closedX, e.to, G)) nx.add(e.to);
+    }
+    return [...nx].sort((a, b) => a - b);
+  }
+
+  function applyX(G, sec, to, type, useDouble) {
+    if (type === "pass") to = sec.pos;   // パス：その場にとどまる（切符は使わない）
+    if (type === "heli") {
+      G.heli--;
+      if (sec.pos === G.dud) { to = sec.pos; sec.dudKnown = true; }   // ガス欠：その場から動けない
+      else to = pick(heliTargets(G, sec.pos, true));
+    }
+    sec.pos = to;
+    sec.path.push(to);
+    const n = G.xLog.length + 1;
+    let rev = REVEAL.includes(n), vanished = false;
+    if (rev && G.skipReveal > 0) { G.skipReveal--; rev = false; vanished = true; }   // 雲隠れ
+    G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0 });
+    if (type === "black") G.black--;
+    else if (G.xt && G.xt[type] !== undefined) G.xt[type]--;
+    G.possible = rev ? [to] : nextPossible(G, type);
+    if (rev) G.lastSeen = { pos: to, n };
+    if (mateActive(G) && to === G.mate.pos) { finish(G, "x", "meet"); return to; }
+    if (G.withMate !== false && !G.mate && G.xLog.length >= MATE_FROM) spawnMate(G, sec);
+    if (useDouble) { G.dbl--; G.doubling = true; }
+    else { G.doubling = false; mateStep(G, sec); if (!G.over) G.turn = 0; }
+    G.seq++;
+    return to;
+  }
+  const mateActive = G => !!G.mate && !G.mate.out;
+  // 相棒の登場：怪盗Xから MATE_MIN 手以上、刑事から3手以上離れた駅（島・破壊駅は除く）
+  function spawnMate(G, sec) {
+    const occ = G.det.map(d => d.pos);
+    const ok = p => p !== sec.pos && !ISLAND_ST.has(p) && !isRuin(G, p) && occ.every(o => o !== p);
+    let cands = shuffle([...Array(N).keys()]).filter(p => ok(p) && D[sec.pos][p] >= MATE_MIN && occ.every(o => D[p][o] >= 3));
+    if (!cands.length) cands = [...Array(N).keys()].filter(ok).sort((a, b) => D[sec.pos][b] - D[sec.pos][a]).slice(0, 5);
+    const pos = cands[0];
+    G.mate = { pos, path: [pos], out: false, since: G.xLog.length };
+  }
+  // 相棒の移動：怪盗Xの本当の居場所へ向かう（刑事の隣はなるべく避ける）
+  function mateStep(G, sec) {
+    if (!mateActive(G) || G.over || G.xLog.length === G.mate.since || G.xLog.length % MATE_EVERY !== 0) return;
+    const m = G.mate, occ = new Set(G.det.map(d => d.pos));
+    const risk = q => G.det.some(d => D[d.pos][q] <= 1) ? 3 : 0;
+    const opts = [...new Set(ADJ[m.pos].map(e => e.to))].filter(q => !occ.has(q) && !isClosed(G.closedX, q, G));
+    let best = m.pos, bs = D[m.pos][sec.pos] * 2 + risk(m.pos);
+    for (const q of opts) { const v = D[q][sec.pos] * 2 + risk(q); if (v < bs) { bs = v; best = q; } }
+    if (best === m.pos) return;
+    m.pos = best;
+    m.path.push(best);
+    if (best === sec.pos) finish(G, "x", "meet");
+  }
+
+  function detMoves(G, k) {
+    const d = G.det[k];
+    // 刑事どうしは同じ駅に重なってもよい
+    const out = ADJ[d.pos].filter(e => dHas(d, e.type) && !isClosed(G.closedD, e.to, G));
+    if (d.t.heli > 0 && HELI_SET.has(d.pos) && !heliBanned(G) && !(G.dudFound && d.pos === G.dud) && heliTargets(G, d.pos, false, k).length) out.push({ to: -1, type: "heli" });
+    return out;
+  }
+  const allStuck = G => G.det.every((_, k) => detMoves(G, k).length === 0);
+
+  // ---------------- カード（5・10・17手目に両陣営が1枚引く。ハズレなし） ----------------
+  const CARD_TURNS = [5, 10, 17];
+  const CARD_LAST = 20;   // 手札のカードは20手目まで好きな時に使える
+  const CARD = {
+    bridge:    { side: "d", name: "橋封鎖", desc: "橋を1つ選んで封鎖する。4手のあいだ怪盗Xは通れない。" },
+    rcheck:    { side: "d", name: "ランダム検問", desc: "引いたその場で発動。ヘリポート以外のどこかの駅に検問所が敷かれ、6手のあいだ怪盗Xはその駅を通れない。" },
+    checkpoint:{ side: "d", name: "検問", desc: "いま自分がいる駅に検問所を置く。6手のあいだ怪盗Xはその駅を通れない。" },
+    dash:      { side: "d", name: "ダッシュ", desc: "使った刑事は、この番に2回続けて動ける（1駅進んだあと、もう1駅）。" },
+    heliban:   { side: "d", name: "ヘリ封鎖", desc: "引いたその場で発動。すべてのヘリポートを5手のあいだ閉鎖し、誰もヘリで飛べない。" },
+    reinforce: { side: "d", name: "応援要請", desc: "刑事全員にヘリの切符が1枚ずつ追加される。" },
+    trap:      { side: "x", name: "罠", desc: "いまいる駅に罠を仕掛ける。踏んだ刑事は1回休み。刑事には見えない。" },
+    vanish:    { side: "x", name: "雲隠れ", desc: "次の目撃情報を1回だけ無効にする。" },
+    destroy:   { side: "x", name: "駅破壊", desc: "2手以内の駅を1つ壊す。壊れた駅は最後まで誰も通れない（怪盗Xも）。" },
+    miss:      { side: "", name: "ハズレ", desc: "何も起こらなかった。" },
+  };
+  const DECK = {
+    d: [["bridge", 22], ["checkpoint", 33], ["dash", 10], ["heliban", 18], ["rcheck", 17]],
+    x: [["trap", 34], ["vanish", 33], ["destroy", 33]],
+  };
+  // ヘリ封鎖は1ゲームに1回だけ（一度引いたら山札から外す）
+  function drawCard(side, G = null) {
+    const deck = DECK[side].filter(([c]) => !(c === "heliban" && G && G.helibanDrawn));
+    let r = Math.random() * deck.reduce((s, c) => s + c[1], 0);
+    for (const [c, w] of deck) if ((r -= w) < 0) return c;
+    return "miss";
+  }
+  function cardTargets(G, sec, card) {
+    if (card === "bridge") return BRIDGE_ST.filter(b => !isClosed(G.closedX, b, G));
+    if (card === "destroy") {
+      const occ = new Set(G.det.map(d => d.pos));
+      return [...Array(N).keys()].filter(i => i !== sec.pos && D[sec.pos][i] <= 2 && !occ.has(i) && !isRuin(G, i));
+    }
+    return null;
+  }
+  function applyCard(G, sec, card, target) {
+    const n = G.xLog.length;
+    if (card === "bridge") G.closedX = { ...(G.closedX || {}), [target]: n + 4 };
+    else if (card === "heliban") G.heliBan = n + 5;
+    else if (card === "dash") G.dash = target;   // target＝使った刑事の番号
+    else if (card === "rcheck") {
+      // ランダム検問：ヘリポート・怪盗Xの駅・破壊された駅・刑事の駅以外からランダム
+      const occ = new Set(G.det.map(d => d.pos));
+      const opts = [...Array(N).keys()].filter(i => !HELI_SET.has(i) && i !== sec.pos && !isRuin(G, i) && !occ.has(i) && !(G.checkpoints && G.checkpoints[i] !== undefined && G.xLog.length < G.checkpoints[i]));
+      target = pick(opts);
+      G.closedX = { ...(G.closedX || {}), [target]: n + 6 };
+      G.checkpoints = { ...(G.checkpoints || {}), [target]: n + 6 };
+    }
+    else if (card === "checkpoint") {
+      // 検問所：怪盗Xは6手のあいだその駅を通れない
+      G.closedX = { ...(G.closedX || {}), [target]: n + 6 };
+      G.checkpoints = { ...(G.checkpoints || {}), [target]: n + 6 };
+    }
+    else if (card === "inquiry") {
+      const others = shuffle(G.possible.filter(s => s !== sec.pos));
+      G.possible = [sec.pos, ...others.slice(0, Math.floor(others.length / 2))].sort((a, b) => a - b);
+    } else if (card === "reinforce") G.det.forEach(d => { d.t.heli += 1; });
+    else if (card === "trap") sec.trap = sec.pos;
+    else if (card === "vanish") G.skipReveal = (G.skipReveal || 0) + 1;
+    else if (card === "destroy") {
+      G.ruin = [...(G.ruin || []), target];
+      G.possible = G.possible.filter(p => p !== target);
+    }
+    G.cards = [...(G.cards || []), { card, n, target: card === "trap" ? null : (target ?? null) }];
+    return target;
+  }
+  // CPU が選ぶ対象
+  function aiCardTarget(G, sec, card) {
+    const opts = cardTargets(G, sec, card);
+    if (!opts || !opts.length) return null;
+    if (card === "bridge") {
+      const P = G.possible;
+      return opts.reduce((best, b) => { const v = P.reduce((s, p) => s + dd(b, p), 0) / P.length; return v < best[1] ? [b, v] : best; }, [opts[0], Infinity])[0];
+    }
+    // 駅破壊：いちばん近い刑事の通り道になっている駅を壊す（自分の逃げ道は3つ以上残す）
+    let near = G.det[0].pos;
+    for (const d of G.det) if (D[sec.pos][d.pos] < D[sec.pos][near]) near = d.pos;
+    const exits = o => new Set(ADJ[sec.pos].map(e => e.to).filter(t => t !== o && !isRuin(G, t))).size;
+    const safe = opts.filter(o => exits(o) >= 3);
+    if (!safe.length) return null;
+    return safe.reduce((best, o) => { const v = D[o][near] + D[o][sec.pos] * 0.5; return v < best[1] ? [o, v] : best; }, [safe[0], Infinity])[0];
+  }
+  // 手札：いまが何手目か（怪盗Xはこれから動く手、刑事はいまの手）
+  const cardMove = (G, side) => side === "x" ? G.xLog.length + 1 : G.xLog.length;
+  const handOf = (G, side) => ((G.hand = G.hand || { x: [], d: [] })[side]);
+  // CPU がいま使うカードを選ぶ（使うものは手札から取り除いて返す）
+  function aiUseCards(G, sec, side) {
+    const hand = handOf(G, side), used = [];
+    if (!hand.length || cardMove(G, side) > CARD_LAST) return used;
+    const last = cardMove(G, side) === CARD_LAST;
+    const dmin = Math.min(...G.det.map(d => D[sec.pos][d.pos]));
+    for (let i = hand.length - 1; i >= 0; i--) {
+      const c = hand[i];
+      let use = last;
+      if (side === "x") {
+        if (c === "trap") use = use || dmin <= 3;
+        if (c === "vanish") use = use || (REVEAL.includes(G.xLog.length + 1) && !(G.skipReveal > 0));
+        if (c === "destroy") use = use || dmin <= 2;
+      } else {
+        if (c === "dash") {
+          // 候補までちょうど2手のときに使えば一気に踏み込める
+          const here = G.turn === "x" ? -1 : G.det[G.turn].pos;
+          use = use || (here >= 0 && G.dash == null && G.possible.length <= 8 && Math.min(...G.possible.map(p => D[here][p])) === 2);
+        }
+        if (c === "checkpoint") {
+          // 自分の駅が怪盗Xの逃げ道（候補の隣）になっていれば置く
+          const here = G.turn === "x" ? -1 : G.det[G.turn].pos;
+          use = use || (here >= 0 && G.possible.length <= 20 && G.possible.some(p => D[p][here] === 1));
+        }
+        if (c === "bridge") use = use || G.possible.length <= 30;
+        if (c === "heliban") use = use || (G.heli > 0 && !heliBanned(G) && G.possible.length <= 12 && G.possible.some(p => HELI_SET.has(p)));
+        if (c === "reinforce") use = use || G.det.every(d => d.t.heli === 0);
+      }
+      if (!use) continue;
+      let target = null;
+      if (needsTargetCard(c)) { target = aiCardTarget(G, sec, c); if (target === null) continue; }
+      if (c === "checkpoint") { if (G.turn === "x") continue; target = G.det[G.turn].pos; }
+      if (c === "dash") { if (G.turn === "x" || G.dash != null) continue; target = G.turn; }
+      hand.splice(i, 1);
+      used.push([c, target]);
+    }
+    return used;
+  }
+  const needsTargetCard = c => c === "bridge" || c === "destroy";
+  // 罠：踏んだ刑事は1回休み
+  function checkTrap(G, sec) {
+    if (sec.trap === null || sec.trap === undefined || sec.trap === sec.pos) return -1;
+    const k = G.det.findIndex(d => d.pos === sec.trap);
+    if (k < 0) return -1;
+    G.stun = { ...(G.stun || {}), [k]: 1 };
+    sec.trap = null;
+    return k;
+  }
+
+  function advance(G, k) {
+    if (k + 1 < G.det.length) G.turn = k + 1;
+    else if (G.xLog.length >= MAX_MOVES) { G.over = true; G.winner = "x"; G.reason = "escape"; }
+    else G.turn = "x";
+  }
+  function applyD(G, k, to, type, sec = null) {
+    const d = G.det[k];
+    if (type === "heli") {
+      if (d.pos === G.dud) { to = d.pos; G.dudFound = true; }         // ガス欠：その場から動けない（全員に知れ渡る）
+      else to = pick(heliTargets(G, d.pos, false, k));
+    }
+    d.pos = to;
+    if (type === "heli") d.t.heli--;
+    d.last = type;
+    // 刑事の番で怪盗Xの駅に入った時点で確保（最終手でも逃げ切りより優先）
+    if (sec && to === sec.pos) { finish(G, "d", "caught"); return to; }
+    const dashing = G.dash === k;
+    if (mateActive(G) && to === G.mate.pos) { G.mate.out = true; G.mate.by = k; }   // 相棒を確保
+    G.possible = G.possible.filter(p => p !== to);
+    // ダッシュ中は同じ刑事がもう1回動く
+    if (dashing) { G.dash = null; G.seq++; return to; }
+    advance(G, k);
+    G.seq++;
+    return to;
+  }
+  function skipD(G, k) { if (G.dash === k) G.dash = null; advance(G, k); G.seq++; }
+  function finish(G, winner, reason) { G.over = true; G.winner = winner; G.reason = reason; G.seq++; }
+
+  // ---------------- CPU ----------------
+  const AI_MATE_PULL = 3;
+  function xSafety(G, to) {
+    const cpos = G.det.map(d => d.pos);
+    const dmin = Math.min(...cpos.map(c => D[to][c]));
+    const dsum = cpos.reduce((s, c) => s + Math.min(D[to][c], 5), 0);
+    const exits = ADJ[to].filter(e => !cpos.some(c => D[e.to][c] <= 1)).length;
+    let s = Math.min(dmin, 4) * 10 + dsum + exits * 1.5;
+    if (dmin <= 1) s -= 40;
+    return { s, dmin };
+  }
+  function aiX(G, sec) {
+    const moves = xMoves(G, sec);
+    let best = null, bs = -Infinity, bestD = 0;
+    const mate = mateActive(G) ? G.mate.pos : null;
+    for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) {
+      const r = xSafety(G, to);
+      if (to === mate) return { to, type: moves.find(m => m.to === to && m.type !== "black")?.type || "black", useDouble: false };
+      const s = r.s + Math.random() * 3 - (mate !== null ? Math.min(D[to][mate], 8) * AI_MATE_PULL : 0);
+      if (s > bs) { bs = s; best = to; bestD = r.dmin; }
+    }
+    // 追い詰められたらヘリでランダムに逃げる
+    if (moves.some(m => m.type === "heli")) {
+      const lands = heliTargets(G, sec.pos, true);
+      const hs = lands.reduce((s, h) => s + xSafety(G, h).s, 0) / lands.length;
+      if (best === null || (bestD <= 1 && hs > bs - 5) || hs > bs + 12) return { to: -1, type: "heli", useDouble: false };
+    }
+    const n = G.xLog.length + 1;
+    const nowD = Math.min(...G.det.map(d => D[sec.pos][d.pos]));
+    const useDouble = canDouble(G) && bestD <= 1;
+    const opts = moves.filter(m => m.to === best && m.type !== "black").map(m => m.type);
+    let type = opts[0], size = -1;
+    // 候補が広がる切符を選ぶ。残りが少ない切符は節約する
+    for (const ty of opts) { const k = nextPossible(G, ty).length + (G.xt ? Math.min(G.xt[ty], 4) * 3 : 0); if (k > size) { size = k; type = ty; } }
+    const wantBlack = G.black > 0 && !REVEAL.includes(n) && (
+      (REVEAL.includes(n - 1) && Math.random() < 0.6) ||
+      (nowD <= 2 && Math.random() < 0.35));
+    if (wantBlack || !type) type = "black";
+    return { to: best, type, useDouble };
+  }
+
+  // 最後の目撃から記録された切符をたどり、候補駅の確からしさを求める
+  const AI_MATE_GUARD = 0.6;
+  const AI_BIAS = 1.2, AI_PROB = 30, AI_SPREAD = 1.2, AI_LOOK = 20;
+  function candWeights(G) {
+    const P = G.possible, occ = G.det.map(d => d.pos);
+    const uni = () => new Map(P.map(p => [p, 1 / P.length]));
+    if (!G.lastSeen || P.length <= 1) return uni();
+    const safe = q => Math.exp(AI_BIAS * Math.min(3, ...occ.map(o => D[q][o])));
+    let cur = new Map([[G.lastSeen.pos, 1]]);
+    for (let i = G.lastSeen.n; i < G.xLog.length; i++) {
+      const t = G.xLog[i].t, nx = new Map();
+      for (const [p, w] of cur) {
+        const tos = t === "heli" ? HELI.filter(h => h !== p) : [...new Set(ADJ[p].filter(e => t === "black" || e.type === t).map(e => e.to))];
+        const ws = tos.map(safe), tot = ws.reduce((a, b) => a + b, 0);
+        tos.forEach((q, j) => nx.set(q, (nx.get(q) || 0) + w * ws[j] / tot));
+      }
+      cur = nx;
+    }
+    const out = new Map();
+    let tot = 0;
+    for (const p of P) { const w = (cur.get(p) || 0) + 0.02 / P.length; out.set(p, w); tot += w; }
+    for (const [p, w] of out) out.set(p, w / tot);
+    return out;
+  }
+  function aiD(G, k, steady = false) {
+    const moves = detMoves(G, k);
+    const order = G.orders ? G.orders[k] : undefined;
+    if (order !== undefined && order !== null) {
+      // 指示された駅へ向かう。着いたら周辺で張り込む
+      const here = G.det[k].pos;
+      const norm = moves.filter(m => m.to >= 0);
+      if (norm.length) {
+        let pool = D[here][order] > 1 ? norm.filter(m => D[m.to][order] < D[here][order]) : norm.filter(m => D[m.to][order] <= 1);
+        if (!pool.length) pool = norm;
+        pool.sort((a, b) => D[a.to][order] - D[b.to][order]);
+        const bestD = D[pool[0].to][order];
+        const tied = pool.filter(m => D[m.to][order] === bestD);
+        const pr = new Set(G.possible);
+        const pickM = tied.find(m => pr.has(m.to)) || tied[0];
+        return { to: pickM.to, type: pickM.type };
+      }
+    }
+    // 候補駅ごとの「いそうな度合い」で重み付け（刑事から遠い駅ほど怪盗Xは逃げ込みやすい）
+    const P = G.possible;
+    const W = candWeights(G);
+    const others = G.det.filter((_, j) => j !== k).map(o => o.pos);
+    const scoreAt = to => {
+      let ed = 0, prob = 0;
+      for (const [p, w] of W) { ed += dd(to, p) * w; if (p === to) prob = w; }
+      let spread = 0;
+      for (const o of others) if (D[to][o] <= 1) spread -= AI_SPREAD;
+      // 候補が少ないときは1手先読み：怪盗Xがいちばん安全な駅へ逃げたとして、そこがどれだけ追い詰められるか
+      let look = 0;
+      if (P.length <= AI_LOOK) {
+        const team = [...others, to];
+        for (const [p, w] of W) {
+          if (p === to) continue;
+          const opts = [...new Set(ADJ[p].map(e => e.to))].filter(q => !team.includes(q) && !isClosed(G.closedX, q, G));
+          if (!opts.length) { look += w * 40; continue; }
+          let bestQ = -1;
+          for (const q of opts) { const m = Math.min(4, ...team.map(o => D[q][o])); if (m > bestQ) bestQ = m; }
+          look -= w * bestQ * 10;
+          look += 3 * w * Math.max(0, 3 - opts.filter(q => Math.min(...team.map(o => D[q][o])) >= 2).length);
+        }
+      }
+      let mateV = 0;
+      if (mateActive(G)) mateV = (to === G.mate.pos ? 30 : 0) - Math.min(D[to][G.mate.pos], 6) * AI_MATE_GUARD;
+      return prob * AI_PROB - ed * 4 + spread + look + mateV;
+    };
+    let best = null, bs = -Infinity;
+    for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) {
+      const types = moves.filter(m => m.to === to).map(m => m.type);
+      const s = scoreAt(to) + (steady ? (to % 7) * 0.01 : Math.random() * 0.8);
+      if (s > bs) { bs = s; best = to; }
+    }
+    if (moves.some(m => m.type === "heli")) {
+      const lands = heliTargets(G, G.det[k].pos, false, k);
+      const hs = lands.reduce((s, h) => s + scoreAt(h), 0) / lands.length;
+      if (best === null || hs > bs + 6) return { to: -1, type: "heli" };
+    }
+    const types = moves.filter(m => m.to === best).map(m => m.type);
+    return { to: best, type: types[0] };
+  }
+  // ======================================================================
+  // CORE-END
+  // ======================================================================
+
+  // 生成画像を使うときはここにファイル名を入れる（例: map: "art/map.jpg"）
+  // 刑事の画像（全身は3:5の透過画像、足元が下辺の中央。face は顔アイコン用の正方形）
+  const DETECTIVES = [
+    { name: "グレイ警部", sub: "冷静な切れ者" },
+    { name: "ハリス刑事", sub: "叩き上げのベテラン" },
+    { name: "ローズ巡査", sub: "行動派の新鋭" },
+    { name: "ミミ巡査", sub: "町の人気者" },
+    { name: "ジョンソン", sub: "頼れる力持ち" },
+  ].map((d, i) => ({ ...d, img: `art/detectives/detective-${i + 1}.webp`, face: `art/detectives/detective-${i + 1}-face.webp` }));
+  const ART = { map: "art/london-map.webp", x: null, d: [null, null, null, null, null], title: null };
+  const DET_KEY = "london-chase-detective";
+  // 選んだキャラが刑事1（あなた）。残りは順番に刑事2以降
+  const detChar = k => DETECTIVES[((A.detPick || 0) + k) % DETECTIVES.length];
+  // 怪盗Xのキャラ（全身は3:5の透過画像、足元が下辺の中央。face は顔アイコン用の正方形）
+  const THIEVES = [
+    { name: "ジャック", sub: "すばしっこい小悪党", img: "art/thieves/thief-1.webp", face: "art/thieves/thief-1-face.webp" },
+    { name: "ブルーノ", sub: "怪力の大男", img: "art/thieves/thief-2.webp", face: "art/thieves/thief-2-face.webp" },
+    { name: "ヴァイオレット", sub: "華麗な女怪盗", img: "art/thieves/thief-3.webp", face: "art/thieves/thief-3-face.webp" },
+  ];
+  const THIEF_KEY = "london-chase-thief";
+  const thief = () => THIEVES[A.thief] || THIEVES[0];
+  const mateChar = () => THIEVES[((A.thief || 0) + 1) % THIEVES.length];
+
+  const DCOL = ["#3B82F6", "#F97316", "#EC4899", "#14B8A6", "#A855F7"];
+  const AI_DELAY = 650;
+  const SAVE_KEY = "london-chase-save-v4";
+  const $ = id => document.getElementById(id);
+  try { if (localStorage.getItem("london-chase-hud-hidden") === "1") document.body.classList.add("hud-hidden"); } catch (e) {}
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs = {}, parent) {
+    const e = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const dName = k => "刑事" + (k + 1);
+
+  function portrait(kind, k = 0, cls = "") {
+    const src = kind === "m" ? mateChar().face : kind === "x" ? (ART.x || thief().face) : (ART.d[k] || detChar(k).face);
+    if (src) return `<span class="portrait p-${kind} ${cls}"><img src="${src}" alt=""></span>`;
+    const color = kind === "x" ? "#2A2530" : DCOL[k];
+    const bg = kind === "x" ? "rgba(192,39,31,0.28)" : "rgba(255,255,255,0.08)";
+    return `<svg class="portrait ${cls}" viewBox="-30 -114 60 60" aria-hidden="true"><defs><clipPath id="pc-${kind}${k}${cls}"><circle cx="0" cy="-84" r="29"></circle></clipPath></defs><circle cx="0" cy="-84" r="29" fill="${bg}"></circle><g clip-path="url(#pc-${kind}${k}${cls})"><use href="${kind === "x" ? "#fig-x" : "#fig-d"}" x="-36" y="-112" width="72" height="120" style="color:${color}"></use></g>${kind === "d" ? `<text x="17" y="-61" class="pawn-num" style="font-size:13px">${k + 1}</text>` : ""}</svg>`;
+  }
+
+  // ======================================================================
+  // 状態
+  // ======================================================================
+  const A = {
+    role: null,        // "x" | "d" | "pass"
+    detCount: DEFAULT_DETS,
+    detPick: (() => { try { return Math.min(4, Math.max(0, Number(localStorage.getItem(DET_KEY)) || 0)); } catch (e) { return 0; } })(),
+    thief: (() => { try { return Math.min(2, Math.max(0, Number(localStorage.getItem(THIEF_KEY)) || 0)); } catch (e) { return 0; } })(),
+    G: null,
+    sec: null,
+    feed: [],
+    sel: null,         // 選択中の移動先
+    useDouble: false,
+    hints: true,
+    cover: null,       // パス&プレイの目隠し："x"（Xへ渡す）| "x-open" | "d"（刑事へ渡す）
+    screen: "title",   // title | rules | game | result
+    busy: false,
+  };
+  let timer = null;
+
+  const humanTurn = () => {
+    const G = A.G;
+    if (!G || G.over || A.pendingCard) return false;
+    if (A.role === "pass") return G.turn === "x" ? A.cover === "x-open" : A.cover === null;
+    return A.role === "x" ? G.turn === "x" : G.turn === ME_DET;
+  };
+  // 刑事モードで自分が動かす刑事（ほかの刑事はCPU）
+  const ME_DET = 0;
+  const xVisible = () => {
+    const G = A.G;
+    if (!G) return false;
+    if (G.over || A.role === "x") return true;
+    return A.role === "pass" && A.cover === "x-open";
+  };
+  const sideName = () => A.role === "x" ? "x" : A.role === "d" ? "d" : null;
+
+  function pushFeed(n, text, hot = false) {
+    A.feed.unshift({ n, text, hot });
+    if (A.feed.length > 200) A.feed.length = 200;
+  }
+  function describe(prev, G) {
+    for (let i = prev.xLog.length; i < G.xLog.length; i++) {
+      const e = G.xLog[i];
+      let s = e.t === "pass" ? "怪盗Xはパス（その場にとどまった）" : `怪盗Xが ${TYPE[e.t].name} で移動`;
+      if (e.d === 1) s = "怪盗Xが2倍移動！ " + s;
+      if (xVisible()) s += `（→ ${NO(A.sec.path[i + 1])} ${NAME(A.sec.path[i + 1])}）`;
+      pushFeed(i + 1, s);
+      if (e.t === "heli" && A.sec.path[i + 1] === A.sec.path[i] && xVisible()) {
+        dudAction(A.sec.path[i], "怪盗Xのヘリが飛べない…（刑事にはバレていない）");
+      }
+      if (e.v) {
+        pushFeed(i + 1, "雲隠れ！ 目撃情報が消えた", true); toast("雲隠れ！ 目撃情報が消えた");
+        say(Math.floor(Math.random() * G.det.length), "消えた！？", "sad");
+        banner("雲隠れ！", "出現するはずの怪盗Xが姿を見せない", "gray", 1);
+      }
+      if (e.p !== null) {
+        pushFeed(i + 1, `目撃情報！ 怪盗Xは ${NO(e.p)} ${NAME(e.p)} にいる`, true); toast(`目撃情報！ 怪盗Xは ${NAME(e.p)} に`);
+        say(nearestDet([e.p]), pick(FOUND_LINES), "hot");
+        banner("目撃！", `怪盗Xは ${NO(e.p)} ${NAME(e.p)} に現れた`, "", 2);
+      }
+    }
+    G.det.forEach((d, k) => {
+      const p = prev.det[k];
+      if (p && p.pos === d.pos && p.t.heli !== d.t.heli) {
+        say(k, "ガス欠だと！？", "sad", 3000);
+        dudAction(d.pos, `${NAME(d.pos)} のヘリは使えない`);
+      }
+      if (p && p.pos !== d.pos) {
+        const used = d.last;
+        pushFeed(G.xLog.length, `${dName(k)} → ${NO(d.pos)} ${NAME(d.pos)}（${used ? TYPE[used].name : ""}）`);
+      }
+    });
+    if (G.mate && !prev.mate) {
+      // 相棒の登場
+      buildTokens();
+      pushFeed(G.xLog.length, `怪盗Xの相棒が ${NO(G.mate.pos)} ${NAME(G.mate.pos)} に現れた！`, true);
+      banner("相棒登場！", `${NAME(G.mate.pos)} に怪盗Xの相棒が現れた`, "", 2);
+      say(nearestDet([G.mate.pos]), "仲間がいたのか！", "hot", 2600);
+    }
+    if (G.mate && prev.mate) {
+      if (!prev.mate.out && G.mate.out) {
+        const k = G.mate.by ?? 0;
+        pushFeed(G.xLog.length, `${dName(k)} が ${NAME(G.mate.pos)} で相棒を確保！ もう合流はできない`, true);
+        say(k, "相棒を捕まえた！", "hot", 3000);
+        banner("相棒確保！", "怪盗Xはもう相棒と合流できない", "blue", 2);
+      } else if (!G.mate.out && prev.mate.pos !== G.mate.pos && !G.over) {
+        pushFeed(G.xLog.length, `相棒 → ${NO(G.mate.pos)} ${NAME(G.mate.pos)}`);
+      }
+    }
+    if (!prev.over && G.over && G.reason === "meet") {
+      pushFeed(G.xLog.length, `${NAME(G.mate.pos)} で怪盗Xが相棒と合流！ 逃走成功`, true);
+      G.det.forEach((_, k) => say(k, pick(["しまった、仲間がいたか！", "逃げられた…", "くそっ…"]), "sad", 4000));
+      banner("合流成功！", `怪盗Xは ${NAME(G.mate.pos)} で相棒と落ち合った`, "", 3);
+    } else if (!prev.over && G.over) {
+      pushFeed(G.xLog.length, G.winner === "x" ? "怪盗Xの勝ち！" : "怪盗Xを逮捕！ 刑事の勝ち！", true);
+      if (G.winner === "d") {
+        const kc = G.det.findIndex(d => d.pos === A.sec.pos);
+        G.det.forEach((_, k) => say(k, k === kc ? "確保ーっ！" : pick(["やったな！", "お手柄だ！", "観念しろ！"]), k === kc ? "hot" : "", 4000));
+        banner("逮捕！", G.reason === "trapped" ? "怪盗Xは追い詰められて動けない" : `${dName(Math.max(0, kc))}が怪盗Xを確保した`, "blue", 3);
+      } else {
+        G.det.forEach((_, k) => say(k, pick(["くそっ…", "逃げられた…", "無念…"]), "sad", 4000));
+        banner("逃げ切り！", "怪盗Xは霧のロンドンへ消えた", "", 3);
+      }
+    }
+  }
+
+  // 刑事側から見た怪盗Xの見つかり具合（公開情報だけで決まる）
+  function exposure(G) {
+    const n = G.possible.length;
+    if (n <= 1) return { level: "found", n, label: "発見されている", help: "刑事に居場所がばれています" };
+    if (n <= 4) return { level: "near", n, label: `追われている・候補${n}駅`, help: "刑事は候補をかなり絞り込んでいます" };
+    return { level: "lost", n, label: `見失われている・候補${n}駅`, help: "刑事はまだ居場所をつかめていません" };
+  }
+  // 刑事ごとの吹き出し："!" は怪盗Xを捕捉している、"?" は見失っている
+  function detBubble(G, k) {
+    const e = exposure(G);
+    if (e.level === "found") return "!";
+    const near = Math.min(...G.possible.map(p => D[G.det[k].pos][p]));
+    return e.level === "near" && near <= 2 ? "!" : "?";
+  }
+  // ---------------- 刑事のリアクション（セリフの吹き出しと中央の見出し） ----------------
+  const SPEECH = new Map();   // 刑事番号 -> { text, kind, until }
+  function say(k, text, kind = "", ms = 2400) {
+    if (k < 0 || !A.G || !A.G.det[k]) return;
+    SPEECH.set(k, { text, kind, until: Date.now() + ms });
+    updateTalk();
+    setTimeout(updateTalk, ms + 40);
+  }
+  function nearestDet(targets) {
+    const G = A.G;
+    let best = 0, bd = Infinity;
+    G.det.forEach((d, k) => { const x = Math.min(...targets.map(p => D[d.pos][p])); if (x < bd) { bd = x; best = k; } });
+    return best;
+  }
+  function updateTalk() {
+    if (!A.G) return;
+    A.G.det.forEach((_, k) => {
+      const t = $("tokD" + k);
+      if (!t) return;
+      const s = SPEECH.get(k), on = s && s.until > Date.now();
+      const tp = $("talkD" + k), tk = tp.querySelector(".talk"), b = t.querySelector(".bubble");
+      tp.style.transform = t.style.transform;
+      if (!on) { tk.style.display = "none"; tk.dataset.text = ""; if (b) b.style.visibility = ""; return; }
+      if (b) b.style.visibility = "hidden";
+      if (tk.dataset.text !== s.text) {
+        tk.dataset.text = s.text;
+        const w = s.text.length * 26 + 30;
+        tk.querySelector(".tb").setAttribute("d", `M${-w / 2},-54 h${w} a10,10 0 0 1 10,10 v30 a10,10 0 0 1 -10,10 h${-w / 2 + 14} l-14,14 l-4,-14 h${-w / 2 + 4} a10,10 0 0 1 -10,-10 v-30 a10,10 0 0 1 10,-10 Z`);
+        tk.querySelector("text").textContent = s.text;
+        tk.setAttribute("class", "talk pop " + s.kind);
+      }
+      tk.style.display = "";
+    });
+  }
+  // ヘリのガス欠：ふわっと浮いて、プスンと落ちる
+  function dudAction(pos, sub) {
+    toast("ガス欠！ ヘリが飛べない");
+    banner("ガス欠！", sub, "gray", 2);
+    const [x, y] = P(pos);
+    const host = el("g", { transform: `translate(${x + 78} ${y - 14})` }, $("gTalk"));
+    const heli = el("g", { class: "dud-heli" }, host);
+    el("path", { d: "M-26,-6 q0,-20 24,-20 h8 q20,0 20,18 q0,12 -18,12 h-18 q-16,0 -16,-10 Z", class: "dh-body" }, heli);
+    el("path", { d: "M26,-10 L58,-16 L60,-4 L26,-2 Z", class: "dh-body" }, heli);
+    el("path", { d: "M-10,-6 h12 v-12 h-4 q-8,0 -8,8 Z", class: "dh-glass" }, heli);
+    el("path", { d: "M-20,8 v6 M18,8 v6 M-28,14 h56", class: "dh-skid" }, heli);
+    el("path", { d: "M0,-26 v-8 M-44,-34 h88", class: "dh-rotor" }, heli);
+    for (let i = 0; i < 3; i++) el("circle", { cx: 40 + i * 12, cy: -18 - i * 6, r: 10 + i * 4, class: "dh-smoke s" + i }, host);
+    const t = el("text", { x: 0, y: -60, class: "dh-text" }, host);
+    t.textContent = "プスン…";
+    setTimeout(() => host.remove(), 2800);
+  }
+  let bannerPri = 0, bannerUntil = 0;
+  function banner(title, sub = "", color = "", pri = 1) {
+    if (Date.now() < bannerUntil && pri < bannerPri) return;
+    bannerPri = pri; bannerUntil = Date.now() + 1900;
+    const d = document.createElement("div");
+    d.className = "bn " + color;
+    d.innerHTML = `<b></b><small></small>`;
+    d.querySelector("b").textContent = title;
+    d.querySelector("small").textContent = sub;
+    $("banner").replaceChildren(d);
+    setTimeout(() => { if (d.parentNode) d.remove(); }, 1950);
+  }
+  const FOUND_LINES = ["見つけた！", "いたぞ！", "そこか！", "逃がさん！"];
+  const LOST_LINES = ["見失った…", "どこへ消えた…", "くそっ、撒かれた", "手がかりが…"];
+  const NEAR_LINES = ["近いぞ…", "この辺りだ", "匂うな…"];
+
+  let lastExpo = null;
+  function noteExposure() {
+    const G = A.G;
+    if (!G || G.over) { lastExpo = null; return; }
+    const lv = exposure(G).level;
+    if (lv === "found") {
+      G.seen = G.seen || [];
+      const last = G.seen[G.seen.length - 1], pos = G.possible[0], n = G.xLog.length;
+      if (!last || last.pos !== pos) G.seen.push({ n, pos });
+    }
+    if (lastExpo && lv !== lastExpo) {
+      if (lv === "found") {
+        toast("刑事が怪盗Xを発見！");
+        say(nearestDet(G.possible), pick(FOUND_LINES), "hot");
+        banner("発見！", `刑事が怪盗Xの居場所をつかんだ（${NAME(G.possible[0])}）`, "", 1);
+      } else if (lv === "lost") {
+        toast("刑事は怪盗Xを見失った");
+        say(Math.floor(Math.random() * G.det.length), pick(LOST_LINES), "sad");
+        banner("見失った…", `候補は${G.possible.length}駅に広がった`, "gray", 0);
+      } else if (lastExpo === "lost") {
+        toast("刑事が怪盗Xに迫っている");
+        say(nearestDet(G.possible), pick(NEAR_LINES));
+      }
+    }
+    lastExpo = lv;
+  }
+
+  function save() {
+    try {
+      if (!A.G || A.G.over) localStorage.removeItem(SAVE_KEY);
+      else localStorage.setItem(SAVE_KEY, JSON.stringify({ role: A.role, detCount: A.detCount, thief: A.thief, detPick: A.detPick, G: A.G, sec: A.sec, feed: A.feed.slice(0, 60), cover: A.cover === "x-open" ? "x" : A.cover }));
+    } catch (e) {}
+  }
+  function loadSave() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) { return null; } }
+
+  // ======================================================================
+  // 進行
+  // ======================================================================
+  function startGame(role) {
+    clearTimeout(timer);
+    lastSight = null;
+    SPEECH.clear();
+    const { G, sec } = newGame(A.detCount);
+    Object.assign(A, { role, G, sec, feed: [], sel: null, useDouble: false, screen: "game", busy: false });
+    A.cover = role === "pass" ? "x" : null;
+    pushFeed(0, role === "x" ? `あなたは怪盗X。${MAX_MOVES}手逃げ切るか、相棒と合流すれば勝ち！` : role === "d" ? `あなたは刑事1。ほかの刑事${A.detCount - 1}人はCPUの仲間です。怪盗Xを逮捕せよ！` : "パス&プレイ。怪盗X役の人から始めます。", true);
+    buildTokens();
+    fitView(false);
+    step();
+    if (role !== "pass") setTimeout(() => focusTurn(), 50);
+  }
+
+  function resume(s) {
+    clearTimeout(timer);
+    SPEECH.clear();
+    lastSight = null;
+    Object.assign(A, { role: s.role, detCount: s.detCount, thief: s.thief || 0, detPick: s.detPick || 0, G: s.G, sec: s.sec, feed: s.feed || [], sel: null, useDouble: false, screen: "game", busy: false, cover: s.cover || null });
+    buildTokens();
+    fitView(false);
+    step();
+  }
+
+  function apply(fn) {
+    const prev = clone(A.G);
+    fn();
+    if (!A.G.over && A.G.det.some(d => d.pos === A.sec.pos)) finish(A.G, "d", "caught");
+    describe(prev, A.G);
+    const tk = A.G.over ? -1 : checkTrap(A.G, A.sec);
+    if (tk >= 0) { say(tk, "しまった！罠だ！", "hot"); toast(`${dName(tk)} が罠にかかった！ 1回休み`); pushFeed(A.G.xLog.length, `${dName(tk)} が ${NAME(A.G.det[tk].pos)} で怪盗Xの罠にかかった（1回休み）`, true); }
+  }
+
+  function step() {
+    clearTimeout(timer);
+    const G = A.G;
+    while (!G.over) {
+      if (G.turn === "x") {
+        if (!xMoves(G, A.sec).length) { apply(() => finish(G, "d", "trapped")); continue; }
+        if (A.role === "pass" && A.cover === null) A.cover = "x";
+        if (A.role === "pass" && A.cover !== "x-open") { save(); render(); return; }
+        if (!G.doubling) {
+          const n = G.xLog.length + 1;
+          G.drawn = G.drawn || { x: [], d: [] };
+          if (CARD_TURNS.includes(n) && !G.drawn.x.includes(n)) {
+            G.drawn.x.push(n);
+            const card = drawCard("x");
+            gainCard("x", card);
+            if (A.role === "x" || A.role === "pass") { A.pendingCard = { side: "x", card, stage: "reveal" }; save(); render(); return; }
+          }
+          expireHand("x");
+        }
+        if (A.role === "x" || A.role === "pass") { save(); render(); return; }
+        for (const [c, t] of aiUseCards(G, A.sec, "x")) useCardNow("x", c, t);
+        render();
+        timer = setTimeout(() => {
+          const m = aiX(G, A.sec);
+          apply(() => applyX(G, A.sec, m.to, m.type, m.useDouble));
+          step();
+        }, AI_DELAY);
+        return;
+      }
+      const k = G.turn;
+      if (k === 0) {
+        const n = G.xLog.length;
+        G.drawn = G.drawn || { x: [], d: [] };
+        if (CARD_TURNS.includes(n) && !G.drawn.d.includes(n)) {
+          if (A.role === "pass" && A.cover !== null) { save(); render(); return; }
+          G.drawn.d.push(n);
+          const card = drawCard("d", G);
+          gainCard("d", card);
+          if (A.role === "d" || A.role === "pass") { A.pendingCard = { side: "d", card, stage: "reveal" }; save(); render(); return; }
+        }
+        expireHand("d");
+      }
+      if (G.stun && G.stun[k] > 0) {
+        G.stun[k]--;
+        pushFeed(G.xLog.length, `${dName(k)} は罠で足止め（1回休み）`, true);
+        apply(() => skipD(G, k));
+        continue;
+      }
+      if (allStuck(G)) { apply(() => finish(G, "x", "stuck")); continue; }
+      if (!detMoves(G, k).length) {
+        pushFeed(G.xLog.length, `${dName(k)} は使える切符がないので待機`);
+        apply(() => skipD(G, k));
+        continue;
+      }
+      if (A.role === "pass" || (A.role === "d" && k === ME_DET)) { save(); render(); ensureVisible(G.det[k].pos); return; }
+      // 刑事がすべてCPUのとき（怪盗Xモード）だけ、CPUの刑事がチームのカードを使う。
+      // 刑事モードの手札はあなたのもの（仲間のCPUは勝手に使わない）
+      if (A.role === "x") for (const [c, t] of aiUseCards(G, A.sec, "d")) {
+        say(k, `「${CARD[c].name}」だ！`, "", 2200);
+        pushFeed(G.xLog.length, `${dName(k)} がカードを使った`);
+        useCardNow("d", c, t);
+      }
+      render();
+      timer = setTimeout(() => {
+        const m = aiD(G, k, A.role === "d");
+        const from = G.det[k].pos;
+        let landed = m.to;
+        apply(() => { landed = applyD(G, k, m.to, m.type, A.sec); });
+        if (m.type === "heli") heliNote(k, from, landed);
+        step();
+      }, AI_DELAY);
+      return;
+    }
+    save();
+    A.cover = null;
+    render();
+    setTimeout(() => { A.screen = "result"; renderScreen(); }, 900);
+  }
+
+  // ---------------- カードの処理 ----------------
+  const needsTarget = card => card === "bridge" || card === "destroy";
+  function announceCard(side, card, target) {
+    const G = A.G, c = CARD[card];
+    if (side === "d") {
+      let detail = "";
+      if (card === "bridge") detail = `${NO(target)} ${NAME(target)} を封鎖（4手）`;
+      else if (card === "dash") { detail = `${dName(target)} がダッシュ！ この番は2回続けて動ける`; say(target, "走るぞ！", "hot", 2200); }
+      else if (card === "rcheck") detail = `${NO(target)} ${NAME(target)} に検問所が敷かれた（6手のあいだ怪盗Xは通れない）`;
+      else if (card === "checkpoint") detail = `${NO(target)} ${NAME(target)} に検問所を設置（6手のあいだ怪盗Xは通れない）`;
+      else if (card === "reinforce") detail = "刑事全員にヘリの切符を1枚追加";
+      else if (card === "heliban") detail = `すべてのヘリポートを閉鎖（${G.heliBan - G.xLog.length}手）`;
+      else detail = "何も起こらなかった";
+      toast(`刑事チームのカード「${c.name}」`);
+      pushFeed(G.xLog.length, `刑事チームのカード「${c.name}」：${detail}`, card !== "miss");
+      return;
+    }
+    const mine = A.role === "x" || (A.role === "pass" && A.cover === "x-open");
+    if (card === "destroy") {
+      toast(`怪盗Xが ${NAME(target)} を破壊！`);
+      pushFeed(G.xLog.length, `怪盗Xのカード「駅破壊」：${NO(target)} ${NAME(target)} は壊れて最後まで誰も通れない`, true);
+    } else if (mine) {
+      toast(`カード「${c.name}」を使った`);
+      pushFeed(G.xLog.length, `怪盗Xのカード「${c.name}」${card === "trap" ? `：${NAME(A.sec.pos)} に罠を仕掛けた` : card === "vanish" ? "：次の目撃情報を消す" : "：何も起こらなかった"}`, card !== "miss");
+    } else {
+      toast("怪盗Xがカードを使った…");
+      pushFeed(G.xLog.length, "怪盗Xが何かのカードを使った（効果はわからない）", true);
+    }
+  }
+  // 引いたカードを手札に加える（ハズレは捨てる）
+  function gainCard(side, card) {
+    const G = A.G;
+    const mine = side === "x" ? (A.role === "x" || (A.role === "pass" && A.cover === "x-open")) : A.role !== "x";
+    if (card === "heliban") {
+      G.helibanDrawn = true;
+      // ヘリ封鎖は引いたその場で自動発動
+      applyCard(G, A.sec, card, null);
+      announceCard(side, card, null);
+      banner("ヘリ封鎖！", `すべてのヘリポートが${G.heliBan - G.xLog.length}手のあいだ閉鎖`, "blue", 2);
+      return;
+    }
+    if (card === "rcheck") {
+      // ランダム検問も引いたその場で自動発動
+      const t = applyCard(G, A.sec, card, null);
+      announceCard(side, card, t);
+      banner("検問！", `${NAME(t)} に検問所が敷かれた`, "blue", 2);
+      return;
+    }
+    if (card !== "miss") handOf(G, side).push(card);
+    if (side === "d") {
+      pushFeed(G.xLog.length, card === "miss" ? "刑事チームのカード：ハズレ" : `刑事チームがカード「${CARD[card].name}」を手に入れた`, card !== "miss");
+    } else if (mine) {
+      pushFeed(G.xLog.length, card === "miss" ? "怪盗Xのカード：ハズレ" : `カード「${CARD[card].name}」を手に入れた`, card !== "miss");
+    } else {
+      toast("怪盗Xがカードを引いた…");
+      pushFeed(G.xLog.length, "怪盗Xがカードを引いた（中身はわからない）", true);
+    }
+  }
+  function useCardNow(side, card, target) {
+    applyCard(A.G, A.sec, card, target);
+    announceCard(side, card, target);
+
+  }
+  function expireHand(side) {
+    const G = A.G, hand = handOf(G, side);
+    if (!hand.length || cardMove(G, side) <= CARD_LAST) return;
+    const n = hand.length;
+    hand.length = 0;
+    const show = side === "d" ? A.role !== "x" : (A.role === "x" || (A.role === "pass" && A.cover === "x-open"));
+    if (show) pushFeed(G.xLog.length, `使わなかったカード${n}枚は${CARD_LAST}手目を過ぎて失効した`);
+  }
+  const handSide = () => A.G && (A.G.turn === "x" ? "x" : "d");
+  // 手札を見られる側（使えるのは自分の番だけ）
+  const handViewSide = () => {
+    const G = A.G;
+    if (!G || G.over) return null;
+    if (A.role === "x") return "x";
+    if (A.role === "d") return "d";
+    if (A.role === "pass") return G.turn === "x" ? (A.cover === "x-open" ? "x" : null) : (A.cover === null ? "d" : null);
+    return null;
+  };
+  const canUseHand = () => {
+    const G = A.G;
+    if (!G || !humanTurn()) return false;
+    const side = handSide();
+    return handOf(G, side).length > 0 && cardMove(G, side) <= CARD_LAST;
+  };
+  function finishCard(target) {
+    const pc = A.pendingCard;
+    const hand = handOf(A.G, pc.side);
+    if (pc.handIndex !== undefined) hand.splice(pc.handIndex, 1);
+    A.pendingCard = null;
+    useCardNow(pc.side, pc.card, target);
+    save(); render();
+  }
+
+  function heliNote(k, from, landed) {
+    if (landed === from) {
+      toast(`${dName(k)} のヘリはガス欠で飛べなかった！`);
+      pushFeed(A.G.xLog.length, `${NO(from)} ${NAME(from)} のヘリポートはガス欠（もう誰も飛べない）`, true);
+    } else toast(`${dName(k)} はヘリで ${NO(landed)} ${NAME(landed)} に着陸`);
+  }
+
+  function commitX(to, type) {
+    const dbl = A.useDouble && canDouble(A.G);
+    A.sel = null; A.useDouble = false;
+    let landed = to;
+    const from = A.sec.pos;
+    apply(() => { landed = applyX(A.G, A.sec, to, type, dbl); });
+    if (type === "heli") {
+      if (landed === from) { toast("ガス欠！ ヘリは飛べなかった"); pushFeed(A.G.xLog.length, `${NO(from)} ${NAME(from)} のヘリはガス欠だった（怪盗Xだけが知っている）`, true); }
+      else toast(`ヘリで ${NO(landed)} ${NAME(landed)} に着陸`);
+    }
+    if (A.role === "pass" && !A.G.over && A.G.turn !== "x") A.cover = "d";
+    step();
+  }
+  function commitD(k, to, type) {
+    A.sel = null;
+    let landed = to;
+    const from = A.G.det[k].pos;
+    apply(() => { landed = applyD(A.G, k, to, type, A.sec); });
+    if (type === "heli") heliNote(k, from, landed);
+    step();
+  }
+
+  // 駅をタップ
+  function onStationTap(i) {
+    const G = A.G;
+    if (!G || A.screen !== "game") return;
+    if (A.pendingCard && A.pendingCard.stage === "target") {
+      if (A.pendingCard.opts.includes(i)) finishCard(i);
+      else toast(`${NAME(i)} は選べません`);
+      return;
+    }
+    if (A.pendingOrder !== null && A.pendingOrder !== undefined) {
+      const k = A.pendingOrder;
+      G.orders = { ...(G.orders || {}), [k]: i };
+      A.pendingOrder = null;
+      toast(`${dName(k)}：${NAME(i)} へ向かいます`);
+      pushFeed(G.xLog.length, `指示：${dName(k)} は ${NO(i)} ${NAME(i)} へ向かう`);
+      save(); render();
+      return;
+    }
+    if (!humanTurn()) { toast(`${NO(i)} ${NAME(i)}`); return; }
+    const opts = G.turn === "x" ? xMoves(G, A.sec).filter(m => m.to === i) : detMoves(G, G.turn).filter(m => m.to === i);
+    if (!opts.length) { toast(`${NO(i)} ${NAME(i)} へは行けません`); return; }
+    A.sel = i;
+    render();
+    openSheet();
+  }
+
+  // ======================================================================
+  // 盤面（パン・ズーム）
+  // ======================================================================
+  const V = { s: 1, tx: 0, ty: 0, fit: 1 };
+  const mapEl = $("map"), world = $("world");
+  let anim = null;
+
+  function vpSize() { const r = mapEl.getBoundingClientRect(); return { w: r.width, h: r.height, r }; }
+  function hudTop() {
+    const t = document.querySelector(".hud.top");
+    return t ? t.getBoundingClientRect().bottom - mapEl.getBoundingClientRect().top : 100;
+  }
+  function clampView() {
+    const { w, h } = vpSize();
+    V.s = Math.min(3, Math.max(V.fit * 0.85, V.s));
+    const mw = W * V.s, mh = H * V.s, pad = 80;
+    V.tx = mw + pad * 2 <= w ? (w - mw) / 2 : Math.min(pad, Math.max(w - mw - pad, V.tx));
+    const top = hudTop();
+    V.ty = mh + top + 40 <= h ? top + (h - top - mh) / 2 : Math.min(top + 20, Math.max(h - mh - 60, V.ty));
+  }
+  function applyView() {
+    world.setAttribute("transform", `translate(${V.tx.toFixed(1)} ${V.ty.toFixed(1)}) scale(${V.s.toFixed(4)})`);
+    mapEl.classList.toggle("z0", V.s < 0.62);
+    mapEl.classList.toggle("z1", V.s >= 0.62 && V.s < 1.15);
+    rescaleMarks();
+    layoutEdge();
+  }
+  function setView(s, tx, ty) { V.s = s; V.tx = tx; V.ty = ty; clampView(); applyView(); }
+  function animateView(s, tx, ty, ms = 380) {
+    cancelAnimationFrame(anim);
+    const from = { ...V }, to = { s, tx, ty };
+    const tmp = { ...V }; Object.assign(V, to); clampView(); Object.assign(to, { s: V.s, tx: V.tx, ty: V.ty }); Object.assign(V, tmp);
+    const t0 = performance.now();
+    const tick = now => {
+      const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      V.s = from.s + (to.s - from.s) * e; V.tx = from.tx + (to.tx - from.tx) * e; V.ty = from.ty + (to.ty - from.ty) * e;
+      applyView();
+      if (k < 1) anim = requestAnimationFrame(tick);
+    };
+    anim = requestAnimationFrame(tick);
+  }
+  function fitView(animate = true) {
+    const { w, h } = vpSize();
+    const top = hudTop();
+    V.fit = Math.min(w / W, (h - top - 20) / H);
+    const s = V.fit * 1.02, tx = (w - W * s) / 2, ty = top + (h - top - H * s) / 2;
+    animate ? animateView(s, tx, ty) : setView(s, tx, ty);
+  }
+  function zoomAt(factor, cx, cy, animate = true) {
+    const s = Math.min(3, Math.max(V.fit * 0.85, V.s * factor));
+    const k = s / V.s;
+    const tx = cx - (cx - V.tx) * k, ty = cy - (cy - V.ty) * k;
+    animate ? animateView(s, tx, ty, 220) : setView(s, tx, ty);
+  }
+  function centerOn(i, s = Math.max(V.s, 0.95)) {
+    const { w, h } = vpSize();
+    const [, x, y] = STATIONS[i];
+    animateView(s, w / 2 - x * s, (hudTop() + h) / 2 - y * s + 20);
+  }
+  // 指定した駅がすべて画面に入るように表示する
+  function fitStations(list) {
+    const { w, h } = vpSize();
+    const xs = list.map(i => STATIONS[i][1]), ys = list.map(i => STATIONS[i][2]);
+    // 上のUIと下の手札の間に収める
+    const hbEl = $("handbar"), hbTop = hbEl && !hbEl.hidden ? hbEl.getBoundingClientRect().top - mapEl.getBoundingClientRect().top : h;
+    const top = hudTop() + 50, bottom = Math.min(h, hbTop) - 20, pad = 70;
+    const bw = Math.max(...xs) - Math.min(...xs) + pad * 2, bh = Math.max(...ys) - Math.min(...ys) + pad * 2;
+    const s = Math.max(0.2, Math.min(1.1, w / bw, (bottom - top) / bh));
+    const cx = (Math.max(...xs) + Math.min(...xs)) / 2, cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+    animateView(s, w / 2 - cx * s, (top + bottom) / 2 - cy * s);
+  }
+  function ensureVisible(i) {
+    const { w, h } = vpSize();
+    const [, x, y] = STATIONS[i];
+    const sx = x * V.s + V.tx, sy = y * V.s + V.ty;
+    if (sx < 70 || sx > w - 70 || sy < hudTop() + 60 || sy > h - 70) centerOn(i, V.s);
+  }
+  function focusTurn() {
+    const G = A.G;
+    if (!G) return;
+    if (G.turn === "x") { if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else if (A.role === "d") centerOn(G.det[0].pos); else fitView(); }
+    else centerOn(G.det[G.turn].pos);
+  }
+
+  // ポインター操作：1本指でパン、2本指でピンチ、タップで駅を選ぶ
+  const ptrs = new Map();
+  let gesture = null;
+  function stationAt(clientX, clientY) {
+    const { r } = vpSize();
+    const wx = (clientX - r.left - V.tx) / V.s, wy = (clientY - r.top - V.ty) / V.s;
+    let best = -1, bd = Math.max(34, 26 / V.s);
+    STATIONS.forEach(([, x, y], i) => { const d = Math.hypot(x - wx, y - wy); if (d < bd) { bd = d; best = i; } });
+    return best;
+  }
+  mapEl.addEventListener("pointerdown", e => {
+    mapEl.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    cancelAnimationFrame(anim);
+    if (ptrs.size === 1) {
+      const g = gesture = { type: "pan", sx: e.clientX, sy: e.clientY, tx: V.tx, ty: V.ty, moved: 0, t: performance.now() };
+      // 長押しで作戦ピン
+      g.lp = setTimeout(() => {
+        if (gesture === g && g.moved <= 6 && ptrs.size === 1) {
+          const st = stationAt(g.sx, g.sy);
+          if (st >= 0 && openPin(st)) g.longFired = true;
+        }
+      }, 550);
+    }
+    else if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()];
+      gesture = { type: "pinch", d: Math.hypot(a.x - b.x, a.y - b.y), s: V.s, tx: V.tx, ty: V.ty, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, moved: 99 };
+    }
+  });
+  mapEl.addEventListener("pointermove", e => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!gesture) return;
+    const { r } = vpSize();
+    if (gesture.type === "pan" && ptrs.size === 1) {
+      const dx = e.clientX - gesture.sx, dy = e.clientY - gesture.sy;
+      gesture.moved = Math.max(gesture.moved, Math.hypot(dx, dy));
+      if (gesture.moved > 6) { mapEl.classList.add("dragging"); setView(V.s, gesture.tx + dx, gesture.ty + dy); }
+    } else if (gesture.type === "pinch" && ptrs.size >= 2) {
+      const [a, b] = [...ptrs.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
+      const s = Math.min(3, Math.max(V.fit * 0.85, gesture.s * d / gesture.d));
+      const k = s / gesture.s;
+      const gx = gesture.mx - r.left, gy = gesture.my - r.top;
+      setView(s, mx - (gx - gesture.tx) * k, my - (gy - gesture.ty) * k);
+    }
+  });
+  const endPtr = e => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.delete(e.pointerId);
+    mapEl.classList.remove("dragging");
+    if (gesture) clearTimeout(gesture.lp);
+    if (gesture && gesture.type === "pan" && !gesture.longFired && gesture.moved <= 6 && e.type === "pointerup" && performance.now() - gesture.t < 600) {
+      const best = stationAt(e.clientX, e.clientY);
+      if (best >= 0) onStationTap(best);
+    }
+    if (ptrs.size === 1) {
+      const [p] = [...ptrs.values()];
+      gesture = { type: "pan", sx: p.x, sy: p.y, tx: V.tx, ty: V.ty, moved: 99, t: 0 };
+    } else if (!ptrs.size) gesture = null;
+  };
+  mapEl.addEventListener("pointerup", endPtr);
+  mapEl.addEventListener("contextmenu", e => {
+    e.preventDefault();
+    const st = stationAt(e.clientX, e.clientY);
+    if (st >= 0) openPin(st);
+  });
+  // 作戦ピン：刑事モードで駅を長押し（右クリック）すると、仲間への作戦を出せる
+  function openPin(st) {
+    const G = A.G;
+    if (!G || G.over || A.role !== "d" || A.screen !== "game" || A.pendingCard) return false;
+    A.pinSheet = st; A.orderSheet = null; A.sel = null;
+    renderSheet();
+    return true;
+  }
+  function surround(st) {
+    const G = A.G;
+    const spots = [st, ...new Set(ADJ[st].filter(e => e.type !== "boat").map(e => e.to))];
+    const mates = G.det.map((_, k) => k).filter(k => k !== ME_DET);
+    const orders = { ...(G.orders || {}) };
+    const used = new Set();
+    // 近い仲間から順に、まだ誰も向かっていない周りの駅を割り当てる
+    mates.sort((a, b) => D[G.det[a].pos][st] - D[G.det[b].pos][st]);
+    for (const k of mates) {
+      const free = spots.filter(p => !used.has(p));
+      const tgt = (free.length ? free : spots).reduce((best, p) => D[G.det[k].pos][p] < D[G.det[k].pos][best] ? p : best, (free.length ? free : spots)[0]);
+      used.add(tgt);
+      orders[k] = tgt;
+    }
+    G.orders = orders;
+  }
+  mapEl.addEventListener("pointercancel", endPtr);
+  mapEl.addEventListener("wheel", e => {
+    e.preventDefault();
+    const { r } = vpSize();
+    zoomAt(Math.exp(-e.deltaY * 0.0018), e.clientX - r.left, e.clientY - r.top, false);
+  }, { passive: false });
+  mapEl.addEventListener("dblclick", e => {
+    const { r } = vpSize();
+    zoomAt(1.8, e.clientX - r.left, e.clientY - r.top);
+  });
+  window.addEventListener("resize", () => { const { w, h } = vpSize(); V.fit = Math.min(w / W, (h - hudTop() - 20) / H); clampView(); applyView(); });
+
+  // ======================================================================
+  // 盤面の描画
+  // ======================================================================
+  function smoothPath(pts) {
+    let d = `M${pts[0][0]},${pts[0][1]}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+      const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      d += ` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0]},${p2[1]}`;
+    }
+    return d;
+  }
+  const P = i => STATIONS[i].slice(1, 3);
+
+  // 背景（古地図）を SVG で組み立て、ビットマップにして敷く
+  function riverPolygon() {
+    const L = [], R = [];
+    for (let i = 0; i < RIVER.length; i++) {
+      const [x, y, w] = RIVER[i];
+      const a = RIVER[Math.max(0, i - 1)], b = RIVER[Math.min(RIVER.length - 1, i + 1)];
+      const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len, ny = dx / len;
+      L.push([x + nx * w / 2, y + ny * w / 2]);
+      R.push([x - nx * w / 2, y - ny * w / 2]);
+    }
+    return smoothPath(L) + " L" + smoothPath(R.reverse()).slice(1) + " Z";
+  }
+  function backgroundSVG() {
+    let seed = 1895;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const o = [];
+    o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`);
+    o.push(`<defs>
+      <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" seed="4"/><feColorMatrix type="matrix" values="0 0 0 0 0.33  0 0 0 0 0.24  0 0 0 0 0.12  0 0 0 0.18 0"/></filter>
+      <filter id="blotch" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.004" numOctaves="3" seed="9"/><feColorMatrix type="matrix" values="0 0 0 0 0.5  0 0 0 0 0.36  0 0 0 0 0.16  0 0 0 0.45 -0.12"/></filter>
+      <radialGradient id="vig" cx="50%" cy="50%" r="72%"><stop offset="62%" stop-color="#5A3B16" stop-opacity="0"/><stop offset="100%" stop-color="#5A3B16" stop-opacity="0.5"/></radialGradient>
+      <pattern id="trees" width="26" height="22" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="4.5" fill="#8FA464"/><circle cx="19" cy="17" r="4" fill="#8FA464"/></pattern>
+      <pattern id="waves" width="40" height="18" patternUnits="userSpaceOnUse"><path d="M2,10 q8,-7 16,0 t16,0" fill="none" stroke="#7FA7AE" stroke-width="1.6" opacity="0.6"/></pattern>
+    </defs>`);
+    o.push(`<rect width="${W}" height="${H}" fill="#E8DAB8"/>`);
+    // 路地と街区
+    const SP = 30, cols = Math.ceil(W / SP) + 3, rows = Math.ceil(H / SP) + 3, G = [];
+    for (let r = 0; r < rows; r++) { G.push([]); for (let c = 0; c < cols; c++) G[r].push([(c - 1) * SP + (rnd() - 0.5) * 18, (r - 1) * SP + (rnd() - 0.5) * 18]); }
+    const pt = q => q[0].toFixed(0) + "," + q[1].toFixed(0);
+    let d = "", blocks = "";
+    for (let r = 0; r < rows - 1; r++) for (let c = 0; c < cols - 1; c++) {
+      if (rnd() > 0.12) d += `M${pt(G[r][c])}L${pt(G[r][c + 1])}`;
+      if (rnd() > 0.18) d += `M${pt(G[r][c])}L${pt(G[r + 1][c])}`;
+      if (rnd() < 0.55) {
+        const a = G[r][c], b = G[r][c + 1], cc = G[r + 1][c + 1], e = G[r + 1][c];
+        const m = [(a[0] + b[0] + cc[0] + e[0]) / 4, (a[1] + b[1] + cc[1] + e[1]) / 4];
+        const sh = q => [q[0] * 0.8 + m[0] * 0.2, q[1] * 0.8 + m[1] * 0.2];
+        blocks += `M${pt(sh(a))}L${pt(sh(b))}L${pt(sh(cc))}L${pt(sh(e))}Z`;
+      }
+    }
+    o.push(`<path d="${blocks}" fill="#DCCBA4" opacity="0.8"/>`);
+    o.push(`<path d="${d}" stroke="#C8B48A" stroke-width="1.6" fill="none"/>`);
+    // 大通り（バス路線に沿わせる）
+    for (const seq of BUS) {
+      const pts = seq.map(P);
+      o.push(`<path d="${smoothPath(pts)}" stroke="#BCA67A" stroke-width="16" fill="none" stroke-linecap="round" opacity="0.55"/>`);
+      o.push(`<path d="${smoothPath(pts)}" stroke="#F2E8CF" stroke-width="10" fill="none" stroke-linecap="round"/>`);
+    }
+    // 公園（駅から離れた空き地に置く）
+    const parkAt = (x, y, rx, ry, rot) => `<g transform="translate(${x.toFixed(0)} ${y.toFixed(0)}) rotate(${rot})"><ellipse rx="${rx}" ry="${ry}" fill="#B9C68E" stroke="#6E7F3E" stroke-width="2.5"/><ellipse rx="${rx - 6}" ry="${ry - 6}" fill="url(#trees)" opacity="0.7"/></g>`;
+    let parks = 0;
+    for (let tries = 0; tries < 400 && parks < 9; tries++) {
+      const x = 150 + rnd() * (W - 300), y = 150 + rnd() * (H - 300);
+      const near = STATIONS.some(s => Math.hypot(s[1] - x, s[2] - y) < 120);
+      const wet = RIVER.some(([rx, ry, w]) => Math.hypot(rx - x, ry - y) < w / 2 + 120);
+      if (!near && !wet) { o.push(parkAt(x, y, 70 + rnd() * 50, 40 + rnd() * 25, (rnd() - 0.5) * 40)); parks++; }
+    }
+    // テムズ川（斜め）と島
+    const rp = riverPolygon();
+    o.push(`<path d="${rp}" fill="#A7C8CB" stroke="#6E9AA3" stroke-width="5"/>`);
+    o.push(`<path d="${rp}" fill="url(#waves)"/>`);
+    for (const [cx, cy, rx, ry, ang] of ISLANDS) {
+      o.push(`<g transform="translate(${cx} ${cy}) rotate(${ang})"><ellipse rx="${rx + 10}" ry="${ry + 10}" fill="#D9CFA8" stroke="#6E9AA3" stroke-width="4"/><ellipse rx="${rx}" ry="${ry}" fill="#E8DAB8" stroke="#A89468" stroke-width="2"/><ellipse rx="${rx * 0.55}" ry="${ry * 0.45}" fill="url(#trees)" opacity="0.6"/></g>`);
+    }
+    // 橋
+    for (const [bx, by] of BRIDGES) {
+      let best = 0, bd = Infinity;
+      RIVER.forEach(([x, y], i) => { const q = Math.hypot(x - bx, y - by); if (q < bd) { bd = q; best = i; } });
+      const a = RIVER[Math.max(0, best - 1)], b = RIVER[Math.min(RIVER.length - 1, best + 1)];
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI + 90;
+      const w = RIVER[best][2] + 60;
+      o.push(`<g transform="translate(${bx} ${by}) rotate(${ang.toFixed(1)})"><rect x="${-w / 2}" y="-11" width="${w}" height="22" fill="#CDB98C" stroke="#3B2C1E" stroke-width="2.5"/>${Array.from({ length: Math.floor(w / 26) }, (_, i) => `<path d="M${-w / 2 + 13 + i * 26},-11 v22" stroke="#3B2C1E" stroke-width="1" opacity="0.5"/>`).join("")}</g>`);
+    }
+    // 地区名
+    const ward = (x, y, s) => `<text x="${x}" y="${y}" font-family="IM Fell English SC, Georgia, serif" font-size="46" letter-spacing="14" fill="#5A4428" opacity="0.18" text-anchor="middle">${s}</text>`;
+    o.push(ward(2250, 330, "NORTH BANK"), ward(700, 1500, "SOUTH BANK"), ward(1900, 700, "THE CITY"), ward(1200, 1200, "SOUTHWARK"),
+      ward(2600, 1000, "TOWER HAMLETS"), ward(400, 900, "BATTERSEA"), ward(1450, 250, "CAMDEN"), ward(1700, 1500, "GREENWICH"));
+    const mid = RIVER[18];
+    o.push(`<text x="${mid[0]}" y="${mid[1]}" transform="rotate(26 ${mid[0]} ${mid[1]})" font-family="IM Fell English SC, Georgia, serif" font-size="34" letter-spacing="30" fill="#4E7880" text-anchor="middle" dy="12">RIVER THAMES</text>`);
+    // 名所（駅の近く）
+    const ink = `stroke="#3B2C1E" stroke-width="2.2" stroke-linejoin="round"`, fill = `fill="#D9C79E"`;
+    const near = (name, dx, dy) => { const i = STATIONS.findIndex(s => s[0] === name); return i < 0 ? null : [STATIONS[i][1] + dx, STATIONS[i][2] + dy]; };
+    const lm = (at, sc, body) => at ? `<g transform="translate(${at[0].toFixed(0)} ${at[1].toFixed(0)}) scale(${sc})">${body}</g>` : "";
+    o.push(lm(near("ウェストミンスター", 70, 20), 1.6, `<rect x="-62" y="-16" width="54" height="14" ${fill} ${ink}/><rect x="-6" y="-46" width="12" height="44" ${fill} ${ink}/><path d="M-7,-46 L0,-64 L7,-46 Z" ${fill} ${ink}/><circle cy="-38" r="4.5" fill="#F7EFD9" ${ink}/>`));
+    o.push(lm(near("セント・ポール", -70, -20), 1.6, `<rect x="-18" y="-10" width="36" height="10" ${fill} ${ink}/><rect x="-9" y="-18" width="18" height="8" ${fill} ${ink}/><path d="M-10,-18 A10,10 0 0 1 10,-18 Z" ${fill} ${ink}/><rect x="-1.8" y="-34" width="3.6" height="7" ${fill} ${ink}/>`));
+    o.push(lm(near("ウォータールー", -80, -10), 1.4, `<circle cy="-26" r="22" fill="none" ${ink}/>` + Array.from({ length: 12 }, (_, a) => `<path d="M0,-26 L${(22 * Math.cos(a * Math.PI / 6)).toFixed(1)},${(-26 + 22 * Math.sin(a * Math.PI / 6)).toFixed(1)}" ${ink}/>`).join("") + `<path d="M0,-26 L-10,0 M0,-26 L10,0" ${ink}/>`));
+    o.push(lm(near("グリーン・パーク", 60, 50), 1.5, `<rect x="-22" y="-12" width="44" height="12" ${fill} ${ink}/><path d="M-7,-12 L0,-18 L7,-12 Z" ${fill} ${ink}/><path d="M0,-18 L0,-28 L7,-26 L0,-23" fill="#C0271F" ${ink}/>`));
+    o.push(lm(near("バタシー", 70, 10), 1.5, `<rect x="-26" y="-18" width="52" height="18" ${fill} ${ink}/>` + [-22, -10, 10, 22].map(x => `<rect x="${x - 3}" y="-40" width="6" height="22" fill="#F2E8CF" ${ink}/>`).join("")));
+    o.push(lm(near("ロンドン・ブリッジ", 60, -10), 1.6, `<path d="M-10,0 L0,-60 L10,0 Z" fill="#CFE0E2" ${ink}/>`));
+    o.push(lm(near("カナリー・ワーフ", -60, 10), 1.5, `<rect x="-9" y="-50" width="18" height="50" ${fill} ${ink}/><path d="M-9,-50 L0,-60 L9,-50 Z" ${fill} ${ink}/><rect x="-26" y="-28" width="12" height="28" ${fill} ${ink}/><rect x="14" y="-34" width="12" height="34" ${fill} ${ink}/>`));
+    o.push(lm(near("ノース・グリニッジ", 70, 0), 1.5, `<path d="M-30,0 A30,20 0 0 1 30,0 Z" fill="#F2E8CF" ${ink}/>` + [-24, -12, 0, 12, 24].map(x => `<path d="M${x},-12 L${x * 1.25},-30" ${ink}/>`).join("")));
+    const tb = BRIDGES[3];
+    if (tb) o.push(lm(tb, 1.4, `<rect x="-26" y="-32" width="12" height="34" ${fill} ${ink}/><rect x="14" y="-32" width="12" height="34" ${fill} ${ink}/><path d="M-27,-32 L-20,-42 L-13,-32 Z M13,-32 L20,-42 L27,-32 Z" ${fill} ${ink}/><rect x="-14" y="-29" width="28" height="4" ${fill} ${ink}/>`));
+    // 方位記号と表題
+    o.push(`<g transform="translate(2860 1760)"><circle r="70" fill="#F2E8CF" stroke="#3B2C1E" stroke-width="3"/><circle r="56" fill="none" stroke="#3B2C1E" stroke-width="1.5"/><path d="M0,-78 L13,0 L0,78 L-13,0 Z M-78,0 L0,-13 L78,0 L0,13 Z" fill="#D9C79E" stroke="#3B2C1E" stroke-width="2"/><path d="M0,-78 L13,0 L-13,0 Z" fill="#3B2C1E"/><text y="-86" font-family="Georgia, serif" font-size="28" fill="#3B2C1E" text-anchor="middle">N</text></g>`);
+    o.push(`<g transform="translate(60 1700)"><rect width="400" height="160" rx="6" fill="#F4EBD3" stroke="#3B2C1E" stroke-width="3"/><rect x="10" y="10" width="380" height="140" rx="4" fill="none" stroke="#3B2C1E" stroke-width="1.5"/><text x="200" y="82" font-family="IM Fell English SC, Georgia, serif" font-size="68" letter-spacing="12" fill="#3B2C1E" text-anchor="middle">LONDON</text><text x="200" y="124" font-family="IM Fell English SC, Georgia, serif" font-size="22" fill="#3B2C1E" text-anchor="middle">A Chase upon the Thames · MDCCCXCV</text></g>`);
+    o.push(`<rect width="${W}" height="${H}" filter="url(#blotch)"/>`);
+    o.push(`<rect width="${W}" height="${H}" filter="url(#grain)"/>`);
+    o.push(`<rect width="${W}" height="${H}" fill="url(#vig)"/>`);
+    o.push(`</svg>`);
+    return o.join("");
+  }
+
+  async function renderBackground() {
+    const img = $("bgimg");
+    if (ART.map) {
+      // 用意した盤面画像を使う。読み込めなければコードで描いた古地図にする
+      const ok = await new Promise(res => { const im = new Image(); im.onload = () => res(true); im.onerror = () => res(false); im.src = ART.map; });
+      if (ok) { img.setAttribute("href", ART.map); return; }
+    }
+    const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(backgroundSVG());
+    try {
+      const im = new Image();
+      im.src = url;
+      await im.decode();
+      const k = 1.25;
+      const c = document.createElement("canvas");
+      c.width = Math.round(W * k); c.height = Math.round(H * k);
+      c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.9));
+      if (!blob) throw new Error("no blob");
+      img.setAttribute("href", URL.createObjectURL(blob));
+    } catch (e) {
+      img.setAttribute("href", url);
+    }
+  }
+
+  function buildBoard() {
+    const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels");
+    // 路線：水上バス → 地下鉄 → バス → タクシーの順に重ねる
+    const layers = { boat: el("g", {}, gE), tube: el("g", {}, gE), bus: el("g", {}, gE), taxi: el("g", {}, gE) };
+    for (const [key, types] of edgeTypes) {
+      const [a, b] = key.split("-").map(Number);
+      const [x1, y1] = P(a), [x2, y2] = P(b);
+      const len = Math.hypot(x2 - x1, y2 - y1);
+      const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
+      const list = ["boat", "tube", "bus", "taxi"].filter(t => types.has(t));
+      list.forEach((t, k) => {
+        const off = (k - (list.length - 1) / 2) * 14;
+        const pts = { x1: x1 + nx * off, y1: y1 + ny * off, x2: x2 + nx * off, y2: y2 + ny * off };
+        const g = el("g", {}, layers[t]);
+        el("title", {}, g).textContent = types.get(t).join("・");
+        el("line", { ...pts, class: `edge ${t} casing` }, g);
+        el("line", { ...pts, class: `edge ${t}` }, g);
+        if (t === "tube") el("line", { ...pts, class: "edge tube dash" }, g);
+      });
+    }
+    // 駅：上半分を使える交通手段で塗り分け、下半分に番号。ヘリポートは H マーク
+    const R = 22;
+    STATIONS.forEach(([name, x, y], i) => {
+      const g = el("g", {}, gS);
+      if (HELI_SET.has(i)) {
+        el("circle", { cx: x, cy: y, r: R + 16, class: "helipad" }, g);
+        el("text", { x: x + R + 10, y: y - R - 4, class: "heli-h" }, g).textContent = "H";
+      }
+      if (BRIDGE_ST.includes(i)) el("rect", { x: x - R - 7, y: y - R - 7, width: 2 * R + 14, height: 2 * R + 14, rx: 6, class: "bridge-pt", transform: `rotate(45 ${x} ${y})` }, g);
+      el("circle", { cx: x, cy: y, r: R, class: "stn-base" }, g);
+      const ts = MOVE_TYPES.filter(t => ADJ[i].some(e => e.type === t));
+      ts.forEach((t, k) => {
+        const a0 = Math.PI + Math.PI * k / ts.length, a1 = Math.PI + Math.PI * (k + 1) / ts.length;
+        el("path", { d: `M${x},${y} L${(x + R * Math.cos(a0)).toFixed(2)},${(y + R * Math.sin(a0)).toFixed(2)} A${R},${R} 0 0 1 ${(x + R * Math.cos(a1)).toFixed(2)},${(y + R * Math.sin(a1)).toFixed(2)} Z`, class: "wedge " + t }, g);
+      });
+      el("path", { d: `M${x - R},${y} H${x + R}`, stroke: "#3B2C1E", "stroke-width": 1.5 }, g);
+      el("circle", { cx: x, cy: y, r: R, class: "stn-rim" }, g);
+      el("text", { x, y: y + 16, class: "stn-num" }, g).textContent = NO(i);
+      el("text", { x, y: y + R + 24, class: "stn-label", id: "lbl" + i }, gL).textContent = name;
+    });
+  }
+
+  // 駒（ボードゲームのポーン）
+  function buildTokens() {
+    const gT = $("gTokens");
+    gT.replaceChildren();
+    $("gTalk").replaceChildren();
+    const mk = (id, kind, k) => {
+      const g = el("g", { class: "tok", id }, gT);
+      el("ellipse", { cx: 0, cy: 6, rx: 34, ry: 13, class: "ring", visibility: "hidden" }, g);
+      const src = kind === "x" ? thief().img : detChar(k).img;
+      const u = src
+        ? el("image", { href: src, x: -46, y: -144, width: 92, height: 153 }, g)
+        : el("use", { href: kind === "x" ? "#fig-x" : "#fig-d", x: -36, y: -112, width: 72, height: 120 }, g);
+      u.style.color = kind === "x" ? "#2A2530" : DCOL[k];
+      const top = src ? -144 : -112;
+      if (kind === "d") {
+        if (src) {
+          // 画像の駒は足元に番号バッジ（刑事の色）
+          el("circle", { cx: 34, cy: -2, r: 13, fill: DCOL[k], stroke: "#fff", "stroke-width": 3 }, g);
+          el("text", { x: 34, y: 3.5, class: "pawn-num" }, g).textContent = k + 1;
+        } else el("text", { x: 0, y: -46, class: "pawn-num" }, g).textContent = k + 1;
+        const b = el("g", { class: "bubble q" }, el("g", { transform: `translate(30 ${top})` }, g));
+        el("path", { class: "bb", d: "M-20,-44 h40 a8,8 0 0 1 8,8 v28 a8,8 0 0 1 -8,8 h-12 l-12,12 l2,-12 h-18 a8,8 0 0 1 -8,-8 v-28 a8,8 0 0 1 8,-8 Z" }, b);
+        el("text", { x: 0, y: -13 }, b).textContent = "?";
+        // セリフは駅名より手前に描く
+        const tk = el("g", { class: "talk" }, el("g", { transform: `translate(0 ${top - 6})` }, el("g", { id: "talkD" + k, class: "talk-pos" }, $("gTalk"))));
+        tk.style.display = "none";
+        el("path", { class: "tb" }, tk);
+        el("text", { x: 0, y: -29 }, tk);
+      }
+      return g;
+    };
+    mk("tokX", "x", 0);
+    if (A.G.mate) {
+      const g = el("g", { class: "tok mate-tok", id: "tokM" }, gT);
+      el("ellipse", { cx: 0, cy: 6, rx: 30, ry: 11, class: "mate-ring" }, g);
+      el("image", { href: mateChar().img, x: -40, y: -126, width: 80, height: 133 }, g);
+      // 「相棒」の札：拡大率に関係なく読める大きさで描く
+      const badge = el("g", { class: "mate-badge", transform: "translate(0 -138)" }, g);
+      el("rect", { x: -40, y: -20, width: 80, height: 36, rx: 18, class: "mate-badge-bg" }, badge);
+      el("path", { d: "M-8,16 L0,26 L8,16 Z", class: "mate-badge-bg" }, badge);
+      el("text", { x: 0, y: 6, class: "mate-label" }, badge).textContent = "相棒";
+    }
+    A.G.det.forEach((_, k) => mk("tokD" + k, "d", k));
+    rescaleMarks();
+  }
+
+  let lastSight = null;
+  function poof(pos) {
+    const [x, y] = P(pos);
+    const g = el("g", {}, $("gTalk"));
+    [[-18, -40, 22], [16, -54, 26], [0, -80, 20], [-10, -20, 18], [20, -24, 16]].forEach(([dx, dy, r]) => el("circle", { cx: x + dx, cy: y + dy, r, class: "poof" }, g));
+    const t = el("text", { x, y: y - 110, class: "dh-text" }, g);
+    t.textContent = "…消えた";
+    setTimeout(() => g.remove(), 2600);
+  }
+  // 足跡：経路に沿って左右交互に靴あとを並べる。新しいほど濃い
+  function footPrint(parent, x, y, a, side, op, over) {
+    const g = el("g", { transform: `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)}) translate(0 ${side * 7})`, opacity: op.toFixed(2) }, parent);
+    el("ellipse", { cx: 3, cy: 0, rx: 8, ry: 4.6, class: "foot" + (over ? " x-over" : "") }, g);
+    el("circle", { cx: -9, cy: 0, r: 3.8, class: "foot" + (over ? " x-over" : "") }, g);
+  }
+  function footPair(parent, x, y, a, op, over) {
+    footPrint(parent, x - 8 * Math.cos(a * Math.PI / 180), y - 8 * Math.sin(a * Math.PI / 180), a, -1, op, over);
+    footPrint(parent, x + 8 * Math.cos(a * Math.PI / 180), y + 8 * Math.sin(a * Math.PI / 180), a, 1, op, over);
+  }
+  function drawFootprints(parent, path, over) {
+    const segs = path.length - 1;
+    for (let i = 0; i < segs; i++) {
+      if (path[i] === path[i + 1]) continue;
+      const [x1, y1] = P(path[i]), [x2, y2] = P(path[i + 1]);
+      const len = Math.hypot(x2 - x1, y2 - y1), a = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+      const op = 0.25 + 0.75 * (i + 1) / segs;
+      const n = Math.max(1, Math.floor((len - 60) / 34));
+      for (let j = 0; j < n; j++) {
+        const t = (30 + (len - 60) * (j + 0.5) / n) / len;
+        footPrint(parent, x1 + (x2 - x1) * t, y1 + (y2 - y1) * t, a, j % 2 ? 1 : -1, op, over);
+      }
+    }
+    if (over) path.forEach((p, i) => { if (i > 0) { const [x, y] = P(p); el("text", { x, y: y + 52, class: "foot-no" }, parent).textContent = i; } });
+  }
+  function placeToken(g, pos, dx = 0, dy = 0) {
+    const [x, y] = P(pos);
+    g.style.transform = `translate(${x + dx}px, ${y + dy + 8}px)`;
+  }
+
+  // ======================================================================
+  // 描画（HUD）
+  // ======================================================================
+  // 画面の外にいる駒へ、画面の縁から方向を示す矢印を出す
+  function edgeTargets() {
+    const G = A.G;
+    if (!G || A.screen !== "game") return [];
+    const t = G.det.map((d, k) => ({ key: "d" + k, kind: "d", k, pos: d.pos }));
+    if (xVisible()) t.push({ key: "x", kind: "x", k: 0, pos: A.sec.pos, found: !G.over && exposure(G).level === "found" });
+    else if (!G.over && exposure(G).level === "found") t.push({ key: "xf" + G.possible[0], kind: "x", k: 0, pos: G.possible[0], found: true });
+    if (mateActive(G) && !G.over) t.push({ key: "m" + G.mate.pos, kind: "m", k: 0, pos: G.mate.pos });
+    return t;
+  }
+  function renderEdge() {
+    const host = $("edge");
+    const G = A.G;
+    const showDist = G && xVisible() && !G.over;
+    host.innerHTML = edgeTargets().map(t => {
+      const color = t.kind === "x" ? "#C0271F" : t.kind === "m" ? "#8E1B16" : DCOL[t.k];
+      let dist = "";
+      if (showDist && t.kind === "d") {
+        const n = D[A.sec.pos][t.pos];
+        dist = `<span class="ea-d ${n <= 2 ? "hot" : ""}">あと${n}手</span>`;
+      }
+      const label = t.kind === "x" ? "怪盗X" : t.kind === "m" ? "相棒" : dName(t.k);
+      return `<button class="edge-arrow ${t.found ? "found" : ""}" data-act="focusPos" data-pos="${t.pos}" data-key="${t.key}" aria-label="${label}の方向（${NAME(t.pos)}）" hidden>
+        <svg class="dir" viewBox="-28 -28 56 56"><g class="rot"><circle r="24" fill="${color}" stroke="#FBF5E4" stroke-width="3"></circle><path d="M24,-10 L38,0 L24,10 Z" fill="${color}" stroke="#FBF5E4" stroke-width="2.5" stroke-linejoin="round"></path></g></svg>
+        ${portrait(t.kind, t.k)}${dist}</button>`;
+    }).join("");
+    layoutEdge();
+  }
+  function layoutEdge() {
+    const host = $("edge");
+    if (!host || !host.children.length) return;
+    const r = mapEl.getBoundingClientRect();
+    const topEl = document.querySelector(".hud.top"), botEl = document.querySelector(".hud.bottom"), sideEl = document.querySelector(".hud.side");
+    const top = (topEl ? topEl.getBoundingClientRect().bottom - r.top : 100) + 36;
+    const bottom = (botEl ? botEl.getBoundingClientRect().top - r.top : r.height) - 40;
+    const sideR = sideEl ? sideEl.getBoundingClientRect() : null;
+    const right = r.width - 36;
+    const left = 40;
+    const cx = (left + right) / 2, cy = (top + bottom) / 2;
+    for (const b of host.children) {
+      const pos = Number(b.dataset.pos);
+      const [wx, wy] = P(pos);
+      const sx = wx * V.s + V.tx, sy = (wy - 40) * V.s + V.ty;
+      if (sx >= left - 20 && sx <= right + 20 && sy >= top - 30 && sy <= bottom + 30) { b.hidden = true; continue; }
+      // 駒（と相棒の札）が画面の中に見えていれば矢印は出さない
+      const key = b.dataset.key || "";
+      const tokEl = key === "x" || key.startsWith("xf") ? $("tokX") : key.startsWith("m") ? $("tokM") : $("tokD" + key.slice(1));
+      if (tokEl && tokEl.style.display !== "none") {
+        const tr = tokEl.getBoundingClientRect();
+        const tcx = tr.left + tr.width / 2 - r.left, tcy = tr.top + tr.height / 2 - r.top;
+        if (tr.width > 0 && tcx >= 0 && tcx <= r.width && tcy >= top - 36 && tcy <= r.height) { b.hidden = true; continue; }
+      }
+      const dx = sx - cx, dy = sy - cy;
+      const kx = dx ? Math.abs((dx > 0 ? right - cx : cx - left) / dx) : Infinity;
+      const ky = dy ? Math.abs((dy > 0 ? bottom - cy : cy - top) / dy) : Infinity;
+      const k = Math.min(kx, ky);
+      let ax = cx + dx * k, ay = cy + dy * k;
+      // 右側のボタン列に重なるときは、その左へずらす
+      if (sideR) {
+        const sl = sideR.left - r.left, st = sideR.top - r.top, sb = sideR.bottom - r.top;
+        if (ax > sl - 30 && ay > st - 30 && ay < sb + 30) ax = sl - 34;
+      }
+      b.hidden = false;
+      b.style.transform = `translate(${ax.toFixed(1)}px, ${ay.toFixed(1)}px)`;
+      b.querySelector(".rot").setAttribute("transform", `rotate(${(Math.atan2(dy, dx) * 180 / Math.PI).toFixed(1)})`);
+    }
+  }
+
+  function render() {
+    noteExposure();
+    renderMap();
+    renderTop();
+    renderPrompt();
+    renderLog();
+    renderScreen();
+    renderSheet();
+    renderEdge();
+    renderHandbar();
+    // 隠しているときはプルタブに手番だけ出す
+    const t1 = document.querySelector("#prompt .t1");
+    $("pullTab").querySelector(".pt-t").textContent = t1 ? t1.textContent : "";
+    const hb = $("hintBtn");
+    hb.hidden = A.role === "x";
+    hb.setAttribute("aria-pressed", String(A.hints));
+  }
+
+  // 手札はいつも画面の左下に表示。使えるときは金色に光り、タップで使う
+  // 目印は拡大率に関係なく、画面上でほぼ同じ大きさに見えるように描く（スマホは小さめ）
+  const markScale = () => {
+    const px = window.innerWidth < 600 ? 26 : 46;   // 照準の外側の輪の、画面上の半径
+    return Math.min(2.4, Math.max(0.3, px / (60 * (V.s || 1))));
+  };
+  function rescaleMarks() {
+    const k = markScale().toFixed(3);
+    document.querySelectorAll("#gMarks .scaled-mark").forEach(g => g.setAttribute("transform", `translate(${g.dataset.x} ${g.dataset.y}) scale(${k})`));
+    // 相棒の札は縮小表示でも読めるように大きくする（拡大時はそのまま）
+    const mb = Math.max(1, Math.min(6, (window.innerWidth < 600 ? 58 : 66) / (80 * (V.s || 1))));
+    document.querySelectorAll(".mate-badge").forEach(g => g.setAttribute("transform", `translate(0 ${-130 - 8 * mb}) scale(${mb.toFixed(3)})`));
+  }
+  // 手札欄のヘリ：残り枚数と、いま飛べるかどうか
+  function heliCard(G, side) {
+    const left = side === "x" ? G.heli : (G.det[A.role === "d" ? ME_DET : (G.turn === "x" ? 0 : G.turn)] || {}).t?.heli ?? 0;
+    const can = humanTurn() && (G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn)).some(m => m.type === "heli");
+    const why = !left ? "切符なし" : heliBanned(G) ? "封鎖中" : can ? "タップで飛ぶ" : "H駅で使える";
+    return `<button class="hb-card heli ${can ? "go" : "off"}" ${can ? `data-act="heli"` : "disabled"} title="ヘリ：${why}">
+      <span class="hb-heli"><img src="art/icons/heli.webp" alt=""><b>×${left}</b></span>
+      <span>${why}</span></button>`;
+  }
+  // ログ・シート・画面が開いたり閉じたりしたら手札欄の表示を合わせる
+  queueMicrotask(() => {
+    const mo = new MutationObserver(() => renderHandbar());
+    ["drawer", "sheet", "screen"].forEach(id => { const e = document.getElementById(id); if (e) mo.observe(e, { attributes: true, attributeFilter: ["hidden"] }); });
+  });
+  function renderHandbar() {
+    const host = $("handbar"), G = A.G;
+    const side = A.screen === "game" ? handViewSide() : null;
+    // ログ・シート・カード画面などを開いている間は手札欄をしまう
+    const covered = !$("drawer").hidden || !$("sheet").hidden || !$("screen").hidden;
+    if (!G || !side || covered) { host.hidden = true; return; }
+    const hand = handOf(G, side), usable = canUseHand() && handSide() === side;
+    const left = CARD_LAST - cardMove(G, side);
+    G.drawn = G.drawn || { x: [], d: [] };
+    const next = CARD_TURNS.find(n => !G.drawn[side].includes(n) && n >= cardMove(G, side));
+    host.hidden = false;
+    host.classList.toggle("ready", usable && hand.length > 0);
+    host.innerHTML = `<div class="hb-head"><b>${side === "x" ? "怪盗Xの手札" : "刑事の手札"}</b><span>${left >= 0 ? `${CARD_LAST}手目まで` : "期限切れ"}${next ? `・次は${next}手目` : ""}</span></div>
+      <div class="hb-cards">${heliCard(G, side)}${hand.length ? hand.map((c, i) => `<button class="hb-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : `data-act="hand"`} title="${esc(CARD[c].desc)}"><img src="art/cards/${c}.webp" alt=""><span>${CARD[c].name}</span></button>`).join("") : `<span class="hb-empty">なし</span>`}</div>`;
+  }
+
+  function renderMap() {
+    const G = A.G;
+    const gP = $("gPoss"), gD = $("gDest"), gM = $("gMarks"), gTr = $("gTrail");
+    gP.replaceChildren(); gD.replaceChildren(); gM.replaceChildren(); gTr.replaceChildren();
+    document.querySelectorAll(".stn-label.hot").forEach(l => l.classList.remove("hot"));
+    if (!G) return;
+    const hot = i => $("lbl" + i)?.classList.add("hot");
+    const showX = xVisible();
+
+    if (!showX && A.hints && !G.over) for (const p of G.possible) { const [x, y] = P(p); el("circle", { cx: x, cy: y, r: 32, class: "poss" }, gP); }
+    const path = G.over || showX ? A.sec.path : null;
+    if (path && path.length > 1) {
+      el("path", { d: "M" + path.map(p => P(p).join(",")).join(" L"), class: "trail", opacity: G.over ? 0.8 : 0.3 }, gTr);
+      drawFootprints(gTr, path, G.over);
+    } else if (!showX && G.seen && G.seen.length) {
+      // 刑事側：見つけた場所をつないだ「わかっている逃走経路」
+      const pts = G.seen.map(e => e.pos);
+      if (pts.length > 1) el("path", { d: "M" + pts.map(p => P(p).join(",")).join(" L"), class: "seen-trail" }, gTr);
+      G.seen.forEach((e, i) => {
+        const [x, y] = P(e.pos);
+        const nx = G.seen[i + 1] ? P(G.seen[i + 1].pos) : null;
+        const a = nx ? Math.atan2(nx[1] - y, nx[0] - x) * 180 / Math.PI : 0;
+        footPair(gTr, x, y, a, 0.35 + 0.65 * (i + 1) / G.seen.length, false);
+        el("text", { x, y: y + 52, class: "foot-no" }, gTr).textContent = `${e.n}手目`;
+      });
+    }
+
+    if (humanTurn()) {
+      const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+      for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) {
+        const [x, y] = P(to);
+        el("circle", { cx: x, cy: y, r: 31, class: "dest pulse" }, gD);
+        el("circle", { cx: x, cy: y, r: 35, class: "dest-outer pulse" }, gD);
+        hot(to);
+      }
+    }
+    if (A.pendingCard && A.pendingCard.stage === "target") {
+      // 対象の駅：大きな赤い照準と「ここを封鎖／破壊」の札
+      const verb = A.pendingCard.card === "bridge" ? "ここを封鎖" : "ここを破壊";
+      const ms = markScale();
+      for (const t of A.pendingCard.opts) {
+        const [x, y] = P(t);
+        el("circle", { cx: x, cy: y, r: 36, class: "dest card-dest" }, gD);
+        const g = el("g", { class: "card-aim scaled-mark", "data-x": x, "data-y": y, transform: `translate(${x} ${y}) scale(${ms})` }, gM);
+        el("circle", { r: 60, class: "ca-ring" }, g);
+        el("circle", { r: 44, class: "ca-ring2" }, g);
+        el("path", { d: "M-76,0 h22 M54,0 h22 M0,-76 v22 M0,54 v22", class: "ca-tick" }, g);
+        const tag = el("g", { transform: "translate(0 -104)" }, g);
+        el("rect", { x: -62, y: -20, width: 124, height: 34, rx: 17, class: "ca-tag" }, tag);
+        el("path", { d: "M-9,14 L0,26 L9,14 Z", class: "ca-tag" }, tag);
+        el("text", { x: 0, y: 5, class: "ca-text" }, tag).textContent = verb;
+        hot(t);
+      }
+    }
+    // 封鎖された橋・破壊された駅・罠・仲間への指示
+    for (const [st, until] of Object.entries(G.closedX || {})) {
+      if (G.xLog.length >= until) continue;
+      if (G.checkpoints && G.checkpoints[st] !== undefined) {
+        const [x, y] = P(Number(st));
+        const cg = el("g", { class: "scaled-mark", "data-x": x, "data-y": y, transform: `translate(${x} ${y}) scale(${markScale()})` }, gM);
+        el("circle", { r: 50, class: "cp-ring" }, cg);
+        el("rect", { x: -44, y: 22, width: 88, height: 12, rx: 3, class: "cp-bar" }, cg);
+        el("path", { d: "M-40,22 l12,12 M-16,22 l12,12 M8,22 l12,12 M32,22 l8,8", class: "cp-stripe" }, cg);
+        el("path", { d: "M-44,34 v18 M44,34 v18", class: "cp-leg" }, cg);
+        el("text", { x: 0, y: 84, class: "mark-label cp big" }, cg).textContent = `検問中 あと${until - G.xLog.length}手`;
+        continue;
+      }
+      const [x, y] = P(Number(st));
+      const bg = el("g", { class: "scaled-mark", "data-x": x, "data-y": y, transform: `translate(${x} ${y}) scale(${markScale()})` }, gM);
+      el("circle", { r: 52, class: "block-ring" }, bg);
+      el("rect", { x: -56, y: -16, width: 112, height: 32, rx: 6, class: "barricade" }, bg);
+      el("path", { d: "M-44,-16 l24,32 M-8,-16 l24,32 M28,-16 l16,21", class: "barricade-stripe" }, bg);
+      el("text", { x: 0, y: -62, class: "mark-label block big" }, bg).textContent = `封鎖中 あと${until - G.xLog.length}手`;
+    }
+    for (const st of G.ruin || []) {
+      const [x, y] = P(st);
+      el("circle", { cx: x, cy: y, r: 38, class: "ruin-fill" }, gM);
+      el("path", { d: `M${x - 22},${y - 14} L${x - 6},${y - 2} L${x - 12},${y + 12} M${x - 6},${y - 2} L${x + 10},${y - 8} L${x + 22},${y + 6} M${x + 10},${y - 8} L${x + 6},${y - 24}`, class: "ruin-crack" }, gM);
+      el("path", { d: `M${x - 16},${y - 16} L${x + 16},${y + 16} M${x + 16},${y - 16} L${x - 16},${y + 16}`, class: "rubble-x" }, gM);
+      el("text", { x, y: y - 46, class: "mark-label ruin" }, gM).textContent = "破壊・通行不可";
+    }
+    // 発見中：刑事の足元から怪盗Xの方向へ矢印
+    if (!G.over && exposure(G).level === "found") {
+      const [tx, ty] = P(G.possible[0]);
+      G.det.forEach((d, k) => {
+        const [x, y] = P(d.pos);
+        const dx = tx - x, dy = ty - y, len = Math.hypot(dx, dy);
+        if (len < 60) return;
+        const a = Math.atan2(dy, dx) * 180 / Math.PI;
+        const g = el("g", { transform: `translate(${x} ${y}) rotate(${a})` }, gM);
+        el("path", { d: "M46,-15 L112,-15 L112,-32 L160,0 L112,32 L112,15 L46,15 Z", class: "find-arrow" }, g);
+      });
+      el("circle", { cx: tx, cy: ty, r: 46, class: "find-ring" }, gM);
+    }
+    if (showX && A.sec.trap !== null && A.sec.trap !== undefined) {
+      const [x, y] = P(A.sec.trap);
+      el("path", { d: `M${x - 26},${y + 10} L${x - 16},${y - 8} L${x - 8},${y + 6} L${x},${y - 12} L${x + 8},${y + 6} L${x + 16},${y - 8} L${x + 26},${y + 10} Z`, class: "trap-mark" }, gM);
+      el("text", { x, y: y - 40, class: "mark-label ruin" }, gM).textContent = "罠";
+    }
+    if (A.role === "d" && G.pin !== undefined && G.pin !== null && !G.over) {
+      const [x, y] = P(G.pin);
+      el("path", { d: `M${x},${y - 30} c-16,-20 -22,-30 -22,-42 a22,22 0 1 1 44,0 c0,12 -6,22 -22,42 Z`, class: "pin-mark" }, gM);
+      el("circle", { cx: x, cy: y - 72, r: 8, fill: "#FBF5E4" }, gM);
+    }
+    // 仲間の狙い：CPUの刑事が次に動く駅を点線の矢印で見せる
+    if (A.role === "d" && !G.over && !A.pendingCard) {
+      G.det.forEach((d, k) => {
+        if (k === ME_DET || !detMoves(G, k).length || (G.stun && G.stun[k] > 0)) return;
+        const m = aiD(G, k, true);
+        const [x1, y1] = P(d.pos);
+        if (m.type === "heli") {
+          el("text", { x: x1, y: y1 + 58, class: "aim-label", fill: DCOL[k] }, gM).textContent = "次はヘリで移動";
+          return;
+        }
+        const [x2, y2] = P(m.to);
+        const len = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / len, uy = (y2 - y1) / len;
+        const ex = x2 - ux * 30, ey = y2 - uy * 30;
+        el("path", { d: `M${x1 + ux * 30},${y1 + uy * 30} L${ex},${ey}`, class: "aim-line", stroke: DCOL[k] }, gM);
+        el("path", { d: `M${ex + ux * 4},${ey + uy * 4} l${-ux * 20 - uy * 11},${-uy * 20 + ux * 11} l${uy * 22},${-ux * 22} Z`, fill: DCOL[k], stroke: "#2A1E12", "stroke-width": 2 }, gM);
+        el("text", { x: x2, y: y2 + 58, class: "aim-label", fill: DCOL[k] }, gM).textContent = `${dName(k)}：次は${NAME(m.to)}`;
+      });
+    }
+    if (G.orders && A.role !== "x") {
+      for (const [ks, st] of Object.entries(G.orders)) {
+        const k = Number(ks);
+        if (!G.det[k]) continue;
+        const [x1, y1] = P(G.det[k].pos), [x2, y2] = P(st);
+        el("path", { d: `M${x1},${y1} L${x2},${y2}`, class: "order-line", stroke: DCOL[k] }, gM);
+        el("path", { d: `M${x2},${y2} L${x2},${y2 - 58} L${x2 + 34},${y2 - 48} L${x2},${y2 - 38}`, class: "order-flag", fill: DCOL[k] }, gM);
+      }
+    }
+    if (A.sel !== null && A.sel >= 0) { const [x, y] = P(A.sel); el("circle", { cx: x, cy: y, r: 36, class: "sel" }, gM); hot(A.sel); }
+    if (G.dud !== undefined && (G.dudFound || G.over || (showX && A.sec.dudKnown))) {
+      const [x, y] = P(G.dud);
+      el("path", { d: `M${x + 18},${y - 42} l24,24 M${x + 42},${y - 42} l-24,24`, class: "dud-x" }, gM);
+      el("text", { x, y: y - 50, class: "dud-label" }, gM).textContent = "ガス欠";
+    }
+    if (heliBanned(G) && !G.over) for (const h of HELI) {
+      const [x, y] = P(h);
+      el("path", { d: `M${x - 30},${y - 30} L${x + 30},${y + 30} M${x + 30},${y - 30} L${x - 30},${y + 30}`, class: "heliban-x" }, gM);
+      el("text", { x, y: y - 44, class: "mark-label block" }, gM).textContent = `ヘリ封鎖 あと${G.heliBan - G.xLog.length}手`;
+    }
+    const sightedNow = !showX && !G.over && exposure(G).level === "found" ? G.possible[0] : null;
+    if (!showX && G.lastSeen && !G.over && G.lastSeen.pos !== sightedNow) {
+      const [x, y] = P(G.lastSeen.pos);
+      el("circle", { cx: x, cy: y, r: 40, class: "lastseen" }, gM);
+      el("text", { x, y: y - 48, class: "lastseen-label" }, gM).textContent = `X? ${G.lastSeen.n}手目`;
+    }
+
+    // コマ（同じ駅に重なったら少しずらす）
+    const stack = {};
+    const off = p => { const k = stack[p] = (stack[p] || 0) + 1; return [[0, 0], [30, -8], [-30, -8], [22, 22], [-22, 22], [0, 28]][k - 1] || [0, 0]; };
+    const tx = $("tokX");
+    if (tx) {
+      // 刑事に発見されている間は、刑事側の画面にも怪盗Xが姿を現す
+      const sight = !showX && !G.over && exposure(G).level === "found" ? G.possible[0] : null;
+      const xAt = showX ? A.sec.pos : sight;
+      if (!showX && lastSight !== null && sight === null) poof(lastSight);
+      if (!showX && sight !== null && lastSight === null) { tx.classList.remove("sighted"); void tx.getBBox(); tx.classList.add("sighted"); }
+      lastSight = showX ? null : sight;
+      tx.style.display = xAt !== null ? "" : "none";
+      if (xAt !== null) { const [dx, dy] = off(xAt); placeToken(tx, xAt, dx, dy); hot(xAt); }
+      tx.querySelector(".ring").setAttribute("visibility", G.turn === "x" && !G.over ? "visible" : "hidden");
+      tx.classList.toggle("x-found", showX && !G.over && exposure(G).level === "found");
+      tx.classList.toggle("x-sighted", !showX && xAt !== null);
+    }
+    const tm = $("tokM");
+    if (tm && G.mate) {
+      tm.style.display = G.mate.out && !G.over ? "none" : "";
+      const [dx, dy] = off(G.mate.pos); placeToken(tm, G.mate.pos, dx, dy);
+      tm.classList.toggle("caught", !!G.mate.out);
+    }
+    G.det.forEach((d, k) => {
+      const t = $("tokD" + k);
+      if (!t) return;
+      const [dx, dy] = off(d.pos);
+      placeToken(t, d.pos, dx, dy);
+      t.querySelector(".ring").setAttribute("visibility", G.turn === k && !G.over ? "visible" : "hidden");
+      const b = t.querySelector(".bubble");
+      if (b) {
+        const mark = G.over ? "" : (G.stun && G.stun[k] > 0 ? "休" : detBubble(G, k));
+        b.style.display = mark ? "" : "none";
+        const tx_ = b.querySelector("text");
+        if (tx_.textContent !== mark) {
+          tx_.textContent = mark;
+          b.setAttribute("class", "bubble pop " + (mark === "!" ? "ex" : "q"));
+        }
+      }
+      hot(d.pos);
+    });
+    updateTalk();
+  }
+
+  function renderTop() {
+    const G = A.G;
+    if (!G) { $("xcard").innerHTML = ""; $("dets").innerHTML = ""; return; }
+    const nx = REVEAL.find(r => r > G.xLog.length);
+    const ex = exposure(G);
+    $("xcard").innerHTML = `${portrait("x")}<span class="who"><b>怪盗X</b>
+      <small class="nx">${G.over ? "ゲーム終了" : nx ? `次の出現 ${nx}手目` : "出現なし"}</small>
+      ${G.over ? "" : `<span class="expo ${ex.level}" title="${ex.help}"><i></i>${ex.label}</span>`}
+      <span class="chipsx">${G.xt ? ["taxi", "bus", "tube", "boat"].map(t => `<span class="tk ${t} ${G.xt[t] ? "" : "zero"}" title="${TYPE[t].name}の残り">${TYPE[t].short}${G.xt[t]}</span>`).join("") : ""}<span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
+    $("xcard").classList.toggle("active", G.turn === "x");
+    $("dets").innerHTML = G.det.map((d, k) => `
+      <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="${A.role === "d" && k !== ME_DET ? "order" : "focusD"}" data-k="${k}" aria-label="${dName(k)}：切符は使い放題・ヘリ${d.t.heli}">
+        ${portrait("d", k, "sm")}${A.role === "d" && k === ME_DET ? `<span class="me-tag">あなた</span>` : ""}${A.role === "d" && k !== ME_DET ? `<span class="me-tag order">${G.orders && G.orders[k] !== undefined ? "指示中" : "指示"}</span>` : ""}
+        <span class="tks"><span class="tk inf" title="タクシー・バス・地下鉄・水上バスは使い放題">切符∞</span><span class="tk heli ${d.t.heli ? "" : "zero"}">H${d.t.heli}</span></span>
+      </button>`).join("");
+  }
+
+  function renderPrompt() {
+    const G = A.G, el_ = $("prompt");
+    if (!G) { el_.innerHTML = ""; return; }
+    if (A.pendingCard && A.pendingCard.stage === "target") {
+      el_.innerHTML = `<div class="txt"><div class="t1">「${CARD[A.pendingCard.card].name}」</div><div class="t2">光る駅を選ぶ</div></div><button class="btn ghost" data-act="cardCancel">やめる</button>`;
+      return;
+    }
+    if (A.pendingOrder !== null && A.pendingOrder !== undefined) {
+      el_.innerHTML = `${portrait("d", A.pendingOrder, "sm")}<div class="txt"><div class="t1">行き先を選ぶ</div><div class="t2">駅をタップ</div></div>`;
+      return;
+    }
+    const moveTxt = `${G.xLog.length}/${MAX_MOVES}手${G.dash != null && G.dash === G.turn ? "・ダッシュ中（もう1駅）" : ""}`;
+    if (G.over) {
+      el_.innerHTML = `${portrait(G.winner === "x" ? "x" : "d", 0, "sm")}<div class="txt"><div class="t1">${G.winner === "x" ? "Xの勝ち" : "刑事の勝ち"}</div></div><button class="btn" data-act="result">結果</button>`;
+      return;
+    }
+    const who = G.turn === "x" ? portrait("x", 0, "sm") : portrait("d", G.turn, "sm");
+    const name = G.turn === "x" ? "怪盗X" : dName(G.turn);
+    const t1 = humanTurn() ? (G.turn === "x" && G.doubling ? "Xの2手目" : `${name}の番`) : `${name} 考え中…`;
+    let heliBtn = "";
+    if (humanTurn()) {
+      const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+      // ヘリは左下の手札欄に表示する
+      if (G.turn !== "x" || (!G.doubling && moves.length)) heliBtn += `<button class="btn ghost pass-btn" data-act="passTurn">パス</button>`;
+    }
+    el_.innerHTML = `${who}<div class="txt"><div class="t1">${t1}</div><div class="t2">${moveTxt}</div></div>${heliBtn}`;
+  }
+
+
+  function renderLog() {
+    const G = A.G;
+    if (!G) { $("xlog").innerHTML = ""; return; }
+    const showX = xVisible();
+    let html = "";
+    for (let i = 0; i < MAX_MOVES; i++) {
+      const e = G.xLog[i];
+      const cls = ["slot"];
+      if (e) cls.push(e.t);
+      if (REVEAL.includes(i + 1)) cls.push("reveal");
+      if (CARD_TURNS.includes(i + 1)) cls.push("cardturn");
+      if (!G.over && i === G.xLog.length) cls.push("now");
+      let st = "";
+      if (e && e.p !== null) st = NO(e.p);
+      else if (e && showX) st = NO(A.sec.path[i + 1]);
+      const title = `${i + 1}手目${CARD_TURNS.includes(i + 1) ? "（カードを引く）" : ""}${e ? "：" + TYPE[e.t].name : ""}${st ? "（" + NAME(st - 1) + "）" : ""}`;
+      html += `<div class="${cls.join(" ")}" title="${esc(title)}"><span class="n">${i + 1}</span>${e ? TYPE[e.t].short : ""}${st ? `<span class="st">${st}</span>` : ""}${e?.d ? `<span class="dbl">2×</span>` : ""}</div>`;
+    }
+    const xl = $("xlog");
+    xl.innerHTML = html;
+    const now = xl.children[Math.min(G.xLog.length, MAX_MOVES - 1)];
+    if (now) xl.scrollLeft = Math.max(0, now.offsetLeft - xl.clientWidth / 2);
+    $("feed").innerHTML = A.feed.map(l => `<li class="${l.hot ? "hot" : ""}"><span class="r">${String(l.n).padStart(2, "0")}手</span><span>${esc(l.text)}</span></li>`).join("");
+  }
+
+  // 切符を選ぶシート
+  function openSheet() { renderSheet(); }
+  function renderSheet() {
+    const wrap = $("sheet");
+    const G = A.G;
+    if (G && A.handSheet && handViewSide()) {
+      const usable = canUseHand();
+      const side = usable ? handSide() : handViewSide(), hand = handOf(G, side);
+      const left = CARD_LAST - cardMove(G, side);
+      G.drawn = G.drawn || { x: [], d: [] };
+      const sched = CARD_TURNS.map(n => `<span class="ds ${G.drawn[side].includes(n) ? "done" : ""}">${n}手目${G.drawn[side].includes(n) ? "・引いた" : ""}</span>`).join("");
+      const note = !hand.length ? "手札はまだありません。" : left < 0 ? "使える期限（" + CARD_LAST + "手目）を過ぎました。" : usable ? "使うカードをタップ" : "カードを使えるのは自分の番だけです。";
+      wrap.hidden = false;
+      wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="手札">
+        <h3>${side === "x" ? "怪盗Xの手札" : "刑事チームの手札"}<span class="pill">${left >= 0 ? `${CARD_LAST}手目まで・あと${left}手` : "期限切れ"}</span></h3>
+        <div class="draw-sched"><b>カードを引く手</b>${sched}</div>
+        <p class="hand-note">${note}</p>
+        <div class="tickets">${hand.map((c, i) => `<button class="ticket hand-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : "disabled"}><img class="hc-art" src="art/cards/${c}.webp" alt=""><span class="en">${CARD[c].name}</span><span class="ja">${CARD[c].desc}</span></button>`).join("")}</div>
+        <button class="btn ghost wide" data-act="handClose">閉じる</button></div>`;
+      return;
+    }
+    if (G && A.pinSheet !== null && A.pinSheet !== undefined) {
+      const st = A.pinSheet;
+      const mates = G.det.map((_, k) => k).filter(k => k !== ME_DET);
+      wrap.hidden = false;
+      wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="作戦ピン">
+        <h3><span class="no">${NO(st)}</span>作戦ピン：${esc(NAME(st))}</h3>
+        <div class="tickets">
+          ${mates.map(k => `<button class="ticket pin-send" data-act="pinSend" data-k="${k}" style="background:${DCOL[k]}"><span class="en">Go</span><span class="ja">${dName(k)} を向かわせる</span></button>`).join("")}
+          <button class="ticket pin-all" data-act="pinSurround"><span class="en">Surround</span><span class="ja">全員でこの駅を包囲する</span></button>
+        </div>
+        <div class="row">${G.pin !== undefined && G.pin !== null ? `<button class="btn ghost" data-act="pinClear">ピンと指示を外す</button>` : ""}<button class="btn ghost" data-act="pinClose">閉じる</button></div></div>`;
+      return;
+    }
+    if (G && A.orderSheet !== null && A.orderSheet !== undefined) {
+      const k = A.orderSheet, cur = G.orders ? G.orders[k] : undefined;
+      wrap.hidden = false;
+      wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="仲間への指示">
+        <h3>${portrait("d", k, "sm")}${dName(k)} への指示</h3>
+        <p style="margin:0;color:var(--muted);font-size:13px">${cur !== undefined ? `いまの指示：${NO(cur)} ${esc(NAME(cur))} へ向かい、周辺を張り込む` : "いまはCPUの判断（おまかせ）で動いています"}</p>
+        <div class="tickets">
+          <button class="ticket order-go" data-act="orderPick"><span class="en">Go</span><span class="ja">行き先の駅を地図で選ぶ</span></button>
+          <button class="ticket order-free" data-act="orderClear"><span class="en">Free</span><span class="ja">おまかせに戻す</span></button>
+        </div>
+        <div class="row"><button class="btn ghost" data-act="focusD" data-k="${k}">この刑事を見る</button><button class="btn ghost" data-act="orderClose">閉じる</button></div></div>`;
+      return;
+    }
+    if (A.sel === null || !G || !humanTurn()) { wrap.hidden = true; return; }
+    const to = A.sel;
+    const isX = G.turn === "x";
+    let tickets = "", opt = "", title;
+    if (to === -1) {
+      const cnt = isX ? G.heli : G.det[G.turn].t.heli;
+      title = `<span class="no">H</span>ヘリで飛ぶ`;
+      tickets = `<button class="ticket heli" data-act="ticket" data-type="heli"><span class="en">Helicopter</span><span class="ja">ほかのヘリポートのどこかへ着陸（ランダム）</span><span class="cnt">${cnt}</span></button>`;
+      opt = `<p style="margin:0;color:var(--muted);font-size:13px">着陸できるヘリポート：${heliTargets(G, isX ? A.sec.pos : G.det[G.turn].pos, isX, isX ? -1 : G.turn).map(h => NO(h)).join("・")}</p>`;
+    } else if (isX) {
+      title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
+      const opts = xMoves(G, A.sec).filter(m => m.to === to).map(m => m.type);
+      tickets = ["taxi", "bus", "tube", "boat", "black"].filter(t => opts.includes(t)).map(t =>
+        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}${t === "black" ? "（乗り物を隠す）" : ""}</span><span class="cnt">${t === "black" ? G.black : G.xt && G.xt[t] !== undefined ? G.xt[t] : ""}</span></button>`).join("");
+      if (canDouble(G)) opt = `<div class="opt-row"><div><b>2倍移動</b><div style="font-size:12px;color:var(--muted)">この後もう1駅続けて動く（残り${G.dbl}）</div></div><button class="switch" role="switch" aria-checked="${A.useDouble}" data-act="double" aria-label="2倍移動"></button></div>`;
+    } else {
+      title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
+      const k = G.turn, d = G.det[k];
+      const opts = detMoves(G, k).filter(m => m.to === to).map(m => m.type);
+      tickets = MOVE_TYPES.filter(t => opts.includes(t)).map(t =>
+        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}</span><span class="cnt">${t === "heli" ? d.t.heli : "∞"}</span></button>`).join("");
+    }
+    wrap.hidden = false;
+    wrap.innerHTML = `<div class="sheet" role="dialog" aria-label="切符を選ぶ">
+      <h3>${title}</h3>
+      <div class="tickets">${tickets}</div>
+      ${opt}
+      <button class="btn ghost wide" data-act="cancel">キャンセル</button></div>`;
+  }
+
+  // 全面スクリーン
+  function renderScreen() {
+    const sc = $("screen");
+    const G = A.G;
+    sc.className = "screen";
+    if (A.screen === "title") {
+      const sv = loadSave();
+      sc.hidden = false;
+      sc.classList.add("title");
+      sc.innerHTML = `<div class="fog"></div>
+        <div class="card">
+          <div class="logo"><div class="faces">${portrait("x", 0, "lg")}${[0, 1, 2].map(k => portrait("d", k, "lg")).join("")}</div>
+            <img class="logo-img" src="art/title/title-logo.webp" alt="LONDON CHASE"><h1 class="sub">ロンドン・チェイス</h1><p>霧の街に消えた怪盗Xを、刑事たちが追う</p></div>
+          <div class="menu">
+            ${sv ? `<button class="btn" data-act="resume">つづきから<span class="s">${sv.G.xLog.length}/${MAX_MOVES}手・${sv.role === "x" ? "怪盗X" : sv.role === "d" ? "刑事" : "パス&プレイ"}</span></button>` : ""}
+            <button class="btn ${sv ? "ghost" : ""}" data-act="start" data-role="x">${portrait("x")}怪盗Xで遊ぶ<span class="s">CPUの刑事から逃げる</span></button>
+            <button class="btn ghost" data-act="start" data-role="d">${portrait("d", 0)}刑事で遊ぶ<span class="s">刑事1を操作・仲間はCPU</span></button>
+          </div>
+          <div class="field"><label>刑事のキャラ<small class="fl-sub">刑事モードのあなた</small></label><div class="thief-pick det-pick">${DETECTIVES.map((t, i) => `<button data-act="detPick" data-i="${i}" aria-pressed="${A.detPick === i}"><img src="${t.face}" alt=""><b>${t.name}</b><span>${t.sub}</span></button>`).join("")}</div></div>
+          <div class="field"><label>怪盗Xのキャラ</label><div class="thief-pick">${THIEVES.map((t, i) => `<button data-act="thief" data-i="${i}" aria-pressed="${A.thief === i}"><img src="${t.face}" alt=""><b>${t.name}</b><span>${t.sub}</span></button>`).join("")}</div></div>
+          <div class="field"><label>刑事の人数</label><div class="seg">${[4, 5].map(n => `<button data-act="dets" data-n="${n}" aria-pressed="${A.detCount === n}">${n}人</button>`).join("")}</div></div>
+          <p class="c" style="font-size:12px;margin-top:-6px">4人が標準。5人にすると怪盗Xは苦しくなります</p>
+          <button class="btn ghost wide" data-act="rules">遊び方</button>
+        </div>`;
+      return;
+    }
+    if (A.screen === "rules") {
+      sc.hidden = false;
+      sc.classList.add("title");
+      sc.innerHTML = `<div class="card"><h2>遊び方</h2><ol class="rules">
+        <li><b>怪盗X</b> 1人と <b>刑事</b> 4〜5人の追いかけっこ。駅から駅へ、1手に1駅ずつ動きます。</li>
+        <li>乗り物は4種類。<b>タクシー</b>（黄）は近くの駅へ。<b>バス</b>（緑）と <b>地下鉄</b>（赤）は遠くまで一気に進めます。地下鉄は外周を一周する環状線と、中央を貫く3路線です。<b>水上バス</b>（青）はテムズ川沿いと川に浮かぶ2つの島を結びます。駅マークの上半分の色が、その駅で使える乗り物です。</li>
+        <li><b>ヘリポート</b>（H）からはヘリで飛べます。行き先は選べず、ほかのヘリポートのどこかにランダムで着陸します。島へは水上バスかヘリでしか行けません。<br>ヘリポートのうち1か所だけは <b>ガス欠</b> で飛べません。どこなのかは誰にも知らされず、飛ぼうとして初めてわかります（切符は減り、その手はその場にとどまります）。</li>
+        <li>川を渡る <b>橋</b> の上にも駅（ひし形の台座）があり、タクシーとバスは橋で一度止まります。</li>
+        <li>怪盗Xの居場所は秘密。刑事にわかるのは画面上部の移動記録に残る <b>切符の種類</b> だけ。${REVEAL.join("・")}手目の後だけ姿を現します。</li>
+        <li><b>移動記録の見方</b>：マスの中の文字は怪盗Xが使った乗り物（タ＝タクシー、バ＝バス、地＝地下鉄、船＝水上バス、黒＝黒チケット、H＝ヘリ、休＝パス）。<span style="color:#E5484D;font-weight:900">赤い丸と赤い枠</span>のマスは怪盗Xが姿を現す手で、現れた駅の番号が入ります。<span style="color:#E3B341;font-weight:900">金色の小さなカード印</span>はカードを引く手、金色の枠はいまの手、「2×」は2倍移動を使った手です。</li>
+        <li><b>切符</b>：刑事はタクシー・バス・地下鉄・水上バスが使い放題（ヘリだけ${DET_TICKETS.heli}枚）。怪盗Xの切符は有限（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・水上バス${X_TICKETS.boat}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）。切符が尽きた乗り物には乗れず、動けなくなると怪盗Xの負け。</li>
+        <li><b>手札</b>：画面の左下にいつも表示されます。自分の番で使えるときは金色に光り、カードをタップするとそのまま使えます。カードを引く手は${CARD_TURNS.join("・")}手目。</li>
+        <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
+        <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引きます（ハズレはありません）。手札のカードは自分の番に左下の手札からタップして、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」。ダッシュを使った刑事はその番に2回続けて動けます。ヘリ封鎖とランダム検問は引いたその場で発動します（ヘリ封鎖は1ゲームに1回だけ、ランダム検問はヘリポート以外のどこかの駅に検問所が敷かれます）。怪盗X側は「罠」「雲隠れ」「駅破壊」。刑事モードの手札はあなただけが使えます（仲間のCPUは使いません）。</li>
+        <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
+        <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
+        <li><b>作戦ピン</b>：刑事モードで駅を長押し（パソコンは右クリック）すると作戦ピンを立て、仲間をその駅へ向かわせたり、全員で包囲させたりできます。</li>
+        <li><b>仲間の狙い</b>：刑事モードでは、CPUの仲間が次に動く駅が点線の矢印と「次は◯◯」で表示されます。</li>
+        <li>刑事の駒の吹き出しは、刑事がどこまで怪盗Xをつかんでいるかの合図です。<b>？</b>は見失っている、<b>！</b>は捕捉している。怪盗Xの札には「見失われている／追われている／発見されている」が表示されます。</li>
+        <li>刑事の番に怪盗Xのいる駅へ入った時点で <b>確保（逮捕）</b>。最後の手でも確保が優先です。刑事どうしは同じ駅に重なってもかまいません。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
+        <li><b>相棒</b>：${MATE_FROM}手目になると怪盗Xの相棒が現れます（怪盗Xから${MATE_MIN}駅以上離れた場所）。相棒は誰からも見え、${MATE_EVERY}手ごとに1駅、怪盗Xのほうへ自動で動きます。怪盗Xが相棒と同じ駅に着いた時点で <b>合流成功＝怪盗Xの勝ち</b>。刑事が相棒の駅に入ると相棒を確保でき、もう合流はできません。</li>
+        <li><b>パス</b>：自分の番に「パス」を押すと、その場にとどまれます（切符は使いません）。怪盗Xのパスは記録に「休」と残ります。2倍移動の途中と、どこへも動けないときはパスできません。</li>
+        <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは画面上部の手番表示にある「ヘリ」ボタンから。</li>
+      </ol><button class="btn wide" data-act="title">戻る</button></div>`;
+      return;
+    }
+    if (A.screen === "result" && G && G.over) {
+      const xWin = G.winner === "x";
+      const you = A.role === "x" ? xWin : A.role === "d" ? !xWin : null;
+      const reason = { meet: "怪盗Xが相棒と合流して逃走に成功しました。", escape: `${MAX_MOVES}手を逃げ切りました。`, stuck: "刑事が全員、使える切符を失いました。", caught: "刑事が怪盗Xのいる駅に踏み込みました。", trapped: "怪盗Xは四方を塞がれて動けなくなりました。" }[G.reason] || "";
+      sc.hidden = false;
+      sc.classList.add("dim");
+      const title = xWin ? (G.reason === "meet" ? "合流成功！" : "逃走成功！") : "確保！";
+      const dets = G.det.map((_, k) => detChar(k).img);
+      const scene = xWin
+        ? `<div class="rs-scene escape ${G.reason === "meet" ? "meet" : ""}"><div class="rs-fog f1"></div>
+            ${G.reason === "meet" && G.mate ? `<img class="rs-mate" src="${mateChar().img}" alt="">` : ""}
+            <img class="rs-hero" src="${thief().img}" alt="">
+            ${dets.slice(0, 3).map((src, i) => `<img class="rs-lose d${i}" src="${src}" alt="">`).join("")}
+            </div>`
+        : `<div class="rs-scene caught">
+            ${dets.slice(0, 4).map((src, i) => `<img class="rs-det d${i}" src="${src}" alt="">`).join("")}
+            <img class="rs-thief" src="${thief().img}" alt="">
+            <svg class="rs-cuffs" viewBox="0 0 80 40" aria-hidden="true"><circle cx="18" cy="20" r="13" fill="none" stroke="#C9CDD4" stroke-width="6"/><circle cx="62" cy="20" r="13" fill="none" stroke="#C9CDD4" stroke-width="6"/><path d="M31 20 h18" stroke="#C9CDD4" stroke-width="5" stroke-dasharray="5 3"/></svg>
+            </div>`;
+      // 完成画像（art/results/scene-<種類>-<怪盗番号>.webp）があれば、合成の代わりにそれを表示
+      const kind = xWin ? (G.reason === "meet" ? "meet" : "escape") : "caught";
+      const full = `<img class="rs-full" src="art/results/scene-${kind}-${(A.thief || 0) + 1}.webp" alt="" onload="this.parentNode.classList.add('full')" onerror="this.remove()">`;
+      sc.innerHTML = `<div class="card result-card">${scene.replace(/(<div class="rs-scene[^>]*>)/, "$1" + full)}
+        <div class="rs-stamp-row"><span class="rs-stamp ${xWin ? "gold" : "red"}">${title}</span></div>
+        <h2>${you === null ? (xWin ? "怪盗Xの逃走成功" : "怪盗X、逮捕！") : you ? "あなたの勝ち！" : "あなたの負け…"}</h2>
+        <p class="c">${G.xLog.length}手目で決着。${reason}</p>
+        <div class="row"><button class="btn" data-act="again">もう一度</button><button class="btn ghost" data-act="title">タイトルへ</button></div>
+        <button class="btn ghost wide" data-act="closeResult">盤面と逃走経路を見る</button></div>`;
+      return;
+    }
+    if (G && A.pendingCard && A.pendingCard.stage === "reveal" && !(A.role === "pass" && (A.cover === "x" || A.cover === "d"))) {
+      const pc = A.pendingCard, c = CARD[pc.card];
+      sc.hidden = false;
+      sc.classList.add("dim");
+      sc.innerHTML = `<div class="card">
+        <div class="label-c">${pc.side === "x" ? "怪盗Xのカード" : "刑事チームのカード"}・${G.xLog.length + (pc.side === "x" ? 1 : 0)}手目</div>
+        <div class="gcard ${pc.card === "miss" ? "miss" : pc.side}">
+          <div class="gc-kind">${pc.card === "miss" ? "MISS" : pc.side === "x" ? "THIEF CARD" : "DETECTIVE CARD"}</div>
+          <img class="gc-art" src="art/cards/${pc.card}.webp" alt="">
+          <div class="gc-name">${c.name}</div>
+          <div class="gc-desc">${c.desc}</div>
+        </div>
+        <button class="btn wide" data-act="cardOk">${pc.card === "miss" ? "残念… 閉じる" : "OK"}</button></div>`;
+      return;
+    }
+    if (G && A.role === "pass" && !G.over && (A.cover === "x" || A.cover === "d")) {
+      sc.hidden = false;
+      sc.classList.add("cover");
+      const toX = A.cover === "x";
+      sc.innerHTML = `<div class="card"><div class="faces">${toX ? portrait("x", 0, "lg") : G.det.map((_, k) => portrait("d", k, "lg")).join("")}</div>
+        <h2>${toX ? "怪盗Xの番です" : "刑事の番です"}</h2>
+        <p class="c">${toX ? "刑事のみなさんは画面を見ないでください。<br>怪盗X役の人に端末を渡してください。" : "怪盗Xは移動しました。<br>刑事のみなさんに端末を渡してください。"}</p>
+        <button class="btn wide" data-act="${toX ? "openX" : "openD"}">${toX ? "怪盗Xです。表示する" : "刑事です。はじめる"}</button></div>`;
+      return;
+    }
+    sc.hidden = true;
+  }
+
+  function skylineSVG() {
+    return `<svg class="skyline" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <path d="M0,400 V300 H60 V270 H90 V300 H140 V250 H170 V300 H230 V280 H260 V220 L275,120 L290,220 V300 H320 V285 H380 V300 H420
+        V180 H424 V170 L432,150 L440,170 V180 H444 V300 H470 V260 A40,40 0 0 1 550,260 V300 H600 V280 H640 V300
+        H700 V200 L716,180 L732,200 V300 H760 V210 L776,190 L792,210 V300 H830 V290 H880 V240 H900 V300 H960 V270 H990 V300 H1040 V230 L1060,140 L1080,230 V300 H1120 V280 H1200 V400 Z" fill="#0A0D14"/>
+      <path d="M700,236 H792" stroke="#0A0D14" stroke-width="8"/>
+      <circle cx="432" cy="195" r="7" fill="#E3B341" opacity="0.8"/>
+      ${Array.from({ length: 26 }, (_, i) => `<rect x="${40 + i * 44}" y="${320 + (i % 3) * 18}" width="6" height="9" fill="#E3B341" opacity="${0.25 + (i % 4) * 0.12}"/>`).join("")}
+    </svg>`;
+  }
+
+  // 盤面の背景画像（路線・駅なし）を書き出す
+  async function exportBackground(fmt) {
+    const svg = backgroundSVG();
+    let blob;
+    try {
+      if (fmt === "svg") blob = new Blob([svg], { type: "image/svg+xml" });
+      else {
+        toast("背景画像を書き出しています…");
+        const im = new Image();
+        im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+        await im.decode();
+        const k = 1.5;
+        const c = document.createElement("canvas");
+        c.width = W * k; c.height = H * k;
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        blob = await new Promise(r => c.toBlob(r, "image/png"));
+      }
+    } catch (e) { toast("画像を作れませんでした"); return; }
+    const filename = `london-chase-background.${fmt}`;
+    let dl = null;
+    try { dl = await window.claude?.use?.("downloads"); } catch (e) { dl = null; }
+    if (dl) {
+      try { await dl.save({ filename, data: blob }); toast(`${filename} を保存しました`); }
+      catch (e) { if (e?.code !== "declined") toast("保存できませんでした"); }
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  window.londonChaseBackgroundSVG = () => backgroundSVG();
+
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = msg;
+    $("toastHost").replaceChildren(t);
+    setTimeout(() => { if (t.parentNode) t.remove(); }, 2500);
+  }
+
+  // ======================================================================
+  // イベント
+  // ======================================================================
+  document.addEventListener("click", ev => {
+    const b = ev.target.closest("[data-act]");
+    if (!b || b.disabled) return;
+    const act = b.dataset.act;
+    const { w, h } = vpSize();
+    switch (act) {
+      case "start": return startGame(b.dataset.role);
+      case "resume": { const s = loadSave(); if (s) resume(s); return; }
+      case "again": return startGame(A.role);
+      case "title": clearTimeout(timer); A.screen = "title"; A.sel = null; renderScreen(); renderSheet(); return;
+      case "toggleHud": {
+        const hidden = document.body.classList.toggle("hud-hidden");
+        try { localStorage.setItem("london-chase-hud-hidden", hidden ? "1" : "0"); } catch (e) {}
+        b.setAttribute("aria-expanded", String(!hidden));
+        b.setAttribute("aria-label", hidden ? "上部の表示を出す" : "上部の表示を隠す");
+        setTimeout(() => { clampView(); applyView(); layoutEdge(); }, 330);
+        return;
+      }
+      case "menu": clearTimeout(timer); save(); A.screen = "title"; A.sel = null; renderScreen(); renderSheet(); return;
+      case "rules": A.screen = "rules"; renderScreen(); return;
+      case "exportBg": exportBackground(b.dataset.fmt); return;
+      case "dets": A.detCount = Number(b.dataset.n); renderScreen(); return;
+      case "detPick": A.detPick = Number(b.dataset.i); try { localStorage.setItem(DET_KEY, String(A.detPick)); } catch (e) {} renderScreen(); return;
+      case "thief": A.thief = Number(b.dataset.i); try { localStorage.setItem(THIEF_KEY, String(A.thief)); } catch (e) {} renderScreen(); return;
+      case "result": A.screen = "result"; renderScreen(); return;
+      case "closeResult": A.screen = "game"; renderScreen(); fitView(); return;
+      case "openX": A.cover = "x-open"; step(); focusTurn(); return;
+      case "openD": A.cover = null; render(); step(); return;
+      case "zoomIn": return zoomAt(1.5, w / 2, h / 2);
+      case "zoomOut": return zoomAt(1 / 1.5, w / 2, h / 2);
+      case "fit": return fitView();
+      case "focusTurn": return focusTurn();
+      case "focusX": { const G = A.G; if (!G) return; if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else toast("怪盗Xはまだ姿を見せていません"); return; }
+      case "focusD": return A.G && centerOn(A.G.det[Number(b.dataset.k)].pos);
+      case "focusPos": return centerOn(Number(b.dataset.pos));
+      case "cardOk": {
+        const pc = A.pendingCard;
+        if (!pc || pc.stage !== "reveal") return;
+        A.pendingCard = null;
+        return step();
+      }
+      case "cardCancel": if (A.pendingCard && A.pendingCard.stage === "target") { A.pendingCard = null; render(); } return;
+      case "hand": if (!handViewSide()) return; A.handSheet = true; A.sel = null; renderSheet(); return;
+      case "handClose": A.handSheet = false; renderSheet(); return;
+      case "useCard": {
+        if (!canUseHand()) return;
+        const side = handSide(), i = Number(b.dataset.i), card = handOf(A.G, side)[i];
+        A.handSheet = false;
+        if (needsTargetCard(card)) {
+          const opts = cardTargets(A.G, A.sec, card) || [];
+          if (!opts.length) { toast("いまは使える場所がありません"); renderSheet(); return; }
+          A.pendingCard = { side, card, stage: "target", opts, handIndex: i };
+          render();
+          if (card === "destroy") fitStations([A.sec.pos, ...opts]); else fitView();
+          return;
+        }
+        let tgt = null;
+        if (card === "checkpoint") {
+          if (A.G.turn === "x") return;
+          tgt = A.G.det[A.G.turn].pos;
+        }
+        if (card === "dash") {
+          if (A.G.turn === "x" || A.G.dash != null) return;
+          tgt = A.G.turn;
+        }
+        handOf(A.G, side).splice(i, 1);
+        useCardNow(side, card, tgt);
+        save(); render();
+        return;
+      }
+      case "order": A.orderSheet = Number(b.dataset.k); A.sel = null; renderSheet(); return;
+      case "orderPick": A.pendingOrder = A.orderSheet; A.orderSheet = null; renderSheet(); render(); toast(`${dName(A.pendingOrder)} の行き先の駅をタップ`); return;
+      case "orderClear": { const k = A.orderSheet; if (A.G.orders) delete A.G.orders[k]; A.orderSheet = null; toast(`${dName(k)} はおまかせで動きます`); save(); render(); return; }
+      case "orderClose": A.orderSheet = null; renderSheet(); return;
+      case "pinSend": {
+        const k = Number(b.dataset.k), st = A.pinSheet, G = A.G;
+        G.pin = st; G.orders = { ...(G.orders || {}), [k]: st };
+        A.pinSheet = null;
+        toast(`${dName(k)}：${NAME(st)} へ向かいます`);
+        pushFeed(G.xLog.length, `作戦ピン：${dName(k)} は ${NO(st)} ${NAME(st)} へ`);
+        save(); render(); return;
+      }
+      case "pinSurround": {
+        const st = A.pinSheet, G = A.G;
+        G.pin = st; surround(st);
+        A.pinSheet = null;
+        toast(`${NAME(st)} を包囲せよ！`);
+        pushFeed(G.xLog.length, `作戦ピン：全員で ${NO(st)} ${NAME(st)} を包囲`, true);
+        save(); render(); return;
+      }
+      case "pinClear": A.G.pin = null; A.G.orders = {}; A.pinSheet = null; toast("作戦ピンと指示を外しました"); save(); render(); return;
+      case "pinClose": A.pinSheet = null; renderSheet(); return;
+      case "hint": A.hints = !A.hints; render(); return;
+      case "log": $("drawer").hidden = !$("drawer").hidden; renderHandbar(); return;
+      case "cancel": A.sel = null; A.useDouble = false; render(); return;
+      case "double": A.useDouble = !A.useDouble; renderSheet(); return;
+      case "passTurn": {
+        if (!humanTurn()) return;
+        const G = A.G;
+        A.sel = null; A.useDouble = false;
+        if (G.turn === "x") {
+          if (G.doubling || !xMoves(G, A.sec).length) return;
+          commitX(A.sec.pos, "pass");
+        } else {
+          const k = G.turn;
+          pushFeed(G.xLog.length, `${dName(k)} はパス（その場にとどまった）`);
+          apply(() => skipD(G, k));
+          step();
+        }
+        return;
+      }
+      case "heli": {
+        if (!humanTurn()) return;
+        const G = A.G, moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+        if (!moves.some(m => m.type === "heli")) return;
+        A.sel = -1; A.useDouble = false; render(); return;
+      }
+      case "ticket": {
+        const G = A.G, to = A.sel, type = b.dataset.type;
+        if (to === null || !humanTurn()) return;
+        if (G.turn === "x") commitX(to, type); else commitD(G.turn, to, type);
+        return;
+      }
+    }
+  });
+  $("sheet").addEventListener("click", e => { if (e.target === $("sheet")) { A.sel = null; A.useDouble = false; A.orderSheet = null; A.pinSheet = null; A.handSheet = false; render(); } });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && A.sel !== null) { A.sel = null; render(); }
+    if (A.screen !== "game") return;
+    const { w, h } = vpSize();
+    if (e.key === "+" || e.key === "=") zoomAt(1.4, w / 2, h / 2);
+    if (e.key === "-") zoomAt(1 / 1.4, w / 2, h / 2);
+  });
+
+  // ======================================================================
+  // 起動
+  // ======================================================================
+  function boot(data) {
+    renderBackground();
+    buildBoard();
+    fitView(false);
+    if (data && data.A && data.A.G) {
+      Object.assign(A, data.A, { busy: false });
+      buildTokens();
+      if (A.screen === "game" && !A.G.over) step(); else render();
+    } else {
+      renderScreen();
+    }
+  }
+  try { window.claude?.hot?.snapshot?.(() => ({ A })); } catch (e) {}
+  if (window.claude?.hot?.ready) window.claude.hot.ready(boot);
+  else boot(window.claude?.hot?.data ?? {});
+})();
+</script>
+<!-- ARTIFACT-BODY-END -->
+</body>
+</html>
