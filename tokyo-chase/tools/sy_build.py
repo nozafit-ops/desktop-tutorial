@@ -58,11 +58,27 @@ for s in tri.simplices:
     for a in range(3):
         i, j = sorted((land[s[a]], land[s[(a + 1) % 3]]))
         cand.add((i, j))
+def seg_pt(a, b, p):
+    vx, vy = b[0] - a[0], b[1] - a[1]
+    L = vx * vx + vy * vy or 1e-9
+    t = max(0, min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / L))
+    return math.hypot(p[0] - a[0] - vx * t, p[1] - a[1] - vy * t)
+def clear(i, j, gap):
+    """線が、止まらない駅のすぐそばを通らないこと（停車駅がまぎらわしくならないように）"""
+    return all(seg_pt(P[i], P[j], P[k]) >= gap for k in range(N) if k != i and k != j)
 def road_ok(i, j):
-    if wet(P[i], P[j]) or dist(i, j) > 420: return False
-    if KIND[i] == "b" or KIND[j] == "b": return dist(i, j) < 330
+    if wet(P[i], P[j]) or dist(i, j) > 420 or not clear(i, j, 55): return False
+    if KIND[i] == "b" or KIND[j] == "b": return False   # 橋は下でまとめてつなぐ
     return not crosses_river(P[i], P[j])
 TAXI = {e for e in cand if road_ok(*e)}
+# 橋：両岸それぞれいちばん近い駅とだけつなぐ（橋からの分岐は2本）
+BRIDGE_NB = {}
+for bi in [i for i in range(N) if KIND[i] == "b"]:
+    nb = []
+    for side in "we":
+        j = min((k for k in range(N) if KIND[k] == side and not wet(P[bi], P[k]) and clear(bi, k, 55)), key=lambda k: dist(bi, k))
+        nb.append(j); TAXI.add((min(bi, j), max(bi, j)))
+    BRIDGE_NB[bi] = nb
 
 def adj_of(edges):
     adj = {i: set() for i in range(N)}
@@ -114,14 +130,15 @@ while removed < EXTRA:
     TAXI.discard((a, b)); removed += 1
 # 行き止まりを作らない：道が1本しかない駅には、近い候補から道を足す
 for v in land:
+    if KIND[v] == "b": continue
     for e in sorted((e for e in cand if v in e and e not in TAXI and road_ok(*e)), key=lambda e: dist(*e)):
         if len(adj[v]) >= 2: break
         TAXI.add(e); adj[e[0]].add(e[1]); adj[e[1]].add(e[0])
     # それでも足りなければ、少し遠い駅まで（ほかの道と交差しない道だけ）
-    for j in sorted((j for j in land if j != v), key=lambda j: dist(v, j)):
+    for j in sorted((j for j in land if j != v and KIND[j] != "b"), key=lambda j: dist(v, j)):
         if len(adj[v]) >= 2 or dist(v, j) > 600: break
         e = (min(v, j), max(v, j))
-        if e in TAXI or wet(P[v], P[j]) or (KIND[j] != "b" and crosses_river(P[v], P[j])): continue
+        if e in TAXI or wet(P[v], P[j]) or crosses_river(P[v], P[j]) or not clear(v, j, 55): continue
         if any(seg_cross(P[v], P[j], P[a], P[b]) for a, b in TAXI if len({a, b, v, j}) == 4): continue
         TAXI.add(e); adj[v].add(j); adj[j].add(v)
 TAXI = sorted(TAXI)
@@ -185,39 +202,85 @@ def spread_pick(cands, radius, prefer, must=()):
         if all(dist(i, j) >= radius for j in out): out.append(i)
     return out
 
-def net_edges(nodes, maxlen, maxdeg, allow_river=False, planar_with=()):
-    """選んだ駅どうしの三角形分割から、短めの辺を採る（角度の狭い辺は捨てる）"""
-    pts = np.array([P[i] for i in nodes])
-    t = Delaunay(pts)
-    cand_ = set()
-    for s in t.simplices:
-        for k in range(3):
-            a, b = sorted((nodes[s[k]], nodes[s[(k + 1) % 3]]))
-            cand_.add((a, b))
-    out = []
-    deg = {i: 0 for i in nodes}
-    for a, b in sorted(cand_, key=lambda e: dist(*e)):
-        if dist(a, b) > maxlen or wet(P[a], P[b]): continue
-        if not allow_river and KIND[a] != "b" and KIND[b] != "b" and crosses_river(P[a], P[b]): continue
-        if deg[a] >= maxdeg or deg[b] >= maxdeg: continue
+def net_edges(nodes, maxlen, maxdeg, allow_river=False, gap=65, minang=28):
+    """選んだ駅どうしを、短い順に直線で結ぶ網。止まらない駅のそばを通る線・ほかの線と交わる線は採らない"""
+    nodes = [i for i in nodes if KIND[i] != "b"]
+    def ok(a, b):
+        if wet(P[a], P[b]) or not clear(a, b, gap): return False
+        return allow_river or not crosses_river(P[a], P[b])
+    pairs = sorted(((a, b) for x, a in enumerate(nodes) for b in nodes[x + 1:] if dist(a, b) <= maxlen), key=lambda e: dist(*e))
+    out, deg = [], {i: 0 for i in nodes}
+    def crosses_any(a, b):
+        return any(seg_cross(P[a], P[b], P[c], P[d]) for c, d in out if len({a, b, c, d}) == 4)
+    def narrow(a, b):
+        """同じ駅から出るほかの線と角度が近すぎる（重なって見える）"""
+        for v, w in ((a, b), (b, a)):
+            for c, d in out:
+                if v not in (c, d): continue
+                o = d if c == v else c
+                u1 = (P[w][0] - P[v][0], P[w][1] - P[v][1]); u2 = (P[o][0] - P[v][0], P[o][1] - P[v][1])
+                if abs(math.degrees(math.atan2(u1[0] * u2[1] - u1[1] * u2[0], u1[0] * u2[0] + u1[1] * u2[1]))) < minang: return True
+        return False
+    for a, b in pairs:
+        if deg[a] >= maxdeg or deg[b] >= maxdeg or not ok(a, b) or crosses_any(a, b) or narrow(a, b): continue
         out.append((a, b)); deg[a] += 1; deg[b] += 1
-    # 孤立したバス停・駅は最寄りとつなぐ
-    for i in nodes:
-        if deg[i] == 0:
-            j = min((j for j in nodes if j != i and not wet(P[i], P[j])), key=lambda j: dist(i, j))
-            out.append((min(i, j), max(i, j))); deg[i] += 1; deg[j] += 1
+    # ばらばらの塊をつなぐ（いちばん近い組から）
+    while True:
+        adj_ = {i: set() for i in nodes}
+        for a, b in out: adj_[a].add(b); adj_[b].add(a)
+        comp = bfs(adj_, nodes[0])
+        rest = [i for i in nodes if i not in comp]
+        if not rest: break
+        best = min(((a, b) for a in comp for b in rest if ok(a, b)), key=lambda e: dist(*e), default=None)
+        if best is None: break
+        out.append((min(best), max(best))); deg[best[0]] += 1; deg[best[1]] += 1
     return out
 
 FAMOUS = {"新宿", "渋谷", "池袋", "東京", "上野", "品川", "銀座", "秋葉原", "押上", "錦糸町", "北千住", "新木場", "浅草", "六本木", "中野", "目黒"}
 fame = lambda i: 30 if ST[i][0] in FAMOUS else 0
 BUS_R = float(os.environ.get("BUS_R", "240"))
 bridges = [i for i in range(N) if KIND[i] == "b"]
-BUS_ST = spread_pick(LANDP, BUS_R, lambda i: tdeg[i] + rng.random() + fame(i), must=bridges)
-BUS_E = net_edges(BUS_ST, BUS_R * 2.1, 4)
+# 橋とその両岸の隣駅はバス停。バスは橋を「両岸の隣駅 → 橋 → 隣駅」と渡る（タクシーと同じ道）
+must_bus = bridges + [j for nb in BRIDGE_NB.values() for j in nb]
+BUS_ST = spread_pick(LANDP, BUS_R, lambda i: tdeg[i] + rng.random() + fame(i), must=must_bus)
+BUS_E = net_edges(BUS_ST, BUS_R * 2.1, 4) + [(min(b, j), max(b, j)) for b, nb in BRIDGE_NB.items() for j in nb]
 
-SUB_R = float(os.environ.get("SUB_R", "450"))
-SUB_ST = spread_pick([i for i in BUS_ST if KIND[i] != "b"], SUB_R, lambda i: tdeg[i] + rng.random() + fame(i))
-SUB_E = net_edges(SUB_ST, SUB_R * 1.9, 4, allow_river=True)
+SUB_N = int(os.environ.get("SUB_N", "14"))
+def subway_grow(target, lo=380, hi=850, gap=55, minang=35):
+    """地下鉄：1駅から始め、はっきり見える直線でつながる遠めの駅を1つずつ足していく。最後に環を少し足す"""
+    cands = [i for i in LANDP if KIND[i] != "b"]
+    start = min((i for i in cands if ST[i][0] in FAMOUS), key=lambda i: dist(i, min(cands, key=lambda j: (P[j][0] - W / 2) ** 2 + (P[j][1] - H / 2.3) ** 2)))
+    S, E, deg = [start], [], {start: 0}
+    def good(a, c):
+        if not (lo <= dist(a, c) <= hi) or wet(P[a], P[c]) or not clear(a, c, gap): return False
+        if any(seg_cross(P[a], P[c], P[x], P[y]) for x, y in E if len({a, c, x, y}) == 4): return False
+        for v, w in ((a, c), (c, a)):
+            for x, y in E:
+                if v not in (x, y): continue
+                o = y if x == v else x
+                u1 = (P[w][0] - P[v][0], P[w][1] - P[v][1]); u2 = (P[o][0] - P[v][0], P[o][1] - P[v][1])
+                if abs(math.degrees(math.atan2(u1[0] * u2[1] - u1[1] * u2[0], u1[0] * u2[0] + u1[1] * u2[1]))) < minang: return False
+        return True
+    while len(S) < target:
+        best = None
+        for a in S:
+            if deg[a] >= 4: continue
+            for c in cands:
+                if c in S or min(dist(c, x) for x in S) < lo or not good(a, c): continue
+                sc_ = min(dist(c, x) for x in S) + fame(c) * 2 - dist(a, c) * 0.3
+                if best is None or sc_ > best[0]: best = (sc_, a, c)
+        if best is None: break
+        _, a, c = best
+        S.append(c); E.append((min(a, c), max(a, c))); deg[a] += 1; deg[c] = 1
+    # 環：まだ結ばれていない地下鉄駅どうしで、はっきり見える組を短い順に少し足す
+    extra = sorted(((x, y) for k, x in enumerate(S) for y in S[k + 1:] if (min(x, y), max(x, y)) not in E), key=lambda e: dist(*e))
+    added = 0
+    for x, y in extra:
+        if added >= target // 3: break
+        if deg[x] >= 4 or deg[y] >= 4 or not good(x, y): continue
+        E.append((min(x, y), max(x, y))); deg[x] += 1; deg[y] += 1; added += 1
+    return S, E
+SUB_ST, SUB_E = subway_grow(SUB_N)
 
 # 水上バス：隅田川沿いを下り、湾でお台場・羽田へ（怪盗Xが黒チケットで使う）
 isl = [i for i in range(N) if KIND[i] == "i"]
@@ -234,6 +297,19 @@ bayw = min((i for i in shore if P[i][0] < P[odaiba][0]), key=lambda i: dist(i, h
 baye = max(shore, key=lambda i: P[i][0])
 BOAT_E = [(piers[k], piers[k + 1]) for k in range(len(piers) - 1)] + [(piers[-1], odaiba), (odaiba, bayw), (bayw, haneda), (odaiba, baye)]
 BOAT_E = [tuple(sorted(e)) for e in BOAT_E]
+def boat_path(a, b):
+    """桟橋 a→b の水上バスの航路。川沿いは川の中心線をたどり、湾はまっすぐ"""
+    if rdist(a) < 160 and rdist(b) < 160:
+        ka, kb = rpos(a), rpos(b)
+        step = 1 if kb >= ka else -1
+        return [list(P[a])] + [RIVER[k] for k in range(ka, kb + step, step)] + [list(P[b])]
+    if rdist(a) < 160 or rdist(b) < 160:
+        r_, o_ = (a, b) if rdist(a) < 160 else (b, a)
+        kr = rpos(r_)
+        path = [list(P[r_])] + [RIVER[k] for k in range(kr, len(RIVER))] + [list(P[o_])]
+        return path if r_ == a else path[::-1]
+    return [list(P[a]), list(P[b])]
+BOAT_PATHS = [boat_path(a, b) for a, b in BOAT_E]
 
 HELI = [odaiba, haneda]
 while len(HELI) < 8:
@@ -259,11 +335,13 @@ report = {
     "heli": [ST[i][0] for i in HELI],
 }
 for k, v in report.items(): print(f"{k}: {v}")
+bdeg = {b: len({v for e in list(TAXI) + BUS_E + SUB_E + BOAT_E if b in e for v in e} - {b}) for b in bridges}
+print("bridge branches:", {ST[b][0]: n for b, n in bdeg.items()})
 board = {
     "W": W, "H": H, "style": "scotland-yard",
     "stations": [[s[0], s[1], s[2]] for s in ST],
     "taxi": [list(e) for e in TAXI], "busEdges": [list(e) for e in BUS_E], "subwayEdges": [list(e) for e in SUB_E],
-    "boatEdges": [list(e) for e in BOAT_E],
+    "boatEdges": [list(e) for e in BOAT_E], "boatPaths": BOAT_PATHS,
     "heli": HELI, "islands": isl, "bridges": bridges, "river": RIVER, "coast": COAST,
 }
 json.dump(board, open(os.path.join(HERE, "board_sy.json"), "w"), ensure_ascii=False)
@@ -290,11 +368,15 @@ if len(sys.argv) > 1:
             L_ = math.hypot(x2 - x1, y2 - y1) or 1
             nx, ny = -(y2 - y1) / L_ * off, (x2 - x1) / L_ * off
             dr.line([(x1 + nx, y1 + ny), (x2 + nx, y2 + ny)], fill=col, width=w)
-    for a, b in BOAT_E:   # 水上バスは破線
-        (x1, y1), (x2, y2) = sc(P[a]), sc(P[b])
-        n_ = int(math.hypot(x2 - x1, y2 - y1) / 12)
-        for k in range(0, n_, 2):
-            dr.line([(x1 + (x2 - x1) * k / n_, y1 + (y2 - y1) * k / n_), (x1 + (x2 - x1) * (k + 1) / n_, y1 + (y2 - y1) * (k + 1) / n_)], fill="#1F4E79", width=5)
+    for path in BOAT_PATHS:   # 水上バスは川に沿った破線
+        pts_ = [sc(q) for q in path]
+        acc = 0
+        for (x1, y1), (x2, y2) in zip(pts_, pts_[1:]):
+            L_ = math.hypot(x2 - x1, y2 - y1); n_ = max(1, int(L_ / 6))
+            for k in range(n_):
+                if int((acc + L_ * k / n_) / 12) % 2 == 0:
+                    dr.line([(x1 + (x2 - x1) * k / n_, y1 + (y2 - y1) * k / n_), (x1 + (x2 - x1) * (k + 1) / n_, y1 + (y2 - y1) * (k + 1) / n_)], fill="#1F4E79", width=5)
+            acc += L_
     lines(TAXI, "#D9A400", 9); lines(TAXI, "#F7C948", 6)
     lines(BUS_E, "#0E6B3A", 11, 6); lines(BUS_E, "#20A35A", 7, 6)
     lines(SUB_E, "#7A1510", 13, -7); lines(SUB_E, "#E03A30", 9, -7)
