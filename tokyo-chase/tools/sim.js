@@ -81,6 +81,14 @@ if (process.env.SIGHT) {
   const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "sight_rule.py"), process.env.SIGHT, process.env.PARTIAL ?? "1"]).toString());
   for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("sight patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
 }
+// 相棒確保で常に見える・警察犬カード（DOGMATE=1、DOGW=山札の重み）
+if (process.env.DOGMATE === "1") {
+  const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "dog_mate.py"), process.env.DOGW || "16"]).toString());
+  for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("dog_mate patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
+}
+// 相棒の調整（MATEDIST=刑事から何駅以上離れて現れるか、MATEEVERY=何手ごとに動くか）
+if (process.env.MATEDIST) core = core.replace("occ.every(o => D[p][o] >= 3));", `occ.every(o => D[p][o] >= ${Number(process.env.MATEDIST)}));`);
+if (process.env.MATEEVERY) core = core.replace(/const MATE_EVERY = \d+;/, `const MATE_EVERY = ${Number(process.env.MATEEVERY)};`);
 // CPUの刑事の性格（PERSONA=1）
 if (process.env.PERSONA === "1") {
   const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "persona.py")]).toString());

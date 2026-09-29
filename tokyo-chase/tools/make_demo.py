@@ -713,6 +713,30 @@ sub("""  .toprow.second .xlog { flex: 1; min-width: 0; }""", """  .toprow.second
   @media (max-width: 760px) { .toprow.first .prompt { flex: none; max-width: 40%; } .toprow.first .prompt .portrait { display: none; } .toprow.first .xcard { min-width: 0; } .xcard .nx { display: none; } }
   @media (max-height: 520px) and (orientation: landscape) { .side { top: auto; bottom: 8px; transform: none; gap: 2px; padding: 4px; } }""")
 
+# ---------------- 相棒確保で常に見える・警察犬カード（tools/dog_mate.py） ----------------
+from dog_mate import patches as dogmate_patches
+for a_, b_ in dogmate_patches():
+    sub(a_, b_)
+# 相棒は刑事から5駅以上離れて現れ、毎手1駅ずつ怪盗Xへ近づく（sim.js MATEDIST=5 MATEEVERY=1 で調整）
+sub("occ.every(o => D[p][o] >= 3));", "occ.every(o => D[p][o] >= 5));")
+sub("const MATE_EVERY = 3;   // 相棒は何手ごとに1駅動くか", "const MATE_EVERY = 1;   // 相棒は何手ごとに1駅動くか")
+sub("""        banner("相棒確保！", "怪盗Xはもう相棒と合流できない", "blue", 2);""",
+    """        banner("相棒確保！", "怪盗Xはもう隠れられない。これから居場所が常に見える", "blue", 2);""")
+sub("""        pushFeed(G.xLog.length, `${dName(k)} が ${NAME(G.mate.pos)} で相棒を確保！ もう合流はできない`, true);""",
+    """        pushFeed(G.xLog.length, `${dName(k)} が ${NAME(G.mate.pos)} で相棒を確保！ もう合流はできず、怪盗Xの居場所は常に見える`, true);""")
+sub("""      else if (card === "heliban") detail = `すべてのヘリポートを閉鎖（${G.heliBan - G.xLog.length}手）`;""",
+    """      else if (card === "heliban") detail = `すべてのヘリポートを閉鎖（${G.heliBan - G.xLog.length}手）`;
+      else if (card === "dog") {
+        if (G.dogUsed && G.dogUsed.n === G.xLog.length) {
+          detail = `足跡を発見：${G.dogUsed.trail.map(p => `${NO(p)} ${NAME(p)}`).join(" → ")}。いそうな駅は${G.possible.length}駅`;
+          banner("警察犬！", `足跡をたどった。いそうな駅は${G.possible.length}駅`, "blue", 2);
+          say(nearestDet(G.dogUsed.trail), "ワン！ 足跡があった", "hot", 2600);
+        } else detail = "まだ足跡がない";
+      }""")
+sub("""<li><b>カード</b>：5・10・17手目に""", """<li><b>カード</b>：${CARD_TURNS.join("・")}手目に""")
+sub("""刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」。""", """刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」「警察犬」。警察犬は怪盗Xの2手前・3手前の駅（足跡）を見つけ、いそうな駅を絞り込みます。""")
+sub("""刑事が相棒の駅に入ると相棒を確保でき、もう合流はできません。</li>""", """刑事が相棒の駅に入ると相棒を確保でき、もう合流はできません。<b>相棒を確保すると、それから先は怪盗Xの居場所が常に見えます。</b></li>""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"
