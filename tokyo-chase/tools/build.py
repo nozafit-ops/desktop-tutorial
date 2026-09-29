@@ -19,13 +19,11 @@ P = [(s[1], s[2]) for s in ST]
 ix = lambda names: [IDX[n] for n in names]
 
 TRAINS = [
-    ("山手線", ["東京", "上野", "日暮里", "巣鴨", "池袋", "高田馬場", "新宿", "渋谷", "目黒", "品川", "浜松町", "新橋", "東京"]),
-    ("中央線", ["荻窪", "中野", "新宿", "四ツ谷", "御茶ノ水", "東京"]),
-    ("銀座線", ["渋谷", "表参道", "青山一丁目", "虎ノ門", "銀座", "日本橋", "上野", "浅草"]),
-    ("東西線", ["中野", "高田馬場", "飯田橋", "日本橋", "門前仲町", "東陽町", "葛西"]),
-    ("半蔵門線", ["渋谷", "永田町", "神保町", "清澄白河", "押上"]),
-    ("常磐線", ["上野", "日暮里", "南千住", "北千住", "綾瀬"]),
-    ("総武線", ["御茶ノ水", "秋葉原", "両国", "錦糸町", "新小岩", "小岩"]),
+    # 環状線：まわりを囲む山手線と、皇居のまわりの小さなセンターサークル
+    ("山手線", ["東京", "上野", "日暮里", "巣鴨", "池袋", "高田馬場", "新宿", "原宿", "渋谷", "目黒", "品川", "浜松町", "東京"]),
+    ("センターサークル", ["東京", "神保町", "飯田橋", "四ツ谷", "赤坂", "虎ノ門", "銀座", "東京"]),
+    ("中央・総武線", ["荻窪", "中野", "新宿", "四ツ谷", "御茶ノ水", "秋葉原", "両国", "錦糸町", "新小岩", "小岩"]),
+    ("京浜東北線", ["赤羽", "王子", "上野", "東京", "品川", "大井町", "蒲田"]),
 ]
 BUSES = [
     ["赤羽", "王子", "田端", "日暮里", "町屋", "南千住", "千住大橋", "北千住", "西新井"],
@@ -96,6 +94,38 @@ for b in [i for i in range(N) if KIND[i] == "b"]:
             j = min((k for k in range(N) if KIND[k] == side), key=lambda k: dist(b, k))
             TAXI.append(tuple(sorted((b, j))))
 
+def thin(edge_list, target=4):
+    adj = {}
+    for a, b in edge_list: adj.setdefault(a, set()).add(b); adj.setdefault(b, set()).add(a)
+    def conn():
+        start = next(iter(adj)); seen = {start}; q = deque([start])
+        while q:
+            u = q.popleft()
+            for v in adj[u]:
+                if v not in seen: seen.add(v); q.append(v)
+        return len(seen) == len(adj)
+    # 長い辺・ほかの辺と角度が近い辺から抜く
+    def score(e):
+        a, b = e
+        ang = []
+        for v, w in ((a, b), (b, a)):
+            for o in adj[v]:
+                if o == w: continue
+                u1 = (P[w][0] - P[v][0], P[w][1] - P[v][1]); u2 = (P[o][0] - P[v][0], P[o][1] - P[v][1])
+                ang.append(abs(math.atan2(u1[0] * u2[1] - u1[1] * u2[0], u1[0] * u2[0] + u1[1] * u2[1])))
+        return -min(ang) * 200 + dist(a, b)
+    out = list(edge_list)
+    for e in sorted(edge_list, key=score, reverse=True):
+        a, b = e
+        if KIND[a] == "b" or KIND[b] == "b": continue
+        if len(adj[a]) <= target - 1 or len(adj[b]) <= target - 1: continue
+        if len(adj[a]) <= target and len(adj[b]) <= target: continue
+        adj[a].discard(b); adj[b].discard(a)
+        if conn(): out.remove(e)
+        else: adj[a].add(b); adj[b].add(a)
+    return out
+TAXI = thin(TAXI)
+
 edges = {}
 def add(a, b, t, line):
     key = (min(a, b), max(a, b))
@@ -141,6 +171,64 @@ board = {
 }
 json.dump(board, open(os.path.join(HERE, "board.json"), "w"), ensure_ascii=False)
 
+# ---- 道路：タクシーの辺を「まっすぐ抜ける」組み合わせでつなぎ、長い道にする ----
+def chains(edge_list):
+    inc = {}
+    for e in edge_list:
+        for v in e: inc.setdefault(v, []).append(e)
+    pair = {}   # (v, e) -> 反対側へ続く辺
+    for v, es in inc.items():
+        cand = []
+        for x in range(len(es)):
+            for y in range(x + 1, len(es)):
+                a_ = es[x][0] if es[x][1] == v else es[x][1]
+                b_ = es[y][0] if es[y][1] == v else es[y][1]
+                u1 = (P[a_][0] - P[v][0], P[a_][1] - P[v][1]); u2 = (P[b_][0] - P[v][0], P[b_][1] - P[v][1])
+                cos = (u1[0] * u2[0] + u1[1] * u2[1]) / (math.hypot(*u1) * math.hypot(*u2))
+                if cos < -0.55: cand.append((cos, es[x], es[y]))
+        used = set()
+        for cos, e1, e2 in sorted(cand):
+            if e1 in used or e2 in used: continue
+            used |= {e1, e2}; pair[(v, e1)] = e2; pair[(v, e2)] = e1
+    left, out = set(edge_list), []
+    for e in edge_list:
+        if e not in left: continue
+        left.discard(e)
+        seq = [e[0], e[1]]
+        for end in (1, 0):
+            cur_e = e
+            while True:
+                v = seq[-1] if end == 1 else seq[0]
+                nx = pair.get((v, cur_e))
+                if not nx or nx not in left: break
+                left.discard(nx)
+                w = nx[0] if nx[1] == v else nx[1]
+                if end == 1: seq.append(w)
+                else: seq.insert(0, w)
+                cur_e = nx
+        out.append(seq)
+    return out
+ROADS = chains([tuple(e) for e in TAXI])
+board["roads"] = ROADS
+json.dump(board, open(os.path.join(HERE, "board.json"), "w"), ensure_ascii=False)
+print("roads:", len(ROADS), "avg len", round(sum(len(r) for r in ROADS) / len(ROADS), 2))
+
+def catmull(pts, closed=False, steps=12):
+    """駅を必ず通るなめらかな曲線（Catmull-Rom）"""
+    if closed and pts[0] == pts[-1]: pts = pts[:-1]
+    n = len(pts); out = []
+    rng = range(n) if closed else range(n - 1)
+    for i in rng:
+        p0 = pts[(i - 1) % n] if closed else pts[max(0, i - 1)]
+        p1, p2 = pts[i], pts[(i + 1) % n]
+        p3 = pts[(i + 2) % n] if closed else pts[min(n - 1, i + 2)]
+        for k in range(steps):
+            t = k / steps; t2, t3 = t * t, t * t * t
+            out.append(tuple(0.5 * ((2 * p1[j]) + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 +
+                                   (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3) for j in range(2)))
+    out.append(tuple(pts[0] if closed else pts[-1]))
+    return out
+
 if len(sys.argv) > 1:
     from PIL import Image, ImageDraw, ImageFont
     K = 0.75
@@ -149,24 +237,28 @@ if len(sys.argv) > 1:
     f = ImageFont.truetype("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc", 20)
     sc = lambda p: (p[0] * K, p[1] * K)
     dr.polygon([sc(p) for p in COAST] + [(W, H), (0, H)][:1] + [(COAST[-1][0] * K + 2000, H), (COAST[0][0] * K, H)], fill="#A9CFE0")
-    dr.line([sc(p) for p in RIVER], fill="#8DBBD4", width=int(110 * K))
-    col = {"taxi": "#F2B51D", "bus": "#16935B", "tube": "#D2362C", "boat": "#2F7FB0"}
-    wid = {"taxi": 3, "bus": 5, "tube": 6, "boat": 4}
-    for t in ["boat", "tube", "bus", "taxi"]:
-        for (a, b), ty in edges.items():
-            if t not in ty: continue
-            lst = [x for x in ["boat", "tube", "bus", "taxi"] if x in ty]
-            k = lst.index(t)
-            off = (k - (len(lst) - 1) / 2) * 7
-            (x1, y1), (x2, y2) = sc(P[a]), sc(P[b])
-            L = math.hypot(x2 - x1, y2 - y1) or 1
-            nx, ny = -(y2 - y1) / L * off / 1, (x2 - x1) / L * off / 1
-            dr.line([(x1 + nx, y1 + ny), (x2 + nx, y2 + ny)], fill=col[t], width=wid[t])
+    rw = 55 * K
+    for x, y in catmull([sc(p) for p in RIVER[::3]] + [sc(RIVER[-1])], steps=20):
+        dr.ellipse([x - rw, y - rw, x + rw, y + rw], fill="#8DBBD4")
+    # 道路：灰色の縁取りの白い曲線
+    for r in ROADS:
+        dr.line(catmull([sc(P[i]) for i in r]), fill="#9A968C", width=int(30 * K), joint="curve")
+    for r in ROADS:
+        dr.line(catmull([sc(P[i]) for i in r]), fill="#FFFFFF", width=int(20 * K), joint="curve")
+    for seq in BUSES:
+        dr.line(catmull([sc(P[i]) for i in ix(seq)]), fill="#16935B", width=int(7 * K), joint="curve")
+    for name, seq in BOATS:
+        dr.line(catmull([sc(P[i]) for i in ix(seq)]), fill="#2F7FB0", width=int(6 * K), joint="curve")
+    for name, seq in TRAINS:
+        pts = catmull([sc(P[i]) for i in ix(seq)], seq[0] == seq[-1])
+        dr.line(pts, fill="#7A1510", width=int(16 * K), joint="curve")
+        dr.line(pts, fill="#E0413A", width=int(10 * K), joint="curve")
+    tube_st = {i for _, seq in TRAINS for i in ix(seq)}
     hs = set(ix(HELI))
     for i, (x, y) in enumerate(P):
         x, y = x * K, y * K
         if i in hs: dr.ellipse([x - 17, y - 17, x + 17, y + 17], outline="#7C3AED", width=3)
         if KIND[i] == "b": dr.polygon([(x, y - 15), (x + 15, y), (x, y + 15), (x - 15, y)], fill="#CDB98C", outline="#3B2C1E")
-        dr.ellipse([x - 11, y - 11, x + 11, y + 11], fill="#FBF5E4", outline="#3B2C1E", width=2)
+        dr.ellipse([x - 16, y - 11, x + 16, y + 11], fill="#E0413A" if i in tube_st else "#FFFFFF", outline="#3B2C1E", width=2)
         dr.text((x, y + 13), ST[i][0], fill="#2A1E12", font=f, anchor="ma", stroke_width=3, stroke_fill="#FBF5E4")
     im.save(sys.argv[1])
