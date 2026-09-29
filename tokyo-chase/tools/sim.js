@@ -8,7 +8,34 @@ const [, , htmlPath, gamesArg = "400", which = "tokyo", detsArg = "4", xTubeArg 
 const html = fs.readFileSync(htmlPath, "utf8");
 let core = html.slice(html.indexOf("// CORE-START"), html.indexOf("// CORE-END"));
 
-if (which === "tokyo") {
+if (which === "sy") {
+  // スコットランドヤード式の盤面（バス・地下鉄・水上バスは路線ではなく辺の集まり）
+  const B = JSON.parse(fs.readFileSync(path.join(__dirname, "board_sy.json"), "utf8"));
+  const a = core.indexOf("const W = ");
+  const b = core.indexOf("const N = STATIONS.length;");
+  const data = `
+  const W = ${B.W}, H = ${B.H};
+  const STATIONS = ${JSON.stringify(B.stations)};
+  const TAXI = ${JSON.stringify(B.taxi)};
+  const TUBE = ${JSON.stringify(B.subwayEdges.map(e => ["地下鉄", e]))};
+  const BUS = ${JSON.stringify(B.busEdges)};
+  const BOATS = ${JSON.stringify(B.boatEdges.map(e => ["水上バス", e]))};
+  const BOAT = [];
+  const HELI = ${JSON.stringify(B.heli)};
+  const RIVER = [], ISLANDS = [];
+  const BRIDGE_ST = ${JSON.stringify(B.bridges)};
+  const BRIDGES = [];
+  const ISLAND_LIST = ${JSON.stringify(B.islands)};
+  `;
+  core = core.slice(0, a) + data + core.slice(b);
+  core = core.replace(/const ISLAND_ST = new Set\([\s\S]*?\}\)\);/, "const ISLAND_ST = new Set(ISLAND_LIST);");
+  core = core.replace(
+    'for (let k = 0; k < BOAT.length - 1; k++) addEdge(BOAT[k], BOAT[k + 1], "boat", "テムズ水上バス");',
+    'for (const [line, seq] of BOATS) for (let k = 0; k < seq.length - 1; k++) addEdge(seq[k], seq[k + 1], "boat", line);');
+  // スコットランドヤードのルール：水上バスは怪盗Xが黒チケットでだけ乗れる。刑事は乗れない
+  core = core.replace('const dHas = (d, type) => type === "heli" ? d.t.heli > 0 : true;', 'const dHas = (d, type) => type === "heli" ? d.t.heli > 0 : type !== "boat";');
+  core = core.replace(/tube: 4, boat: 2 \}/, "tube: 4, boat: 0 }");
+} else if (which === "tokyo") {
   const B = JSON.parse(fs.readFileSync(path.join(__dirname, "board.json"), "utf8"));
   // 盤面データの部分（W,H から BRIDGES まで）を東京の盤面に差し替える
   const a = core.indexOf("const W = ");
@@ -41,6 +68,18 @@ if (which === "tokyo") {
   core = core.replace('const DET_TYPES = ["taxi", "bus", "tube", "boat", "heli"];', 'const DET_TYPES = ["taxi", "bus", "tube", "rail", "boat", "heli"];');
   core = core.replace('const MOVE_TYPES = ["taxi", "bus", "tube", "boat"];', 'const MOVE_TYPES = ["taxi", "bus", "tube", "rail", "boat"];');
   core = core.replace(/tube: 4, boat: 2 \}/, `tube: 4, rail: ${Number(xRailArg)}, boat: 2 }`);
+}
+// 刑事の切符を有限にする（スコットランドヤードのルール。使った切符は怪盗Xへ渡る）
+if (process.env.DET_LIMIT) {
+  const [t, b, u] = process.env.DET_LIMIT.split(",").map(Number);
+  core = core.replace("const DET_TICKETS = { heli: 1 };", `const DET_TICKETS = { taxi: ${t}, bus: ${b}, tube: ${u}, heli: 1 };`);
+  core = core.replace(/const dHas = \(d, type\) => [^;]*;/, 'const dHas = (d, type) => type === "boat" ? false : (d.t[type] ?? 0) > 0;');
+  core = core.replace("    if (type === \"heli\") d.t.heli--;", "    if (type === \"heli\") d.t.heli--;\n    else if (d.t[type] !== undefined) { d.t[type]--; if (G.xt && G.xt[type] !== undefined) G.xt[type]++; }");
+}
+// 公開のタイミング：スコットランドヤード式（24手、3・8・13・18・24手目）
+if (process.env.SY_ROUNDS) {
+  core = core.replace("const MAX_MOVES = 21;", "const MAX_MOVES = 24;");
+  core = core.replace("const REVEAL = [3, 6, 9, 12, 15, 18, 21];", "const REVEAL = [3, 8, 13, 18, 24];");
 }
 if (xTubeArg) core = core.replace(/tube: 4,/, `tube: ${Number(xTubeArg)},`);
 
