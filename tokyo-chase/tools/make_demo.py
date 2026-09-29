@@ -78,15 +78,11 @@ sub('''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべて�
   const DET_TICKETS = { heli: 1 };
   const X_TICKETS = { taxi: 10, bus: 7, tube: 4, boat: 2 };
   const dHas = (d, type) => type === "heli" ? d.t.heli > 0 : true;''',
-'''  // 刑事の切符も有限。使った切符は怪盗Xの手持ちに加わる（スコットランドヤードのルール）
+'''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
   // 水上バスは怪盗Xだけが黒チケットで乗れる。刑事は乗れない
-  const DET_TICKETS = { taxi: 12, bus: 10, tube: 5, heli: 1 };
+  const DET_TICKETS = { heli: 1 };
   const X_TICKETS = { taxi: 10, bus: 7, tube: 4, boat: 0 };
-  const dHas = (d, type) => type === "boat" ? false : (d.t[type] ?? 0) > 0;''')
-sub('''    if (type === "heli") d.t.heli--;
-''', '''    if (type === "heli") d.t.heli--;
-    else if (d.t[type] !== undefined) { d.t[type]--; if (G.xt && G.xt[type] !== undefined) G.xt[type]++; }
-''')
+  const dHas = (d, type) => type === "boat" ? false : type === "heli" ? d.t.heli > 0 : true;''')
 # ロンドン版の不具合の修正：怪盗Xが「駅破壊」で自分の最後の逃げ道を壊さないようにする
 sub('''      return [...Array(N).keys()].filter(i => i !== sec.pos && D[sec.pos][i] <= 2 && !occ.has(i) && !isRuin(G, i));''',
     '''      const exitsLeft = i => ADJ[sec.pos].some(e => e.to !== i && !occ.has(e.to) && !isRuin(G, e.to) && !isClosed(G.closedX, e.to, G));
@@ -99,11 +95,8 @@ sub('''        for (const [c, t] of aiUseCards(G, A.sec, "x")) useCardNow("x", c
 ''')
 
 # ---------------- 画面の表示 ----------------
-sub('''aria-label="${dName(k)}：切符は使い放題・ヘリ${d.t.heli}">''',
-    '''aria-label="${dName(k)}：タクシー${d.t.taxi}・バス${d.t.bus}・地下鉄${d.t.tube}・ヘリ${d.t.heli}">''')
 sub('''<span class="tk inf" title="タクシー・バス・地下鉄・水上バスは使い放題">切符∞</span>''',
-    '''${["taxi", "bus", "tube"].map(t => `<span class="tk ${t} ${d.t[t] ? "" : "zero"}" title="${TYPE[t].name}の残り">${TYPE[t].short}${d.t[t]}</span>`).join("")}''')
-sub('''<span class="cnt">${t === "heli" ? d.t.heli : "∞"}</span>''', '''<span class="cnt">${d.t[t] ?? ""}</span>''')
+    '''<span class="tk inf" title="タクシー・バス・地下鉄は使い放題">切符∞</span>''')
 sub('''${G.xt ? ["taxi", "bus", "tube", "boat"].map(t =>''', '''${G.xt ? ["taxi", "bus", "tube"].map(t =>''')
 sub('''  .det { position: relative; }''', '''  .det { position: relative; }
   .det .tks { flex-wrap: wrap; justify-content: center; max-width: 92px; }''')
@@ -128,7 +121,7 @@ sub('''島へは水上バスかヘリでしか行けません。''', '''2つの�
 sub('''        <li>川を渡る <b>橋</b> の上にも駅（ひし形の台座）があり、タクシーとバスは橋で一度止まります。</li>''',
     '''        <li>${RIVER_NAME}を渡る <b>橋</b> の上にも駅（ひし形の台座）があり、タクシーとバスは橋で一度止まります。橋は5か所だけです。</li>''')
 rsub(r'        <li><b>切符</b>：刑事はタクシー・バス・地下鉄・水上バスが使い放題.*?</li>',
-     '''        <li><b>切符</b>：刑事の切符は1人あたりタクシー${DET_TICKETS.taxi}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.tube}・ヘリ${DET_TICKETS.heli}枚。<b>刑事が使った切符は怪盗Xの手持ちに加わります</b>。怪盗Xの切符（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）も有限。切符が尽きた乗り物には乗れません。動けなくなると怪盗Xの負け、刑事が全員動けなくなると怪盗Xの勝ち。</li>''')
+     '''        <li><b>切符</b>：刑事はタクシー・バス・地下鉄が使い放題（ヘリだけ${DET_TICKETS.heli}枚。水上バスには乗れません）。怪盗Xの切符（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）も有限。切符が尽きた乗り物には乗れません。動けなくなると怪盗Xの負け、刑事が全員動けなくなると怪盗Xの勝ち。</li>''')
 
 # ---------------- 背景（コードで描く簡単な地図） ----------------
 a = out.index("  function backgroundSVG() {"); b = out.index("  async function renderBackground() {")
@@ -381,7 +374,7 @@ sub("""  .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act=
 
 # ---------------- 視界ルール：怪盗Xは刑事の視界（円）に入ったら見つかる ----------------
 from sight_rule import patches as sight_patches
-SIGHT = 450
+SIGHT = 325
 for a_, b_ in sight_patches(SIGHT):
     sub(a_, b_)
 # 刑事の視界を地図に描く（怪盗Xも刑事側も見える）
@@ -465,11 +458,6 @@ rsub(r'(        <li>怪盗Xの居場所は秘密。.*?</li>)', r"""\1
 sub("""    setTimeout(() => { A.screen = "result"; renderScreen(); }, 900);""",
     """    const endedG = G;
     setTimeout(() => { if (A.G === endedG && A.screen === "game") { A.screen = "result"; renderScreen(); } }, 900);""")
-# 地下鉄など切符が切れた乗り物は、切符を選ぶ画面で「切符切れ」と表示する
-sub("""      tickets = MOVE_TYPES.filter(t => opts.includes(t)).map(t =>""", """      const empty = MOVE_TYPES.filter(t => !opts.includes(t) && t !== "boat" && ADJ[d.pos].some(e => e.to === to && e.type === t));
-      opt = empty.length ? `<p style="margin:0;color:var(--muted);font-size:13px">${empty.map(t => TYPE[t].name).join("・")}の切符が切れています（刑事の切符は1人ずつ有限）</p>` : "";
-      tickets = MOVE_TYPES.filter(t => opts.includes(t)).map(t =>""")
-
 # 候補が空のときに「発見」と扱わない（空の候補の場所を描こうとして止まる不具合の予防）
 sub("""    if (n <= 1) return { level: "found",""", """    if (n === 1) return { level: "found",""")
 
