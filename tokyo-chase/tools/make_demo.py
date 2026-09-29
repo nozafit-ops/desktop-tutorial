@@ -461,6 +461,62 @@ sub("""    setTimeout(() => { A.screen = "result"; renderScreen(); }, 900);""",
 # 候補が空のときに「発見」と扱わない（空の候補の場所を描こうとして止まる不具合の予防）
 sub("""    if (n <= 1) return { level: "found",""", """    if (n === 1) return { level: "found",""")
 
+# ---------------- 会話は駒の吹き出しで：長いセリフは折り返す。画面の外の仲間は縁の矢印に吹き出しを出す ----------------
+sub("""        const w = s.text.length * 26 + 30;
+        tk.querySelector(".tb").setAttribute("d", `M${-w / 2},-54 h${w} a10,10 0 0 1 10,10 v30 a10,10 0 0 1 -10,10 h${-w / 2 + 14} l-14,14 l-4,-14 h${-w / 2 + 4} a10,10 0 0 1 -10,-10 v-30 a10,10 0 0 1 10,-10 Z`);
+        tk.querySelector("text").textContent = s.text;""",
+"""        const lines = wrapTalk(s.text);
+        const w = Math.max(...lines.map(l => l.length)) * 26 + 30, hgt = lines.length * 32 + 18;
+        tk.querySelector(".tb").setAttribute("d", `M${-w / 2},${-4 - hgt} h${w} a10,10 0 0 1 10,10 v${hgt - 20} a10,10 0 0 1 -10,10 h${-w / 2 + 14} l-14,14 l-4,-14 h${-w / 2 + 4} a10,10 0 0 1 -10,-10 v${-(hgt - 20)} a10,10 0 0 1 10,-10 Z`);
+        const tx = tk.querySelector("text");
+        tx.textContent = "";
+        tx.setAttribute("y", String(-4 - hgt + 34));
+        lines.forEach((l, i) => { const ts = el("tspan", { x: 0, dy: i ? 32 : 0 }, tx); ts.textContent = l; });""")
+sub("""  function say(k, text, kind = "", ms = 2400) {
+    if (k < 0 || !A.G || !A.G.det[k]) return;
+    SPEECH.set(k, { text, kind, until: Date.now() + ms });
+    updateTalk();
+    setTimeout(updateTalk, ms + 40);
+  }""", """  // 吹き出しのセリフを、句読点や空白の近くで1行12文字くらいに折り返す
+  function wrapTalk(text) {
+    const out = [];
+    let rest = text;
+    while (rest.length > 13) {
+      let cut = -1;
+      for (let i = 12; i >= 6; i--) if ("、。！？ ）".includes(rest[i - 1])) { cut = i; break; }
+      if (cut < 0) cut = 12;
+      out.push(rest.slice(0, cut).trim()); rest = rest.slice(cut).trim();
+    }
+    if (rest) out.push(rest);
+    return out.slice(0, 3);
+  }
+  function say(k, text, kind = "", ms = 2400) {
+    if (k < 0 || !A.G || !A.G.det[k]) return;
+    SPEECH.set(k, { text, kind, until: Date.now() + ms });
+    updateTalk();
+    renderEdge();
+    setTimeout(() => { updateTalk(); renderEdge(); }, ms + 40);
+  }""")
+# 無線の報告は、話した刑事の吹き出しに全文を出す
+sub("""    if (bubble) say(k, bubble, "hot", 2200);""", """    say(k, text, bubble ? "hot" : "", 4800);""")
+# 画面の外にいる仲間の矢印にもセリフを出す
+sub("""        ${portrait(t.kind, t.k)}${dist}</button>`;""", """        ${portrait(t.kind, t.k)}${dist}${t.kind === "d" && SPEECH.has(t.k) && SPEECH.get(t.k).until > Date.now() ? `<span class="ea-say">${esc(SPEECH.get(t.k).text)}</span>` : ""}</button>`;""")
+sub("""  .edge-arrow .ea-d.hot {""", """  .edge-arrow .ea-say { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); width: max-content; max-width: 190px;
+    padding: 5px 9px; border-radius: 10px; background: #FBF5E4; color: #1A140C; border: 2px solid #3B2C1E; font-size: 12px; font-weight: 700; line-height: 1.35; text-align: left; white-space: normal; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .edge-arrow .ea-d.hot {""")
+# 右下の無線欄はやめ、吹き出しとログにする
+sub("""    const on = A.G && A.screen === "game" && A.role !== "x" && (A.radio || []).length;""", """    const on = false;   // 会話は駒の吹き出しで見せる（全部はログに残る）""")
+
+# 縁の矢印の吹き出しが画面の外にはみ出さないように、端では内側へ寄せる
+sub("""      b.style.transform = `translate(${ax.toFixed(1)}px, ${ay.toFixed(1)}px)`;""", """      b.style.transform = `translate(${ax.toFixed(1)}px, ${ay.toFixed(1)}px)`;
+      const say_ = b.querySelector(".ea-say");
+      if (say_) {
+        say_.style.left = ax < 120 ? "0" : ax > r.width - 120 ? "auto" : "50%";
+        say_.style.right = ax > r.width - 120 ? "0" : "auto";
+        say_.style.transform = ax < 120 || ax > r.width - 120 ? "none" : "translateX(-50%)";
+        if (ay < top + 60) { say_.style.bottom = "auto"; say_.style.top = "calc(100% + 16px)"; }
+      }""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"

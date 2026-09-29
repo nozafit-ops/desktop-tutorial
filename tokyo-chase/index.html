@@ -326,6 +326,8 @@
     font-size: 11px; font-weight: 900; padding: 1px 6px; border-radius: 999px; white-space: nowrap;
     background: var(--hud-solid); color: var(--ink); border: 1px solid var(--rule);
   }
+  .edge-arrow .ea-say { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); width: max-content; max-width: 190px;
+    padding: 5px 9px; border-radius: 10px; background: #FBF5E4; color: #1A140C; border: 2px solid #3B2C1E; font-size: 12px; font-weight: 700; line-height: 1.35; text-align: left; white-space: normal; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
   .edge-arrow .ea-d.hot { background: #E5484D; color: #fff; border-color: #E5484D; }
   /* カード */
   .label-c { text-align: center; font-size: 12px; letter-spacing: 0.12em; color: var(--muted); font-weight: 700; }
@@ -1467,11 +1469,25 @@
   }
   // ---------------- 刑事のリアクション（セリフの吹き出しと中央の見出し） ----------------
   const SPEECH = new Map();   // 刑事番号 -> { text, kind, until }
+  // 吹き出しのセリフを、句読点や空白の近くで1行12文字くらいに折り返す
+  function wrapTalk(text) {
+    const out = [];
+    let rest = text;
+    while (rest.length > 13) {
+      let cut = -1;
+      for (let i = 12; i >= 6; i--) if ("、。！？ ）".includes(rest[i - 1])) { cut = i; break; }
+      if (cut < 0) cut = 12;
+      out.push(rest.slice(0, cut).trim()); rest = rest.slice(cut).trim();
+    }
+    if (rest) out.push(rest);
+    return out.slice(0, 3);
+  }
   function say(k, text, kind = "", ms = 2400) {
     if (k < 0 || !A.G || !A.G.det[k]) return;
     SPEECH.set(k, { text, kind, until: Date.now() + ms });
     updateTalk();
-    setTimeout(updateTalk, ms + 40);
+    renderEdge();
+    setTimeout(() => { updateTalk(); renderEdge(); }, ms + 40);
   }
   function nearestDet(targets) {
     const G = A.G;
@@ -1491,9 +1507,13 @@
       if (b) b.style.visibility = "hidden";
       if (tk.dataset.text !== s.text) {
         tk.dataset.text = s.text;
-        const w = s.text.length * 26 + 30;
-        tk.querySelector(".tb").setAttribute("d", `M${-w / 2},-54 h${w} a10,10 0 0 1 10,10 v30 a10,10 0 0 1 -10,10 h${-w / 2 + 14} l-14,14 l-4,-14 h${-w / 2 + 4} a10,10 0 0 1 -10,-10 v-30 a10,10 0 0 1 10,-10 Z`);
-        tk.querySelector("text").textContent = s.text;
+        const lines = wrapTalk(s.text);
+        const w = Math.max(...lines.map(l => l.length)) * 26 + 30, hgt = lines.length * 32 + 18;
+        tk.querySelector(".tb").setAttribute("d", `M${-w / 2},${-4 - hgt} h${w} a10,10 0 0 1 10,10 v${hgt - 20} a10,10 0 0 1 -10,10 h${-w / 2 + 14} l-14,14 l-4,-14 h${-w / 2 + 4} a10,10 0 0 1 -10,-10 v${-(hgt - 20)} a10,10 0 0 1 10,-10 Z`);
+        const tx = tk.querySelector("text");
+        tx.textContent = "";
+        tx.setAttribute("y", String(-4 - hgt + 34));
+        lines.forEach((l, i) => { const ts = el("tspan", { x: 0, dy: i ? 32 : 0 }, tx); ts.textContent = l; });
         tk.setAttribute("class", "talk pop " + s.kind);
       }
       tk.style.display = "";
@@ -2345,7 +2365,7 @@
       const label = t.kind === "x" ? "怪盗X" : t.kind === "m" ? "相棒" : dName(t.k);
       return `<button class="edge-arrow ${t.found ? "found" : ""}" data-act="focusPos" data-pos="${t.pos}" data-key="${t.key}" aria-label="${label}の方向（${NAME(t.pos)}）" hidden>
         <svg class="dir" viewBox="-28 -28 56 56"><g class="rot"><circle r="24" fill="${color}" stroke="#FBF5E4" stroke-width="3"></circle><path d="M24,-10 L38,0 L24,10 Z" fill="${color}" stroke="#FBF5E4" stroke-width="2.5" stroke-linejoin="round"></path></g></svg>
-        ${portrait(t.kind, t.k)}${dist}</button>`;
+        ${portrait(t.kind, t.k)}${dist}${t.kind === "d" && SPEECH.has(t.k) && SPEECH.get(t.k).until > Date.now() ? `<span class="ea-say">${esc(SPEECH.get(t.k).text)}</span>` : ""}</button>`;
     }).join("");
     layoutEdge();
   }
@@ -2385,6 +2405,13 @@
       }
       b.hidden = false;
       b.style.transform = `translate(${ax.toFixed(1)}px, ${ay.toFixed(1)}px)`;
+      const say_ = b.querySelector(".ea-say");
+      if (say_) {
+        say_.style.left = ax < 120 ? "0" : ax > r.width - 120 ? "auto" : "50%";
+        say_.style.right = ax > r.width - 120 ? "0" : "auto";
+        say_.style.transform = ax < 120 || ax > r.width - 120 ? "none" : "translateX(-50%)";
+        if (ay < top + 60) { say_.style.bottom = "auto"; say_.style.top = "calc(100% + 16px)"; }
+      }
       b.querySelector(".rot").setAttribute("transform", `rotate(${(Math.atan2(dy, dx) * 180 / Math.PI).toFixed(1)})`);
     }
   }
@@ -2396,11 +2423,11 @@
     const me = A.role === "d" && k === ME_DET;
     A.radio = [{ k, text, me }, ...(A.radio || [])].slice(0, 12);
     pushFeed(G.xLog.length, `無線｜${me ? "あなた" : dName(k)}：${text}`, true);
-    if (bubble) say(k, bubble, "hot", 2200);
+    say(k, text, bubble ? "hot" : "", 4800);
   }
   function renderRadio() {
     const el_ = $("radio");
-    const on = A.G && A.screen === "game" && A.role !== "x" && (A.radio || []).length;
+    const on = false;   // 会話は駒の吹き出しで見せる（全部はログに残る）
     el_.hidden = !on;
     if (!on) return;
     el_.innerHTML = `<div class="rh">無線</div>` + A.radio.slice(0, 3).map((m, i) =>
