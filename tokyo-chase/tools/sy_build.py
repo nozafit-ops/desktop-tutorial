@@ -314,6 +314,18 @@ BOAT_PATHS = [boat_path(a, b) for a, b in BOAT_E]
 HELI = [odaiba, haneda]
 while len(HELI) < 8:
     HELI.append(max(LANDP, key=lambda i: min(dist(i, h) for h in HELI)))
+# 盤面の中央付近のヘリポートは置かない（端と島だけ）
+HELI = [h for h in HELI if KIND[h] == "i" or not (abs(P[h][0] - W / 2) < W * 0.3 and abs(P[h][1] - H / 2) < H * 0.3)]
+
+# お台場（夢見島）は大きな島にして、北東と西の岸からバスの橋を渡す（タクシーは渡れない）
+def odaiba_bus(side):
+    c = [i for i in LANDP if (P[i][0] > P[odaiba][0] + 100 if side == "e" else P[i][0] < P[odaiba][0] - 200) and P[i][1] < P[odaiba][1]]
+    for j in sorted(c, key=lambda j: dist(odaiba, j)):
+        if clear(odaiba, j, 90) and not any(seg_cross(P[odaiba], P[j], P[a], P[b]) for a, b in BUS_E if len({a, b, odaiba, j}) == 4):
+            return (min(odaiba, j), max(odaiba, j))
+ODAIBA_BUS = [odaiba_bus("e"), odaiba_bus("w")]
+BUS_E += ODAIBA_BUS
+ISLAND_SIZE = {odaiba: [230, 150], haneda: [124, 84]}
 
 # ======================================================================
 # 検証と書き出し
@@ -333,6 +345,7 @@ report = {
     "subway": [ST[i][0] for i in SUB_ST],
     "boat piers": [ST[i][0] for i in sorted({v for e in BOAT_E for v in e})],
     "heli": [ST[i][0] for i in HELI],
+    "odaiba bus": [ST[j][0] for e in ODAIBA_BUS for j in e if j != odaiba],
 }
 for k, v in report.items(): print(f"{k}: {v}")
 bdeg = {b: len({v for e in list(TAXI) + BUS_E + SUB_E + BOAT_E if b in e for v in e} - {b}) for b in bridges}
@@ -342,7 +355,7 @@ board = {
     "stations": [[s[0], s[1], s[2]] for s in ST],
     "taxi": [list(e) for e in TAXI], "busEdges": [list(e) for e in BUS_E], "subwayEdges": [list(e) for e in SUB_E],
     "boatEdges": [list(e) for e in BOAT_E], "boatPaths": BOAT_PATHS,
-    "heli": HELI, "islands": isl, "bridges": bridges, "river": RIVER, "coast": COAST,
+    "heli": HELI, "islands": isl, "islandSize": [ISLAND_SIZE[i] for i in isl], "bridges": bridges, "river": RIVER, "coast": COAST,
 }
 json.dump(board, open(os.path.join(HERE, "board_sy.json"), "w"), ensure_ascii=False)
 

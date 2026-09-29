@@ -64,6 +64,7 @@ data = f'''const W = {B["W"]}, H = {B["H"]};
   const RIVER_NAME = "{RIVER_NAME}";
   const BRIDGE_ST = {json.dumps(B["bridges"])};
   const ISLAND_LIST = {json.dumps(B["islands"])};
+  const ISLAND_SIZE = {json.dumps(B["islandSize"])};
   '''
 a = out.index("const W = 3000, H = 1900;"); b = out.index("const N = STATIONS.length;")
 out = out[:a] + data + out[b:]
@@ -245,7 +246,7 @@ sub("function centerOn(i, s = Math.max(V.s, 0.95)) {", "function centerOn(i, s =
 
 # ---------------- プレイヤー視点に固定：画面は自分の駒を中心に動かない。見えるのは自分のまわりだけ ----------------
 sub("""  // いちばん引いたときの倍率：""", """  // 画面は自分の駒（パス&プレイでは手番の人の駒）を中心に固定する。ドラッグや拡大縮小はしない
-  const LOCK = true;
+  const LOCK = false;   // true にすると画面を自分の駒に固定（いまはドラッグで自由にスクロール）
   let lockedOn = null;
   function viewAnchor() {
     const G = A.G;
@@ -314,8 +315,7 @@ sub("""      case "focusX": {""", """      case "focusX": if (LOCK) return;
 sub("""      case "focusD": return A.G && centerOn""", """      case "focusD": if (LOCK) return; return A.G && centerOn""")
 sub("""      case "focusPos": return centerOn(Number(b.dataset.pos));""", """      case "focusPos": if (LOCK) { const p = Number(b.dataset.pos); toast(`${NO(p)} ${NAME(p)}`); return; } return centerOn(Number(b.dataset.pos));""")
 sub('''aria-label="手番のコマへ移動"''', '''aria-label="自分の駒へ戻る"''')
-sub("""  .side .iconbtn:active""", """  .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act="fit"] { display: none; }
-  .edge-arrow.dest .dest-no { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #FFF6D8; color: #1A140C; font-weight: 900; font-size: 13px; border: 3px solid #3B2C1E; }
+sub("""  .side .iconbtn:active""", """  .edge-arrow.dest .dest-no { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #FFF6D8; color: #1A140C; font-weight: 900; font-size: 13px; border: 3px solid #3B2C1E; }
   .side .iconbtn:active""")
 # 画面の外にある行き先（とカードの対象の駅）は、縁の矢印から選べる
 sub("""    if (mateActive(G) && !G.over) t.push({ key: "m" + G.mate.pos, kind: "m", k: 0, pos: G.mate.pos });
@@ -349,7 +349,15 @@ sub("""  function clampView() {
 sub("""    if (LOCK && A.G && A.screen === "game" && viewAnchor() !== lockedOn) lockView();""",
     """    if (LOCK && A.G && A.screen === "game" && !A.overview && viewAnchor() !== lockedOn) lockView();
     const ob = $("overviewBtn");
-    if (ob) ob.setAttribute("aria-pressed", String(!!A.overview));""")
+    if (ob) ob.setAttribute("aria-pressed", String(!!A.overview));
+    // 自由スクロールでも、自分の番になったら自分の駒が画面に入るようにする
+    if (!LOCK && A.G && A.screen === "game" && !A.G.over) {
+      const fk = humanTurn() ? String(A.G.turn) : null;
+      if (fk !== A.focusKey) {
+        A.focusKey = fk;
+        if (fk !== null && !A.overview) ensureVisible(A.G.turn === "x" ? A.sec.pos : A.G.det[A.G.turn].pos);
+      }
+    }""")
 sub("""      case "hint": A.hints = !A.hints; render(); return;""", """      case "hint": A.hints = !A.hints; render(); return;
       case "overview": {
         if (!A.G) return;
@@ -368,13 +376,10 @@ sub("""  function lockView(animate = true) {
 """, """  function lockView(animate = true) {
     A.overview = false;
 """)
-sub("""  .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act="fit"] { display: none; }""",
-    """  .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act="fit"] { display: none; }
-  #map.z0 .stn-label:not(.hot) { display: none; }""")
 
 # ---------------- 視界ルール：怪盗Xは刑事の視界（円）に入ったら見つかる ----------------
 from sight_rule import patches as sight_patches
-SIGHT = 325
+SIGHT = 350
 for a_, b_ in sight_patches(SIGHT):
     sub(a_, b_)
 # 刑事の視界を地図に描く（怪盗Xも刑事側も見える）
@@ -530,14 +535,18 @@ sub("""    font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; fon
 sub("""  #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; background: #2A2016; cursor: grab; }""",
     """  #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; background: #B9B9B4; cursor: grab; }
   #bgimg { image-rendering: pixelated; image-rendering: crisp-edges; }
-  .rd { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-  .rd-out { stroke: #7C7C78; stroke-width: 30; }
-  .rd-in { stroke: #A9A9A4; stroke-width: 22; }
   .ln { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-  .bus-ln { stroke: #1F8A4C; stroke-width: 12; }
-  .bus-dash { stroke: #DDF3E4; stroke-width: 3; stroke-dasharray: 10 10; }
-  .tube-ln { stroke: #B8323C; stroke-width: 14; }
+  .gap { stroke: #C6C6C1; }
+  .taxi-ln { stroke: #5E5E5A; }
+  .bus-ln { stroke: #1F8A4C; }
+  .bus-dash { stroke: #DDF3E4; stroke-width: 2.5; stroke-dasharray: 10 10; }
+  .tube-ln { stroke: #B8323C; }
   .tube-dash { stroke: #F6D2D0; stroke-width: 4; stroke-dasharray: 12 8; }
+  .deck { fill: #C6C6C1; stroke: none; }
+  .deck-rail { fill: none; stroke: #4A4A46; stroke-width: 5; stroke-linecap: square; }
+  .hport { fill: #2E2E2E; stroke: #FFFFFF; stroke-width: 4; }
+  .hport-ring { fill: none; stroke: #F2C230; stroke-width: 3; }
+  .hport-h { font-family: "DotGothic16", sans-serif; font-size: 26px; fill: #FFFFFF; text-anchor: middle; pointer-events: none; }
   .st-shadow { fill: rgba(0, 0, 0, 0.28); }
   .st-side { fill: #9A9A96; stroke: #2E2E2E; stroke-width: 2.5; }
   .st-side.sub { fill: #6E1520; }

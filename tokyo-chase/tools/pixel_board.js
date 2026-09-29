@@ -63,12 +63,13 @@
     for (let y = 2; y < ch; y += 5) for (let x = (y * 7) % 11; x < cw; x += 11) {
       if (wet(x, y) && wet(x + 4, y)) { g.fillStyle = rnd() < 0.5 ? "#7FB0E6" : "#6A9FDA"; g.fillRect(x, y, 3, 1); }
     }
-    // 島
-    for (const i of ISLAND_LIST) {
-      const [x, y] = P(i);
-      g.fillStyle = "#E4DCC2"; g.beginPath(); g.ellipse(px(x), px(y), px(124), px(84), 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = "#7DBB5E"; g.beginPath(); g.ellipse(px(x), px(y) - 2, px(100), px(62), 0, 0, Math.PI * 2); g.fill();
-    }
+    // 島（お台場＝夢見島は大きめ）
+    ISLAND_LIST.forEach((i, k) => {
+      const [x, y] = P(i), [rx, ry] = ISLAND_SIZE[k];
+      g.fillStyle = "#E4DCC2"; g.beginPath(); g.ellipse(px(x), px(y), px(rx), px(ry), 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#C6C6C1"; g.beginPath(); g.ellipse(px(x), px(y) - 2, px(rx - 22), px(ry - 20), 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#7DBB5E"; g.beginPath(); g.ellipse(px(x - rx * 0.45), px(y + ry * 0.3), px(rx * 0.3), px(ry * 0.3), 0, 0, Math.PI * 2); g.fill();
+    });
     if (PLAIN_BG) { img.setAttribute("href", c.toDataURL("image/png")); return; }
     // 道・線路の通り道（ビルを置かない）
     const segs = [];
@@ -134,46 +135,72 @@
     img.setAttribute("href", c.toDataURL("image/png"));
   }
 
+  // 線の太さ：タクシー（細い1本線）＜バス＜地下鉄。上に重ねるほど太い線で、交差する所は下の線が途切れて見える（立体交差）
+  const LINE_W = { taxi: 5, bus: 11, tube: 17 };
+  const GAP = 5;   // 線のまわりの地面色のすき間（交差や並走を見分けやすく）
   function buildBoard() {
     const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels");
-    const layers = { taxi: el("g", {}, gE), bus: el("g", {}, gE), tube: el("g", {}, gE), boat: el("g", {}, gE) };
+    const layer = () => ({ gap: el("g", {}, gE), ln: el("g", {}, gE) });
+    const boatL = el("g", {}, gE), deckL = el("g", {}, gE);
+    const layers = { taxi: layer(), bus: layer(), tube: layer() };
+    const title = (g, key, t) => { el("title", {}, g).textContent = t; };
     for (const [key, types] of edgeTypes) {
       const [a, b] = key.split("-").map(Number);
-      const g_ = t => { const g = el("g", {}, layers[t]); el("title", {}, g).textContent = types.get(t).join("・"); return g; };
-      if (types.has("taxi")) {
-        const d = roundPath(octPts(a, b)), g = g_("taxi");
-        el("path", { d, class: "rd rd-out" }, g); el("path", { d, class: "rd rd-in" }, g);
+      // 同じ区間を走る線は、地下鉄・タクシー・バスの順に横へ並べる
+      const here = ["tube", "taxi", "bus"].filter(t => types.has(t));
+      const total = here.reduce((s_, t) => s_ + LINE_W[t], 0) + GAP * 2 * (here.length - 1);
+      let at = -total / 2;
+      for (const t of here) {
+        const off = at + LINE_W[t] / 2; at += LINE_W[t] + GAP * 2;
+        const d = roundPath(octPts(a, b, off));
+        const w = LINE_W[t];
+        el("path", { d, class: "ln gap", "stroke-width": w + GAP * 2 }, layers[t].gap);
+        const g = el("g", {}, layers[t].ln);
+        title(g, key, types.get(t).join("・"));
+        el("path", { d, class: `ln ${t}-ln`, "stroke-width": w }, g);
+        if (t !== "taxi") el("path", { d, class: `ln ${t}-dash` }, g);
       }
-      const rails = ["bus", "tube"].filter(t => types.has(t));
-      rails.forEach((t, k) => {
-        const off = types.has("taxi") ? (k === 0 ? 11 : -11) : (rails.length > 1 ? (k === 0 ? 8 : -8) : 0);
-        const d = roundPath(octPts(a, b, off)), g = g_(t);
-        el("path", { d, class: `ln ${t}-ln` }, g); el("path", { d, class: `ln ${t}-dash` }, g);
-      });
       if (types.has("boat")) {
         const pts = BOAT_PATH.has(key) ? BOAT_PATH.get(key) : [P(a), P(b)];
-        const d = "M" + pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" L"), g = g_("boat");
+        const d = "M" + pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" L"), g = el("g", {}, boatL);
+        title(g, key, types.get("boat").join("・"));
         el("path", { d, class: "edge boat casing", "stroke-linejoin": "round" }, g);
         el("path", { d, class: "edge boat", "stroke-linejoin": "round" }, g);
       }
     }
-    // 駅：白い楕円の台。地下鉄の駅は赤。バス停は緑の札、水上バスの桟橋は青の札
+    // 橋の駅：川をまたぐ橋げたを水上バスの上にかける（水上バスは橋の下をくぐり、ここには止まらない）
+    for (const i of BRIDGE_ST) {
+      const [x, y] = P(i);
+      // 川の流れの向き（いちばん近い区間）に直角な向きへ、川幅より少し長い橋げたをかける
+      let k = 0, best = Infinity;
+      for (let j = 0; j < RIVER.length - 1; j++) { const d_ = Math.hypot((RIVER[j][0] + RIVER[j + 1][0]) / 2 - x, (RIVER[j][1] + RIVER[j + 1][1]) / 2 - y); if (d_ < best) { best = d_; k = j; } }
+      const j2 = Math.min(RIVER.length - 1, k + 3), j1 = Math.max(0, k - 2);
+      let tx = RIVER[j2][0] - RIVER[j1][0], ty = RIVER[j2][1] - RIVER[j1][1];
+      const L = Math.hypot(tx, ty) || 1; tx /= L; ty /= L;
+      const ux = -ty, uy = tx, len = 70, half = 34;
+      const c = [[+len, +half], [-len, +half], [-len, -half], [+len, -half]].map(([u, v]) => [x + ux * u + tx * v, y + uy * u + ty * v]);
+      el("path", { d: "M" + c.map(q => q.map(v => v.toFixed(1)).join(",")).join(" L") + " Z", class: "deck" }, deckL);
+      for (const v of [-half, half]) el("path", { d: `M${(x + ux * len + tx * v).toFixed(1)},${(y + uy * len + ty * v).toFixed(1)} L${(x - ux * len + tx * v).toFixed(1)},${(y - uy * len + ty * v).toFixed(1)}`, class: "deck-rail" }, deckL);
+    }
+    // 重ねる順：水上バス → 橋げた → タクシー → バス → 地下鉄（あとのほど上）
+    gE.append(boatL, deckL, layers.taxi.gap, layers.taxi.ln, layers.bus.gap, layers.bus.ln, layers.tube.gap, layers.tube.ln);
+    // 駅：白い楕円の台。地下鉄の駅は赤。バス停は緑の札、水上バスの桟橋は青の札。ヘリポートは H のマーク
     STATIONS.forEach(([name, x, y], i) => {
       const g = el("g", {}, gS);
       const has = t => ADJ[i].some(e => e.type === t);
-      if (HELI_SET.has(i)) {
-        el("circle", { cx: x, cy: y, r: 44, class: "helipad" }, g);
-        el("text", { x: x + 36, y: y - 28, class: "heli-h" }, g).textContent = "H";
-      }
-      if (BRIDGE_ST.includes(i)) el("rect", { x: x - 30, y: y - 30, width: 60, height: 60, rx: 6, class: "bridge-pt", transform: `rotate(45 ${x} ${y})` }, g);
       el("ellipse", { cx: x, cy: y + 7, rx: 30, ry: 19, class: "st-shadow" }, g);
       el("ellipse", { cx: x, cy: y + 3, rx: 29, ry: 19, class: "st-side" + (has("tube") ? " sub" : "") }, g);
       el("ellipse", { cx: x, cy: y, rx: 29, ry: 18, class: "st-top" + (has("tube") ? " sub" : "") }, g);
       el("ellipse", { cx: x - 8, cy: y - 7, rx: 10, ry: 4, class: "st-hi" }, g);
       const tags = [has("bus") && "bus", has("boat") && "boat"].filter(Boolean);
       tags.forEach((t, k) => el("rect", { x: x + 20 + k * 11, y: y - 24, width: 9, height: 9, class: "st-tag " + t }, g));
+      if (HELI_SET.has(i)) {
+        const hx = x - 42, hy = y - 30;
+        el("circle", { cx: hx, cy: hy, r: 21, class: "hport" }, g);
+        el("circle", { cx: hx, cy: hy, r: 15, class: "hport-ring" }, g);
+        el("text", { x: hx, y: hy + 9, class: "hport-h" }, g).textContent = "H";
+      }
       el("text", { x, y: y + 6, class: "stn-num" + (has("tube") ? " on-sub" : "") }, g).textContent = NO(i);
       el("text", { x, y: y + 48, class: "stn-label", id: "lbl" + i }, gL).textContent = name;
     });
   }
-
