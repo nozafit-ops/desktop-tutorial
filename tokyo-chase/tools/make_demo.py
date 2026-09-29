@@ -279,6 +279,16 @@ sub("""  function ensureVisible(i) {
 """, """  function ensureVisible(i) {
     if (LOCK) return;
 """)
+# 自分の番の始めは、駒が画面の端寄りなら真ん中へ（行き先の駅まで見えるように）
+sub("""  function ensureVisible(i) {
+""", """  function focusOwn(i) {
+    const { w, h } = vpSize();
+    const [, x, y] = STATIONS[i];
+    const sx = x * V.s + V.tx, sy = y * V.s + V.ty, top = hudTop();
+    if (sx < w * 0.28 || sx > w * 0.72 || sy < top + (h - top) * 0.22 || sy > h - (h - top) * 0.28) centerOn(i, V.s);
+  }
+  function ensureVisible(i) {
+""")
 sub("""  function focusTurn() {
     const G = A.G;
     if (!G) return;""", """  function focusTurn() {
@@ -350,13 +360,15 @@ sub("""    if (LOCK && A.G && A.screen === "game" && viewAnchor() !== lockedOn) 
     """    if (LOCK && A.G && A.screen === "game" && !A.overview && viewAnchor() !== lockedOn) lockView();
     const ob = $("overviewBtn");
     if (ob) ob.setAttribute("aria-pressed", String(!!A.overview));
+    // 決着したら、隠した上部の表示を出して「結果」ボタンを押せるようにする
+    if (A.G && A.G.over && document.body.classList.contains("hud-hidden")) { document.body.classList.remove("hud-hidden"); const pt = $("pullTab"); if (pt) pt.setAttribute("aria-expanded", "true"); }
     // 自由スクロールでも、自分の番になったら自分の駒が画面に入るようにする
     if (!LOCK && A.G && A.screen === "game" && !A.G.over) {
       const fk = humanTurn() ? String(A.G.turn) : null;
       if (fk !== A.focusKey) {
         A.focusKey = fk;
         // 直前の駒の追いかけ（同じ処理の中で動く）が終わってから、自分の駒へ寄せる
-        if (fk !== null) setTimeout(() => { if (A.G && !A.overview && humanTurn() && String(A.G.turn) === fk) ensureVisible(A.G.turn === "x" ? A.sec.pos : A.G.det[A.G.turn].pos); }, 0);
+        if (fk !== null) setTimeout(() => { if (A.G && !A.overview && humanTurn() && String(A.G.turn) === fk) focusOwn(A.G.turn === "x" ? A.sec.pos : A.G.det[A.G.turn].pos); }, 0);
       }
     }""")
 sub("""      case "hint": A.hints = !A.hints; render(); return;""", """      case "hint": A.hints = !A.hints; render(); return;
@@ -579,7 +591,10 @@ sub("""    if (Date.now() < bannerUntil && pri < bannerPri) return;""", """    i
 
 # ---------------- 横向きの携帯：上・右・左下の表示を小さくして地図を広く ----------------
 sub("""  @media (prefers-reduced-motion: reduce) { .top { transition: none; } }""", """  @media (prefers-reduced-motion: reduce) { .top { transition: none; } }
-  @media (max-height: 520px) and (orientation: landscape) { .hud.top, .hud.side, .handbar { zoom: 0.62; } }""")
+  @media (max-height: 520px) and (orientation: landscape) { .hud.top, .hud.side, .handbar { zoom: 0.62; } }
+  /* 携帯：画面の端の駒アイコンを小さく・半透明にして、下の駅を見やすく */
+  @media (max-width: 760px), (max-height: 520px) { .edge-arrow { opacity: 0.82; } .edge-arrow:active { opacity: 1; } .edge-arrow svg.dir { transform: scale(0.72); } .edge-arrow .portrait, .edge-arrow .portrait img { width: 27px !important; height: 27px !important; } .edge-arrow .ea-d { font-size: 9px; bottom: -6px; padding: 0 4px; } }
+  @media (max-width: 760px) { .hud.side, .handbar { zoom: 0.8; } }""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
