@@ -517,6 +517,38 @@ sub("""      b.style.transform = `translate(${ax.toFixed(1)}px, ${ay.toFixed(1)}
         if (ay < top + 60) { say_.style.bottom = "auto"; say_.style.top = "calc(100% + 16px)"; }
       }""")
 
+# ---------------- ドット絵風の盤面（tools/pixel_board.js）：背景と道・線路・駅の描き方を差し替える ----------------
+a_ = out.index("  async function renderBackground() {"); b_ = out.index("  // 駒（ボードゲームのポーン）")
+out = out[:a_] + open(os.path.join(HERE, "pixel_board.js"), encoding="utf-8").read() + out[b_:]
+sub("""family=Zen+Old+Mincho:wght@700;900&display=swap">""", """family=Zen+Old+Mincho:wght@700;900&family=DotGothic16&display=swap">""")
+sub("""  .stn-num { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 15px; fill: var(--map-ink);""",
+    """  .stn-num { font-family: "DotGothic16", "Zen Kaku Gothic New", sans-serif; font-weight: 400; font-size: 17px; fill: #1C1C1C;""")
+sub("""    font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 17px; fill: var(--map-ink);
+    paint-order: stroke; stroke: var(--paper); stroke-width: 6px; stroke-linejoin: round;""",
+    """    font-family: "DotGothic16", "Zen Kaku Gothic New", sans-serif; font-weight: 400; font-size: 21px; fill: #141414;
+    paint-order: stroke; stroke: #F4F4F0; stroke-width: 6px; stroke-linejoin: miter;""")
+sub("""  #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; background: #2A2016; cursor: grab; }""",
+    """  #map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; background: #B9B9B4; cursor: grab; }
+  #bgimg { image-rendering: pixelated; image-rendering: crisp-edges; }
+  .rd { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .rd-out { stroke: #7C7C78; stroke-width: 30; }
+  .rd-in { stroke: #A9A9A4; stroke-width: 22; }
+  .ln { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .bus-ln { stroke: #1F8A4C; stroke-width: 12; }
+  .bus-dash { stroke: #DDF3E4; stroke-width: 3; stroke-dasharray: 10 10; }
+  .tube-ln { stroke: #B8323C; stroke-width: 14; }
+  .tube-dash { stroke: #F6D2D0; stroke-width: 4; stroke-dasharray: 12 8; }
+  .st-shadow { fill: rgba(0, 0, 0, 0.28); }
+  .st-side { fill: #9A9A96; stroke: #2E2E2E; stroke-width: 2.5; }
+  .st-side.sub { fill: #6E1520; }
+  .st-top { fill: #FAFAF7; stroke: #2E2E2E; stroke-width: 2.5; }
+  .st-top.sub { fill: #C3242F; }
+  .st-hi { fill: rgba(255, 255, 255, 0.7); }
+  .st-tag { stroke: #1C1C1C; stroke-width: 1.5; }
+  .st-tag.bus { fill: #1F8A4C; }
+  .st-tag.boat { fill: #2F7FB0; }
+  .stn-num.on-sub { fill: #FFFFFF; }""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"
