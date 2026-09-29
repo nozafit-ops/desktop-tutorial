@@ -292,6 +292,19 @@
   .pxcard .pc-title { font-size: 15px; line-height: 1.05; color: #4F6475; letter-spacing: .02em; }
   .pxcard .pc-ja { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 11px; font-weight: 700; color: #8A5A4A; line-height: 1.3; }
   .ticket.pxcard:active:not(:disabled) { transform: translateY(2px); }
+  .tickets .ticket.pxcard.hand-card { background: #FBF7EA; color: #4F6475; min-height: 0; }
+  .tickets .ticket.pxcard.hand-card.d { border-color: #2F5FB8; box-shadow: inset 0 0 0 2px #FBF7EA, inset 0 0 0 3px rgba(47,95,184,.35), 0 4px 0 rgba(0,0,0,.35); }
+  .pxcard.hand-card .pc-title { font-family: "DotGothic16", sans-serif; font-size: 17px; align-self: center; }
+  .pxcard.hand-card .pc-no { align-self: center; font-size: 10px; letter-spacing: .05em; }
+  .pxcard.hand-card .pc-ja { font-weight: 500; font-size: 11px; color: #5A4A40; }
+  .gc-art, .hb-card img, .hb-card.heli .hb-heli img { image-rendering: pixelated; }
+  .gcard.gcard.d, .gcard.gcard.x, .gcard.gcard.miss { background: #FBF7EA; border: 4px solid #2F5FB8; box-shadow: inset 0 0 0 3px #FBF7EA, inset 0 0 0 4px rgba(47,95,184,.35), 0 10px 30px rgba(0,0,0,.5); }
+  .gcard.gcard.x { border-color: #C2464F; box-shadow: inset 0 0 0 3px #FBF7EA, inset 0 0 0 4px rgba(194,70,79,.35), 0 10px 30px rgba(0,0,0,.5); }
+  .gcard.gcard.miss { border-color: #8A8680; }
+  .gcard .gc-kind { font-family: "DotGothic16", sans-serif; color: #9FB3C2; letter-spacing: .15em; }
+  .gcard .gc-art { border: 2px solid #4F6475; border-radius: 3px; }
+  .gcard .gc-name { font-family: "DotGothic16", sans-serif; font-weight: 400; color: #4F6475; }
+  .gcard .gc-desc { color: #5A4A40; }
   .ticket {
     position: relative; min-height: 92px; border-radius: 12px; padding: 10px 12px; text-align: left;
     display: flex; flex-direction: column; justify-content: space-between;
@@ -2522,6 +2535,8 @@
       r(19, 9, 4, 1, "#C3242F");
       const q = ["0111", "1001", "0001", "0010", "0100", "0000", "0100"];
       q.forEach((row, y) => [...row].forEach((v, x) => { if (v === "1") r(33 + x * 2, 12 + y * 2, 2, 2, "#E3B341"); }));
+    } else if (kind.startsWith("c_")) {
+      pxHandScene(kind.slice(2), r, box, town);
     } else {   // heli
       r(0, 0, 48, 32, "#CFE3F5");
       for (const [x, y, w] of [[3, 4, 9], [30, 3, 12], [36, 6, 7]]) r(x, y, w, 2, "#F4F8FC");
@@ -2537,6 +2552,78 @@
     pxCache.set(kind, url);
     return url;
   }
+  // 手札カード（特殊カード）の絵
+  function pxHandScene(c, r, box, town) {
+    const miniHeli = (x, y, col = "#7C3AED") => {
+      r(x, y, 12, 1, "#2A2230"); r(x + 5, y + 1, 1, 1, "#2A2230");
+      r(x + 3, y + 2, 7, 4, col); r(x + 7, y + 3, 2, 2, "#CDEBFA"); r(x - 2, y + 3, 5, 1, col);
+      r(x + 3, y + 7, 7, 1, "#2A2230");
+    };
+    const runner = (x, y, col) => {
+      r(x + 3, y, 3, 3, col); r(x + 2, y + 3, 4, 5, col); r(x + 6, y + 4, 3, 1, col); r(x, y + 4, 2, 1, col);
+      r(x + 2, y + 8, 2, 4, col); r(x + 4, y + 8, 3, 2, col); r(x + 6, y + 10, 2, 2, col); r(x, y + 11, 2, 1, col);
+    };
+    if (c === "bridge") {
+      r(0, 0, 48, 32, "#BCD9EE"); r(0, 20, 48, 12, "#3F7FB8");
+      for (let x = 2; x < 48; x += 8) r(x, 26, 3, 1, "#7FB0E6");
+      box(0, 15, 48, 4, "#9A9A96"); for (const x of [8, 38]) r(x, 19, 3, 9, "#6E6E6A");
+      for (let x = 0; x < 48; x += 4) r(x, 13, 1, 2, "#6E6E6A"); r(0, 13, 48, 1, "#6E6E6A");
+      for (let x = 14; x < 34; x += 4) { r(x, 8, 2, 3, "#E5484D"); r(x + 2, 8, 2, 3, "#FBF7EA"); }
+      r(14, 7, 20, 1, "#2A2230"); r(14, 11, 20, 1, "#2A2230"); r(15, 12, 1, 3, "#2A2230"); r(32, 12, 1, 3, "#2A2230");
+      r(22, 2, 4, 4, "#E5484D"); r(23, 3, 2, 2, "#FBF7EA");
+    } else if (c === "checkpoint" || c === "rcheck") {
+      r(0, 0, 48, 32, c === "rcheck" ? "#D9D2C0" : "#A9CBE3");
+      if (c === "rcheck") { for (let x = 0; x < 48; x += 8) r(x, 0, 1, 20, "#B9B09A"); for (let y = 3; y < 20; y += 6) r(0, y, 48, 1, "#B9B09A"); }
+      else town("#8FA3B5", "#D6E4EE", 20);
+      r(0, 20, 48, 12, "#55585C"); for (let x = 1; x < 48; x += 7) r(x, 28, 4, 1, "#E9E9E4");
+      for (const x of [9, 33]) r(x, 15, 2, 10, "#2A2230");
+      for (let x = 6; x < 38; x += 4) { r(x, 13, 2, 3, "#E5484D"); r(x + 2, 13, 2, 3, "#FBF7EA"); }
+      r(6, 12, 32, 1, "#2A2230"); r(6, 16, 32, 1, "#2A2230");
+      for (const x of [2, 40]) { r(x + 2, 18, 2, 2, "#F28C28"); r(x + 1, 20, 4, 2, "#F28C28"); r(x + 2, 20, 2, 1, "#FBF7EA"); r(x, 22, 6, 1, "#2A2230"); }
+      r(21, 8, 3, 3, "#2F7FE0"); r(24, 8, 3, 3, "#E5484D"); r(20, 11, 8, 1, "#2A2230");
+      if (c === "rcheck") { const q = ["0110", "1001", "0010", "0100", "0000", "0100"]; q.forEach((row, y) => [...row].forEach((v, x) => { if (v === "1") r(38 + x * 2, 1 + y * 2, 2, 2, "#C3242F"); })); }
+    } else if (c === "dash") {
+      r(0, 0, 48, 32, "#CFE3F5");
+      for (const [y, x, w] of [[6, 2, 14], [11, 0, 18], [16, 4, 12], [21, 1, 16], [26, 6, 10]]) r(x, y, w, 1, "#FFFFFF");
+      r(0, 28, 48, 4, "#9A9A96");
+      runner(22, 9, "#2F5FB8"); r(25, 9, 3, 1, "#1C3570"); r(24, 8, 5, 1, "#1C3570");
+      for (const x of [34, 38]) { r(x, 12, 3, 2, "#E3B341"); r(x + 1, 11, 1, 4, "#E3B341"); }
+    } else if (c === "heliban") {
+      r(0, 0, 48, 32, "#CFE3F5"); r(6, 25, 36, 5, "#6B6B6B");
+      r(21, 26, 1, 3, "#F2C230"); r(25, 26, 1, 3, "#F2C230"); r(22, 27, 3, 1, "#F2C230");
+      miniHeli(18, 12);
+      for (let a = 0; a < 64; a++) { const t = a / 64 * Math.PI * 2; r(Math.round(24 + Math.cos(t) * 12), Math.round(16 + Math.sin(t) * 12), 2, 2, "#E5484D"); }
+      for (let k = -8; k <= 8; k++) r(24 + k, 16 + k, 2, 2, "#E5484D");
+    } else if (c === "reinforce") {
+      r(0, 0, 48, 32, "#CFE3F5");
+      for (const [x, y, w] of [[3, 3, 9], [32, 4, 12]]) r(x, y, w, 2, "#F4F8FC");
+      miniHeli(5, 8); miniHeli(20, 16); miniHeli(33, 8);
+      r(0, 28, 48, 4, "#9A9A96");
+      for (const [x, y] of [[16, 5], [30, 22], [44, 18]]) { r(x, y, 3, 1, "#2F5FB8"); r(x + 1, y - 1, 1, 3, "#2F5FB8"); }
+    } else if (c === "trap") {
+      r(0, 0, 48, 32, "#6B8F4E"); for (let y = 2; y < 32; y += 4) for (let x = (y * 3) % 7; x < 48; x += 7) r(x, y, 1, 2, "#86A866");
+      box(10, 18, 28, 6, "#8A8A86"); r(22, 20, 4, 2, "#5A5A56");
+      for (let x = 10; x < 38; x += 4) { r(x, 15, 2, 3, "#C9C9C4"); r(x + 1, 13, 1, 2, "#E9E9E4"); }
+      r(10, 24, 28, 1, "#4A4A46"); r(36, 22, 8, 1, "#6E6E6A"); r(43, 20, 2, 5, "#6E6E6A");
+    } else if (c === "vanish") {
+      r(0, 0, 48, 32, "#2A2440");
+      for (const [x, y] of [[3, 3], [40, 5], [30, 2], [8, 10]]) r(x, y, 1, 1, "#E4DCC2");
+      runner(20, 12, "#4A4460");
+      for (const [x, y, w, h] of [[8, 16, 12, 7], [16, 12, 14, 9], [26, 15, 14, 8], [12, 21, 26, 6], [34, 20, 8, 5]]) { r(x, y, w, h, "#D8D4E4"); r(x + 1, y, w - 2, 1, "#F4F2F8"); }
+      for (const [x, y] of [[6, 12], [40, 13], [22, 8], [44, 24]]) r(x, y, 2, 2, "#B9B4CC");
+    } else if (c === "destroy") {
+      r(0, 0, 48, 32, "#3A2A2A"); r(0, 26, 48, 6, "#55585C");
+      for (let a = 0; a < 12; a++) { const t = a / 12 * Math.PI * 2; for (let d = 4; d < 14; d++) r(Math.round(24 + Math.cos(t) * d), Math.round(15 + Math.sin(t) * d * 0.8), 2, 2, d < 9 ? "#F7C948" : "#E86F3A"); }
+      r(18, 11, 12, 8, "#FFF3C4");
+      box(14, 20, 20, 5, "#FBF7EA"); r(24, 20, 1, 5, "#2A2230"); r(23, 22, 1, 1, "#2A2230"); r(25, 21, 1, 1, "#2A2230");
+      for (const [x, y] of [[6, 8], [40, 6], [8, 22], [41, 21], [34, 3]]) r(x, y, 2, 2, "#9A8A7A");
+    } else {   // miss
+      r(0, 0, 48, 32, "#8A8680");
+      const q = ["0111", "1001", "0001", "0010", "0100", "0000", "0100"];
+      q.forEach((row, y) => [...row].forEach((v, x) => { if (v === "1") r(20 + x * 2, 8 + y * 2, 2, 2, "#D8D4CC"); }));
+    }
+  }
+  function pxHandArt(c) { return pxScene("c_" + c); }
   // 走る人の小さなシルエット（カード左上）
   function pxRunner() {
     if (pxCache.has("runner")) return pxCache.get("runner");
@@ -2800,7 +2887,7 @@
     const can = humanTurn() && (G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn)).some(m => m.type === "heli");
     const why = !left ? "切符なし" : heliBanned(G) ? "封鎖中" : can ? "タップで飛ぶ" : "H駅で使える";
     return `<button class="hb-card heli ${can ? "go" : "off"}" ${can ? `data-act="heli"` : "disabled"} title="ヘリ：${why}">
-      <span class="hb-heli"><img src="art/icons/heli.webp" alt=""><b>×${left}</b></span>
+      <span class="hb-heli"><img src="${pxScene("heli")}" alt=""><b>×${left}</b></span>
       <span>${why}</span></button>`;
   }
   // ログ・シート・画面が開いたり閉じたりしたら手札欄の表示を合わせる
@@ -2821,7 +2908,7 @@
     host.hidden = false;
     host.classList.toggle("ready", usable && hand.length > 0);
     host.innerHTML = `<div class="hb-head"><b>${side === "x" ? "怪盗Xの手札" : "刑事の手札"}</b><span>${left >= 0 ? `${CARD_LAST}手目まで` : "期限切れ"}${next ? `・次は${next}手目` : ""}</span></div>
-      <div class="hb-cards">${heliCard(G, side)}${hand.length ? hand.map((c, i) => `<button class="hb-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : `data-act="hand"`} title="${esc(CARD[c].desc)}"><img src="art/cards/${c}.webp" alt=""><span>${CARD[c].name}</span></button>`).join("") : `<span class="hb-empty">なし</span>`}</div>`;
+      <div class="hb-cards">${heliCard(G, side)}${hand.length ? hand.map((c, i) => `<button class="hb-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : `data-act="hand"`} title="${esc(CARD[c].desc)}"><img src="${pxHandArt(c)}" alt=""><span>${CARD[c].name}</span></button>`).join("") : `<span class="hb-empty">なし</span>`}</div>`;
   }
 
   function renderMap() {
@@ -3107,7 +3194,11 @@
         <h3>${side === "x" ? "怪盗Xの手札" : "刑事チームの手札"}<span class="pill">${left >= 0 ? `${CARD_LAST}手目まで・あと${left}手` : "期限切れ"}</span></h3>
         <div class="draw-sched"><b>カードを引く手</b>${sched}</div>
         <p class="hand-note">${note}</p>
-        <div class="tickets">${hand.map((c, i) => `<button class="ticket hand-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : "disabled"}><img class="hc-art" src="art/cards/${c}.webp" alt=""><span class="en">${CARD[c].name}</span><span class="ja">${CARD[c].desc}</span></button>`).join("")}</div>
+        <div class="tickets">${hand.map((c, i) => `<button class="ticket pxcard hand-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : "disabled"}>
+          <span class="pc-top"><img class="pc-run" src="${pxRunner()}" alt=""><span class="pc-no">${side === "x" ? "THIEF CARD" : "POLICE CARD"}</span></span>
+          <img class="pc-art" src="${pxHandArt(c)}" alt="">
+          <span class="pc-bot"><span class="pc-chase">CHASE</span><span class="pc-title">${CARD[c].name}</span></span>
+          <span class="pc-ja">${CARD[c].desc}</span></button>`).join("")}</div>
         <button class="btn ghost wide" data-act="handClose">閉じる</button></div>`;
       return;
     }
@@ -3259,7 +3350,7 @@
         <div class="label-c">${pc.side === "x" ? "怪盗Xのカード" : "刑事チームのカード"}・${G.xLog.length + (pc.side === "x" ? 1 : 0)}手目</div>
         <div class="gcard ${pc.card === "miss" ? "miss" : pc.side}">
           <div class="gc-kind">${pc.card === "miss" ? "MISS" : pc.side === "x" ? "THIEF CARD" : "DETECTIVE CARD"}</div>
-          <img class="gc-art" src="art/cards/${pc.card}.webp" alt="">
+          <img class="gc-art" src="${pxHandArt(pc.card)}" alt="">
           <div class="gc-name">${c.name}</div>
           <div class="gc-desc">${c.desc}</div>
         </div>

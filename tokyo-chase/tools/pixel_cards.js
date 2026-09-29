@@ -80,6 +80,8 @@
       r(19, 9, 4, 1, "#C3242F");
       const q = ["0111", "1001", "0001", "0010", "0100", "0000", "0100"];
       q.forEach((row, y) => [...row].forEach((v, x) => { if (v === "1") r(33 + x * 2, 12 + y * 2, 2, 2, "#E3B341"); }));
+    } else if (kind.startsWith("c_")) {
+      pxHandScene(kind.slice(2), r, box, town);
     } else {   // heli
       r(0, 0, 48, 32, "#CFE3F5");
       for (const [x, y, w] of [[3, 4, 9], [30, 3, 12], [36, 6, 7]]) r(x, y, w, 2, "#F4F8FC");
@@ -95,6 +97,78 @@
     pxCache.set(kind, url);
     return url;
   }
+  // 手札カード（特殊カード）の絵
+  function pxHandScene(c, r, box, town) {
+    const miniHeli = (x, y, col = "#7C3AED") => {
+      r(x, y, 12, 1, "#2A2230"); r(x + 5, y + 1, 1, 1, "#2A2230");
+      r(x + 3, y + 2, 7, 4, col); r(x + 7, y + 3, 2, 2, "#CDEBFA"); r(x - 2, y + 3, 5, 1, col);
+      r(x + 3, y + 7, 7, 1, "#2A2230");
+    };
+    const runner = (x, y, col) => {
+      r(x + 3, y, 3, 3, col); r(x + 2, y + 3, 4, 5, col); r(x + 6, y + 4, 3, 1, col); r(x, y + 4, 2, 1, col);
+      r(x + 2, y + 8, 2, 4, col); r(x + 4, y + 8, 3, 2, col); r(x + 6, y + 10, 2, 2, col); r(x, y + 11, 2, 1, col);
+    };
+    if (c === "bridge") {
+      r(0, 0, 48, 32, "#BCD9EE"); r(0, 20, 48, 12, "#3F7FB8");
+      for (let x = 2; x < 48; x += 8) r(x, 26, 3, 1, "#7FB0E6");
+      box(0, 15, 48, 4, "#9A9A96"); for (const x of [8, 38]) r(x, 19, 3, 9, "#6E6E6A");
+      for (let x = 0; x < 48; x += 4) r(x, 13, 1, 2, "#6E6E6A"); r(0, 13, 48, 1, "#6E6E6A");
+      for (let x = 14; x < 34; x += 4) { r(x, 8, 2, 3, "#E5484D"); r(x + 2, 8, 2, 3, "#FBF7EA"); }
+      r(14, 7, 20, 1, "#2A2230"); r(14, 11, 20, 1, "#2A2230"); r(15, 12, 1, 3, "#2A2230"); r(32, 12, 1, 3, "#2A2230");
+      r(22, 2, 4, 4, "#E5484D"); r(23, 3, 2, 2, "#FBF7EA");
+    } else if (c === "checkpoint" || c === "rcheck") {
+      r(0, 0, 48, 32, c === "rcheck" ? "#D9D2C0" : "#A9CBE3");
+      if (c === "rcheck") { for (let x = 0; x < 48; x += 8) r(x, 0, 1, 20, "#B9B09A"); for (let y = 3; y < 20; y += 6) r(0, y, 48, 1, "#B9B09A"); }
+      else town("#8FA3B5", "#D6E4EE", 20);
+      r(0, 20, 48, 12, "#55585C"); for (let x = 1; x < 48; x += 7) r(x, 28, 4, 1, "#E9E9E4");
+      for (const x of [9, 33]) r(x, 15, 2, 10, "#2A2230");
+      for (let x = 6; x < 38; x += 4) { r(x, 13, 2, 3, "#E5484D"); r(x + 2, 13, 2, 3, "#FBF7EA"); }
+      r(6, 12, 32, 1, "#2A2230"); r(6, 16, 32, 1, "#2A2230");
+      for (const x of [2, 40]) { r(x + 2, 18, 2, 2, "#F28C28"); r(x + 1, 20, 4, 2, "#F28C28"); r(x + 2, 20, 2, 1, "#FBF7EA"); r(x, 22, 6, 1, "#2A2230"); }
+      r(21, 8, 3, 3, "#2F7FE0"); r(24, 8, 3, 3, "#E5484D"); r(20, 11, 8, 1, "#2A2230");
+      if (c === "rcheck") { const q = ["0110", "1001", "0010", "0100", "0000", "0100"]; q.forEach((row, y) => [...row].forEach((v, x) => { if (v === "1") r(38 + x * 2, 1 + y * 2, 2, 2, "#C3242F"); })); }
+    } else if (c === "dash") {
+      r(0, 0, 48, 32, "#CFE3F5");
+      for (const [y, x, w] of [[6, 2, 14], [11, 0, 18], [16, 4, 12], [21, 1, 16], [26, 6, 10]]) r(x, y, w, 1, "#FFFFFF");
+      r(0, 28, 48, 4, "#9A9A96");
+      runner(22, 9, "#2F5FB8"); r(25, 9, 3, 1, "#1C3570"); r(24, 8, 5, 1, "#1C3570");
+      for (const x of [34, 38]) { r(x, 12, 3, 2, "#E3B341"); r(x + 1, 11, 1, 4, "#E3B341"); }
+    } else if (c === "heliban") {
+      r(0, 0, 48, 32, "#CFE3F5"); r(6, 25, 36, 5, "#6B6B6B");
+      r(21, 26, 1, 3, "#F2C230"); r(25, 26, 1, 3, "#F2C230"); r(22, 27, 3, 1, "#F2C230");
+      miniHeli(18, 12);
+      for (let a = 0; a < 64; a++) { const t = a / 64 * Math.PI * 2; r(Math.round(24 + Math.cos(t) * 12), Math.round(16 + Math.sin(t) * 12), 2, 2, "#E5484D"); }
+      for (let k = -8; k <= 8; k++) r(24 + k, 16 + k, 2, 2, "#E5484D");
+    } else if (c === "reinforce") {
+      r(0, 0, 48, 32, "#CFE3F5");
+      for (const [x, y, w] of [[3, 3, 9], [32, 4, 12]]) r(x, y, w, 2, "#F4F8FC");
+      miniHeli(5, 8); miniHeli(20, 16); miniHeli(33, 8);
+      r(0, 28, 48, 4, "#9A9A96");
+      for (const [x, y] of [[16, 5], [30, 22], [44, 18]]) { r(x, y, 3, 1, "#2F5FB8"); r(x + 1, y - 1, 1, 3, "#2F5FB8"); }
+    } else if (c === "trap") {
+      r(0, 0, 48, 32, "#6B8F4E"); for (let y = 2; y < 32; y += 4) for (let x = (y * 3) % 7; x < 48; x += 7) r(x, y, 1, 2, "#86A866");
+      box(10, 18, 28, 6, "#8A8A86"); r(22, 20, 4, 2, "#5A5A56");
+      for (let x = 10; x < 38; x += 4) { r(x, 15, 2, 3, "#C9C9C4"); r(x + 1, 13, 1, 2, "#E9E9E4"); }
+      r(10, 24, 28, 1, "#4A4A46"); r(36, 22, 8, 1, "#6E6E6A"); r(43, 20, 2, 5, "#6E6E6A");
+    } else if (c === "vanish") {
+      r(0, 0, 48, 32, "#2A2440");
+      for (const [x, y] of [[3, 3], [40, 5], [30, 2], [8, 10]]) r(x, y, 1, 1, "#E4DCC2");
+      runner(20, 12, "#4A4460");
+      for (const [x, y, w, h] of [[8, 16, 12, 7], [16, 12, 14, 9], [26, 15, 14, 8], [12, 21, 26, 6], [34, 20, 8, 5]]) { r(x, y, w, h, "#D8D4E4"); r(x + 1, y, w - 2, 1, "#F4F2F8"); }
+      for (const [x, y] of [[6, 12], [40, 13], [22, 8], [44, 24]]) r(x, y, 2, 2, "#B9B4CC");
+    } else if (c === "destroy") {
+      r(0, 0, 48, 32, "#3A2A2A"); r(0, 26, 48, 6, "#55585C");
+      for (let a = 0; a < 12; a++) { const t = a / 12 * Math.PI * 2; for (let d = 4; d < 14; d++) r(Math.round(24 + Math.cos(t) * d), Math.round(15 + Math.sin(t) * d * 0.8), 2, 2, d < 9 ? "#F7C948" : "#E86F3A"); }
+      r(18, 11, 12, 8, "#FFF3C4");
+      box(14, 20, 20, 5, "#FBF7EA"); r(24, 20, 1, 5, "#2A2230"); r(23, 22, 1, 1, "#2A2230"); r(25, 21, 1, 1, "#2A2230");
+      for (const [x, y] of [[6, 8], [40, 6], [8, 22], [41, 21], [34, 3]]) r(x, y, 2, 2, "#9A8A7A");
+    } else {   // miss
+      r(0, 0, 48, 32, "#8A8680");
+      const q = ["0111", "1001", "0001", "0010", "0100", "0000", "0100"];
+      q.forEach((row, y) => [...row].forEach((v, x) => { if (v === "1") r(20 + x * 2, 8 + y * 2, 2, 2, "#D8D4CC"); }));
+    }
+  }
+  function pxHandArt(c) { return pxScene("c_" + c); }
   // 走る人の小さなシルエット（カード左上）
   function pxRunner() {
     if (pxCache.has("runner")) return pxCache.get("runner");

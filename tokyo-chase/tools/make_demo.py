@@ -643,6 +643,31 @@ sub("""  .tickets { display: grid; grid-template-columns: repeat(auto-fit, minma
   .pxcard .pc-ja { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 11px; font-weight: 700; color: #8A5A4A; line-height: 1.3; }
   .ticket.pxcard:active:not(:disabled) { transform: translateY(2px); }""")
 
+# ---------------- 手札カードもドット絵に（tools/pixel_cards.js の pxHandArt） ----------------
+sub("""<img src="art/cards/${c}.webp" alt=""><span>${CARD[c].name}</span></button>`""", """<img src="${pxHandArt(c)}" alt=""><span>${CARD[c].name}</span></button>`""")
+sub("""<span class="hb-heli"><img src="art/icons/heli.webp" alt=""><b>×${left}</b></span>""", """<span class="hb-heli"><img src="${pxScene("heli")}" alt=""><b>×${left}</b></span>""")
+sub("""<img class="gc-art" src="art/cards/${pc.card}.webp" alt="">""", """<img class="gc-art" src="${pxHandArt(pc.card)}" alt="">""")
+sub("""`<button class="ticket hand-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : "disabled"}><img class="hc-art" src="art/cards/${c}.webp" alt=""><span class="en">${CARD[c].name}</span><span class="ja">${CARD[c].desc}</span></button>`""",
+    """`<button class="ticket pxcard hand-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : "disabled"}>
+          <span class="pc-top"><img class="pc-run" src="${pxRunner()}" alt=""><span class="pc-no">${side === "x" ? "THIEF CARD" : "POLICE CARD"}</span></span>
+          <img class="pc-art" src="${pxHandArt(c)}" alt="">
+          <span class="pc-bot"><span class="pc-chase">CHASE</span><span class="pc-title">${CARD[c].name}</span></span>
+          <span class="pc-ja">${CARD[c].desc}</span></button>`""")
+sub("""  .ticket.pxcard:active:not(:disabled) { transform: translateY(2px); }""", """  .ticket.pxcard:active:not(:disabled) { transform: translateY(2px); }
+  .tickets .ticket.pxcard.hand-card { background: #FBF7EA; color: #4F6475; min-height: 0; }
+  .tickets .ticket.pxcard.hand-card.d { border-color: #2F5FB8; box-shadow: inset 0 0 0 2px #FBF7EA, inset 0 0 0 3px rgba(47,95,184,.35), 0 4px 0 rgba(0,0,0,.35); }
+  .pxcard.hand-card .pc-title { font-family: "DotGothic16", sans-serif; font-size: 17px; align-self: center; }
+  .pxcard.hand-card .pc-no { align-self: center; font-size: 10px; letter-spacing: .05em; }
+  .pxcard.hand-card .pc-ja { font-weight: 500; font-size: 11px; color: #5A4A40; }
+  .gc-art, .hb-card img, .hb-card.heli .hb-heli img { image-rendering: pixelated; }
+  .gcard.gcard.d, .gcard.gcard.x, .gcard.gcard.miss { background: #FBF7EA; border: 4px solid #2F5FB8; box-shadow: inset 0 0 0 3px #FBF7EA, inset 0 0 0 4px rgba(47,95,184,.35), 0 10px 30px rgba(0,0,0,.5); }
+  .gcard.gcard.x { border-color: #C2464F; box-shadow: inset 0 0 0 3px #FBF7EA, inset 0 0 0 4px rgba(194,70,79,.35), 0 10px 30px rgba(0,0,0,.5); }
+  .gcard.gcard.miss { border-color: #8A8680; }
+  .gcard .gc-kind { font-family: "DotGothic16", sans-serif; color: #9FB3C2; letter-spacing: .15em; }
+  .gcard .gc-art { border: 2px solid #4F6475; border-radius: 3px; }
+  .gcard .gc-name { font-family: "DotGothic16", sans-serif; font-weight: 400; color: #4F6475; }
+  .gcard .gc-desc { color: #5A4A40; }""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"
