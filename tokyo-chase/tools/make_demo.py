@@ -193,6 +193,63 @@ bg = r'''  function backgroundSVG() {
 out = out[:a] + bg + out[b:]
 sub('''const ART = { map: "art/london-map.webp",''', '''const ART = { map: null,''')
 
+# ---------------- 画面を広く使う：地図は画面いっぱい、最大に縮小しても横は半分くらい。横スクロールで追いかける ----------------
+sub("""    V.s = Math.min(3, Math.max(V.fit * 0.85, V.s));
+    const mw = W * V.s, mh = H * V.s, pad = 80;
+    V.tx = mw + pad * 2 <= w ? (w - mw) / 2 : Math.min(pad, Math.max(w - mw - pad, V.tx));
+    const top = hudTop();
+    V.ty = mh + top + 40 <= h ? top + (h - top - mh) / 2 : Math.min(top + 20, Math.max(h - mh - 60, V.ty));""",
+"""    V.s = Math.min(3, Math.max(V.fit, V.s));
+    const mw = W * V.s, mh = H * V.s;
+    // 地図の端が画面の内側に入らないようにする（上だけは画面上部の表示の下まで下げられる）
+    V.tx = Math.min(0, Math.max(w - mw, V.tx));
+    V.ty = Math.min(hudTop() * 0.7, Math.max(h - mh, V.ty));""")
+sub("""    V.fit = Math.min(w / W, (h - top - 20) / H);
+    const s = V.fit * 1.02, tx = (w - W * s) / 2, ty = top + (h - top - H * s) / 2;
+    animate ? animateView(s, tx, ty) : setView(s, tx, ty);""",
+"""    V.fit = minScale();
+    // いちばん引いた表示で、いま動く駒のあたりを真ん中に
+    const G = A.G;
+    let fx = W / 2, fy = H / 2;
+    if (G && !G.over) {
+      const pos = G.turn === "x" ? (xVisible() ? A.sec.pos : G.lastSeen ? G.lastSeen.pos : null) : G.det[G.turn].pos;
+      if (pos !== null && pos !== undefined) [fx, fy] = P(pos);
+    }
+    const s = V.fit, tx = w / 2 - fx * s, ty = (top + h) / 2 - fy * s;
+    animate ? animateView(s, tx, ty) : setView(s, tx, ty);""")
+sub("""  function fitView(animate = true) {""", """  // いちばん引いたときの倍率：横は地図の半分くらいが見え、縦は画面いっぱい
+  function minScale() {
+    const { w, h } = vpSize();
+    return Math.max(w / (W * 0.5), h / H);
+  }
+  function fitView(animate = true) {""")
+sub("""window.addEventListener("resize", () => { const { w, h } = vpSize(); V.fit = Math.min(w / W, (h - hudTop() - 20) / H); clampView(); applyView(); });""",
+    """window.addEventListener("resize", () => { V.fit = minScale(); clampView(); applyView(); });""")
+sub("V.fit * 0.85", "V.fit", count=0)
+# 駒が動いたら、画面の外へ出ないように追いかける
+sub("""        apply(() => { landed = applyD(G, k, m.to, m.type, A.sec); });
+        if (m.type === "heli") heliNote(k, from, landed);
+        step();
+      }, AI_DELAY);""", """        apply(() => { landed = applyD(G, k, m.to, m.type, A.sec); });
+        if (m.type === "heli") heliNote(k, from, landed);
+        ensureVisible(landed);
+        step();
+      }, AI_DELAY);""")
+sub("""    if (A.role === "pass" && !A.G.over && A.G.turn !== "x") A.cover = "d";
+    step();""", """    if (A.role === "pass" && !A.G.over && A.G.turn !== "x") A.cover = "d";
+    if (xVisible()) ensureVisible(landed);
+    step();""")
+sub("""    apply(() => { landed = applyD(A.G, k, to, type, A.sec); });
+    if (type === "heli") heliNote(k, from, landed);
+    step();""", """    apply(() => { landed = applyD(A.G, k, to, type, A.sec); });
+    if (type === "heli") heliNote(k, from, landed);
+    ensureVisible(landed);
+    step();""")
+sub('aria-label="全体を表示"', 'aria-label="いちばん引いて表示"')
+
+# 駒へ移動するときは、いまの拡大率のまま（勝手に拡大しない）
+sub("function centerOn(i, s = Math.max(V.s, 0.95)) {", "function centerOn(i, s = V.s) {")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"

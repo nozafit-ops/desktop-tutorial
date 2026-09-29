@@ -739,7 +739,7 @@
   <div class="hud side panel">
     <button class="iconbtn" data-act="zoomIn" aria-label="拡大"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button>
     <button class="iconbtn" data-act="zoomOut" aria-label="縮小"><svg viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button>
-    <button class="iconbtn" data-act="fit" aria-label="全体を表示"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+    <button class="iconbtn" data-act="fit" aria-label="いちばん引いて表示"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
     <button class="iconbtn" data-act="focusTurn" aria-label="手番のコマへ移動"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></button>
     <button class="iconbtn" id="hintBtn" data-act="hint" aria-pressed="true" aria-label="推理ヒント（怪盗Xがいるかもしれない駅）"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg></button>
     <button class="iconbtn" data-act="log" aria-label="ログ"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"></path></svg></button>
@@ -1630,6 +1630,7 @@
         let landed = m.to;
         apply(() => { landed = applyD(G, k, m.to, m.type, A.sec); });
         if (m.type === "heli") heliNote(k, from, landed);
+        ensureVisible(landed);
         step();
       }, AI_DELAY);
       return;
@@ -1754,6 +1755,7 @@
       else toast(`ヘリで ${NO(landed)} ${NAME(landed)} に着陸`);
     }
     if (A.role === "pass" && !A.G.over && A.G.turn !== "x") A.cover = "d";
+    if (xVisible()) ensureVisible(landed);
     step();
   }
   function commitD(k, to, type) {
@@ -1762,6 +1764,7 @@
     const from = A.G.det[k].pos;
     apply(() => { landed = applyD(A.G, k, to, type, A.sec); });
     if (type === "heli") heliNote(k, from, landed);
+    ensureVisible(landed);
     step();
   }
 
@@ -1805,11 +1808,11 @@
   }
   function clampView() {
     const { w, h } = vpSize();
-    V.s = Math.min(3, Math.max(V.fit * 0.85, V.s));
-    const mw = W * V.s, mh = H * V.s, pad = 80;
-    V.tx = mw + pad * 2 <= w ? (w - mw) / 2 : Math.min(pad, Math.max(w - mw - pad, V.tx));
-    const top = hudTop();
-    V.ty = mh + top + 40 <= h ? top + (h - top - mh) / 2 : Math.min(top + 20, Math.max(h - mh - 60, V.ty));
+    V.s = Math.min(3, Math.max(V.fit, V.s));
+    const mw = W * V.s, mh = H * V.s;
+    // 地図の端が画面の内側に入らないようにする（上だけは画面上部の表示の下まで下げられる）
+    V.tx = Math.min(0, Math.max(w - mw, V.tx));
+    V.ty = Math.min(hudTop() * 0.7, Math.max(h - mh, V.ty));
   }
   function applyView() {
     world.setAttribute("transform", `translate(${V.tx.toFixed(1)} ${V.ty.toFixed(1)}) scale(${V.s.toFixed(4)})`);
@@ -1832,20 +1835,32 @@
     };
     anim = requestAnimationFrame(tick);
   }
+  // いちばん引いたときの倍率：横は地図の半分くらいが見え、縦は画面いっぱい
+  function minScale() {
+    const { w, h } = vpSize();
+    return Math.max(w / (W * 0.5), h / H);
+  }
   function fitView(animate = true) {
     const { w, h } = vpSize();
     const top = hudTop();
-    V.fit = Math.min(w / W, (h - top - 20) / H);
-    const s = V.fit * 1.02, tx = (w - W * s) / 2, ty = top + (h - top - H * s) / 2;
+    V.fit = minScale();
+    // いちばん引いた表示で、いま動く駒のあたりを真ん中に
+    const G = A.G;
+    let fx = W / 2, fy = H / 2;
+    if (G && !G.over) {
+      const pos = G.turn === "x" ? (xVisible() ? A.sec.pos : G.lastSeen ? G.lastSeen.pos : null) : G.det[G.turn].pos;
+      if (pos !== null && pos !== undefined) [fx, fy] = P(pos);
+    }
+    const s = V.fit, tx = w / 2 - fx * s, ty = (top + h) / 2 - fy * s;
     animate ? animateView(s, tx, ty) : setView(s, tx, ty);
   }
   function zoomAt(factor, cx, cy, animate = true) {
-    const s = Math.min(3, Math.max(V.fit * 0.85, V.s * factor));
+    const s = Math.min(3, Math.max(V.fit, V.s * factor));
     const k = s / V.s;
     const tx = cx - (cx - V.tx) * k, ty = cy - (cy - V.ty) * k;
     animate ? animateView(s, tx, ty, 220) : setView(s, tx, ty);
   }
-  function centerOn(i, s = Math.max(V.s, 0.95)) {
+  function centerOn(i, s = V.s) {
     const { w, h } = vpSize();
     const [, x, y] = STATIONS[i];
     animateView(s, w / 2 - x * s, (hudTop() + h) / 2 - y * s + 20);
@@ -1917,7 +1932,7 @@
       const [a, b] = [...ptrs.values()];
       const d = Math.hypot(a.x - b.x, a.y - b.y);
       const mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
-      const s = Math.min(3, Math.max(V.fit * 0.85, gesture.s * d / gesture.d));
+      const s = Math.min(3, Math.max(V.fit, gesture.s * d / gesture.d));
       const k = s / gesture.s;
       const gx = gesture.mx - r.left, gy = gesture.my - r.top;
       setView(s, mx - (gx - gesture.tx) * k, my - (gy - gesture.ty) * k);
@@ -1977,7 +1992,7 @@
     const { r } = vpSize();
     zoomAt(1.8, e.clientX - r.left, e.clientY - r.top);
   });
-  window.addEventListener("resize", () => { const { w, h } = vpSize(); V.fit = Math.min(w / W, (h - hudTop() - 20) / H); clampView(); applyView(); });
+  window.addEventListener("resize", () => { V.fit = minScale(); clampView(); applyView(); });
 
   // ======================================================================
   // 盤面の描画
