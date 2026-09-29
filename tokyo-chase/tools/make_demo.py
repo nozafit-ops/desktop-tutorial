@@ -737,6 +737,20 @@ sub("""<li><b>カード</b>：5・10・17手目に""", """<li><b>カード</b>�
 sub("""刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」。""", """刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」「警察犬」。警察犬は怪盗Xの2手前・3手前の駅（足跡）を見つけ、いそうな駅を絞り込みます。""")
 sub("""刑事が相棒の駅に入ると相棒を確保でき、もう合流はできません。</li>""", """刑事が相棒の駅に入ると相棒を確保でき、もう合流はできません。<b>相棒を確保すると、それから先は怪盗Xの居場所が常に見えます。</b></li>""")
 
+# ---------------- 警察犬の駒を地図に置く ----------------
+sub("""      el("text", { x, y: y - 48, class: "lastseen-label" }, gM).textContent = `X? ${G.lastSeen.n}手目`;
+    }""", """      el("text", { x, y: y - 48, class: "lastseen-label" }, gM).textContent = `X? ${G.lastSeen.n}手目`;
+    }
+    if (G.dog && !G.dog.gone && !G.over) {
+      const [x, y] = P(G.dog.pos), left = Math.max(0, G.dog.until - G.xLog.length);
+      el("ellipse", { cx: x + 60, cy: y + 20, rx: 50, ry: 11, fill: "rgba(0,0,0,0.28)" }, gM);
+      el("image", { href: pxDogSprite(), x: x + 2, y: y - 60, width: 120, height: 81, class: "dog-piece" }, gM);
+      el("text", { x: x + 62, y: y - 68, class: "mark-label dog" }, gM).textContent = left ? `警察犬 追跡あと${left}手` : "警察犬 追跡終了";
+    }""")
+sub("""  .mark-label.block { stroke: #C0271F; }""", """  .mark-label.block { stroke: #C0271F; }
+  .mark-label.dog { stroke: #6E4A28; }
+  .dog-piece { image-rendering: pixelated; pointer-events: none; }""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"

@@ -203,3 +203,23 @@
       <span class="pc-ja">${info.ja}</span>
     </button>`;
   }
+  // 盤面に置く警察犬の駒（背景なしのドット絵。右向きで地面をかいでいる）
+  function pxDogSprite() {
+    if (pxCache.has("dogsprite")) return pxCache.get("dogsprite");
+    const c = document.createElement("canvas");
+    c.width = 28; c.height = 19;
+    const g = c.getContext("2d");
+    const r = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+    const O = "#2A1A0E", B = "#A0703C", Dk = "#6E4A28";
+    r(4, 5, 16, 8, O); r(5, 6, 14, 6, B);                 // 胴
+    r(18, 7, 9, 7, O); r(19, 8, 7, 5, B);                  // 頭（下向き）
+    r(25, 11, 3, 3, O);                                     // 鼻
+    r(19, 6, 3, 4, Dk); r(22, 9, 1, 1, O);                  // 耳・目
+    r(6, 12, 3, 6, O); r(15, 12, 3, 6, O); r(10, 12, 2, 5, O); r(7, 13, 1, 4, B); r(16, 13, 1, 4, B);
+    r(1, 2, 4, 2, O); r(0, 1, 2, 2, O); r(2, 3, 3, 1, B);   // しっぽ
+    r(15, 5, 4, 2, "#2F5FB8"); r(16, 7, 2, 1, "#E3B341");  // 首輪（警察）
+    r(7, 7, 6, 1, "#C08850");                               // 背中の光
+    const url = c.toDataURL("image/png");
+    pxCache.set("dogsprite", url);
+    return url;
+  }
