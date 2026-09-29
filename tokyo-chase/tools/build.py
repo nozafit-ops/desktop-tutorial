@@ -125,6 +125,13 @@ def thin(edge_list, target=4):
         else: adj[a].add(b); adj[b].add(a)
     return out
 TAXI = thin(TAXI)
+# どの駅にもタクシーの道が2本以上あるように、近い候補から補う（川・海を越えない）
+for v in land:
+    have = sum(1 for e in TAXI if v in e)
+    for i, j in sorted((e for e in cand if v in e and e not in TAXI), key=lambda e: dist(*e)):
+        if have >= 2: break
+        if wet(P[i], P[j]) or KIND[i] == "b" or KIND[j] == "b" or crosses_river(P[i], P[j]): continue
+        TAXI.append((i, j)); have += 1
 
 edges = {}
 def add(a, b, t, line):
@@ -250,7 +257,7 @@ if len(sys.argv) > 1:
     for name, seq in BOATS:
         dr.line(catmull([sc(P[i]) for i in ix(seq)]), fill="#2F7FB0", width=int(6 * K), joint="curve")
     for name, seq in TRAINS:
-        pts = catmull([sc(P[i]) for i in ix(seq)], seq[0] == seq[-1])
+        pts = [sc(P[i]) for i in ix(seq)]   # 電車はまっすぐ
         dr.line(pts, fill="#7A1510", width=int(16 * K), joint="curve")
         dr.line(pts, fill="#E0413A", width=int(10 * K), joint="curve")
     tube_st = {i for _, seq in TRAINS for i in ix(seq)}

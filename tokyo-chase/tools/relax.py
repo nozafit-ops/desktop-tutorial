@@ -34,7 +34,7 @@ def nearest(pl, p):
             best = (d, q, s)
     return best
 
-DMIN, GAP = 215, 100
+DMIN, GAP = 170, 90
 kind = [k for *_, k in RAW]
 # 中心（東京駅あたり）を広げる魚眼の逆変換。川・海岸も同じ変換なので左右関係は崩れない
 C = (35.688, 139.775)
@@ -117,6 +117,17 @@ def constrain():
         push_bay(p, kind[i] == "i")
 
 relax(700)
+# 区間の長さがそろいすぎないよう、駅をそれぞれ少しずつずらす（再現できるよう乱数の種は固定）
+import random
+rj = random.Random(11)
+for i, p in enumerate(pts):
+    if kind[i] == "b": continue
+    for _ in range(40):
+        a = rj.random() * 2 * math.pi; r = 30 + rj.random() * 55
+        q = [p[0] + math.cos(a) * r, p[1] + math.sin(a) * r]
+        if 90 < q[0] < W - 90 and 90 < q[1] < H - 90 and all(math.hypot(q[0] - o[0], q[1] - o[1]) >= 130 for j, o in enumerate(pts) if j != i):
+            p[0], p[1] = q; break
+constrain()
 
 out = {
     "stations": [[RAW[i][0], round(p[0], 1), round(p[1], 1), kind[i]] for i, p in enumerate(pts)],
