@@ -684,6 +684,35 @@ sub("""radio(k, pick(["こっちの視界にはいない", "この辺りは異�
 sub("""        <li><b>仲間への指示</b>：""", """        <li><b>刑事の性格</b>：CPUの刑事にはそれぞれ性格があります。<b>追いかけ</b>は怪盗Xがいそうな駅・最後に見た駅へまっすぐ詰め、<b>先回り</b>は怪盗Xが逃げそうな先へ回り込み、<b>待ち伏せ</b>は地下鉄駅など乗り換えの多い駅を押さえて待ちます。候補が絞れてくると全員で包囲します。</li>
         <li><b>仲間への指示</b>：""")
 
+# ---------------- 怪盗Xの移動記録（行動履歴バー）を最上段に ----------------
+sub("""    <div class="toprow first">
+      <button class="panel iconbtn" data-act="menu" aria-label="メニュー">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      <button class="panel xcard" id="xcard" data-act="focusX"></button>
+      <div class="panel dets" id="dets"></div>
+    </div>
+    <div class="toprow second">
+      <div class="panel prompt" id="prompt"></div>
+      <div class="panel xlog" id="xlog" aria-label="怪盗Xの移動記録"></div>
+    </div>""", """    <div class="toprow second">
+      <div class="panel xlog" id="xlog" aria-label="怪盗Xの移動記録"></div>
+    </div>
+    <div class="toprow first">
+      <button class="panel iconbtn" data-act="menu" aria-label="メニュー">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      <button class="panel xcard" id="xcard" data-act="focusX"></button>
+      <div class="panel prompt" id="prompt"></div>
+      <div class="panel dets" id="dets"></div>
+    </div>""")
+sub("""  .toprow.second .xlog { flex: 1; min-width: 0; }""", """  .toprow.second .xlog { flex: 1; min-width: 0; }
+  .toprow.first .dets { margin-left: auto; }
+  .toprow.first .prompt { max-width: none; }
+  .tk { white-space: nowrap; }
+  @media (max-width: 760px) { .toprow.first .prompt { flex: none; max-width: 40%; } .toprow.first .prompt .portrait { display: none; } .toprow.first .xcard { min-width: 0; } .xcard .nx { display: none; } }
+  @media (max-height: 520px) and (orientation: landscape) { .side { top: auto; bottom: 8px; transform: none; gap: 2px; padding: 4px; } }""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"

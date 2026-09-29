@@ -152,6 +152,11 @@
   .toprow { display: flex; gap: 8px; align-items: stretch; }
   .toprow > * { pointer-events: auto; }
   .toprow.second .xlog { flex: 1; min-width: 0; }
+  .toprow.first .dets { margin-left: auto; }
+  .toprow.first .prompt { max-width: none; }
+  .tk { white-space: nowrap; }
+  @media (max-width: 760px) { .toprow.first .prompt { flex: none; max-width: 40%; } .toprow.first .prompt .portrait { display: none; } .toprow.first .xcard { min-width: 0; } .xcard .nx { display: none; } }
+  @media (max-height: 520px) and (orientation: landscape) { .side { top: auto; bottom: 8px; transform: none; gap: 2px; padding: 4px; } }
   .iconbtn {
     width: 46px; min-height: 46px; display: grid; place-items: center; border-radius: 12px;
   }
@@ -794,16 +799,16 @@
   </svg>
 
   <div class="hud top">
+    <div class="toprow second">
+      <div class="panel xlog" id="xlog" aria-label="怪盗Xの移動記録"></div>
+    </div>
     <div class="toprow first">
       <button class="panel iconbtn" data-act="menu" aria-label="メニュー">
         <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
       </button>
       <button class="panel xcard" id="xcard" data-act="focusX"></button>
-      <div class="panel dets" id="dets"></div>
-    </div>
-    <div class="toprow second">
       <div class="panel prompt" id="prompt"></div>
-      <div class="panel xlog" id="xlog" aria-label="怪盗Xの移動記録"></div>
+      <div class="panel dets" id="dets"></div>
     </div>
     <button class="pulltab" id="pullTab" data-act="toggleHud" aria-label="上部の表示を隠す" aria-expanded="true"><span class="pt-arrow" aria-hidden="true"></span><span class="pt-t"></span></button>
   </div>
