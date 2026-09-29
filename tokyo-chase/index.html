@@ -82,7 +82,7 @@
     text-anchor: middle; pointer-events: none;
   }
   #map.z0 .stn-label { display: none; }
-  #map.z1 .stn-label:not(.hot) { display: none; }
+  #map.z1 .stn-label:not(.hot) { display: inline; }
   #map.z0 .stn-label.hot { display: inline; font-size: 24px; stroke-width: 8px; }
   .dest { fill: rgba(255, 244, 200, 0.35); stroke: #FFF6D8; stroke-width: 5; }
   .dest-outer { fill: none; stroke: var(--map-ink); stroke-width: 3; }
@@ -190,6 +190,8 @@
   .tk.zero { opacity: 0.3; }
 
   .side { right: 10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; padding: 6px; }
+  .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act="fit"] { display: none; }
+  .edge-arrow.dest .dest-no { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #FFF6D8; color: #1A140C; font-weight: 900; font-size: 13px; border: 3px solid #3B2C1E; }
   .side .iconbtn:active, .top .iconbtn:active { background: rgba(255,255,255,0.08); }
   .side .iconbtn[aria-pressed="true"] { background: var(--gold); }
   .side .iconbtn[aria-pressed="true"] svg { stroke: #1A140C; }
@@ -708,7 +710,7 @@
 <div id="app">
   <svg id="map" aria-label="東京の盤面。ドラッグで移動、ピンチやホイールで拡大できます">
     <g id="world">
-      <image id="bgimg" x="0" y="0" width="3000" height="1900" preserveAspectRatio="none"></image>
+      <image id="bgimg" x="0" y="0" width="3380" height="1900" preserveAspectRatio="none"></image>
       <g id="gEdges"></g>
       <g id="gPoss"></g>
       <g id="gTrail"></g>
@@ -740,7 +742,7 @@
     <button class="iconbtn" data-act="zoomIn" aria-label="拡大"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></button>
     <button class="iconbtn" data-act="zoomOut" aria-label="縮小"><svg viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button>
     <button class="iconbtn" data-act="fit" aria-label="いちばん引いて表示"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
-    <button class="iconbtn" data-act="focusTurn" aria-label="手番のコマへ移動"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></button>
+    <button class="iconbtn" data-act="focusTurn" aria-label="自分の駒へ戻る"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></button>
     <button class="iconbtn" id="hintBtn" data-act="hint" aria-pressed="true" aria-label="推理ヒント（怪盗Xがいるかもしれない駅）"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg></button>
     <button class="iconbtn" data-act="log" aria-label="ログ"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"></path></svg></button>
   </div>
@@ -1835,12 +1837,34 @@
     };
     anim = requestAnimationFrame(tick);
   }
+  // 画面は自分の駒（パス&プレイでは手番の人の駒）を中心に固定する。ドラッグや拡大縮小はしない
+  const LOCK = true;
+  let lockedOn = null;
+  function viewAnchor() {
+    const G = A.G;
+    if (!G || !A.sec) return null;
+    if (A.role === "x") return A.sec.pos;
+    if (A.role === "d") return G.det[ME_DET].pos;
+    if (A.cover === "x-open") return A.sec.pos;
+    return G.det[typeof G.turn === "number" ? G.turn : 0].pos;
+  }
+  function lockView(animate = true) {
+    const pos = viewAnchor();
+    if (pos === null || pos === undefined) return;
+    lockedOn = pos;
+    const { w, h } = vpSize();
+    const [x, y] = P(pos);
+    const s = V.fit = minScale();
+    const tx = w / 2 - x * s, ty = (hudTop() + h) / 2 - y * s;
+    animate ? animateView(s, tx, ty, 520) : setView(s, tx, ty);
+  }
   // いちばん引いたときの倍率：横は地図の半分くらいが見え、縦は画面いっぱい
   function minScale() {
     const { w, h } = vpSize();
     return Math.max(w / (W * 0.5), h / H);
   }
   function fitView(animate = true) {
+    if (LOCK && A.G) return lockView(animate);
     const { w, h } = vpSize();
     const top = hudTop();
     V.fit = minScale();
@@ -1867,6 +1891,7 @@
   }
   // 指定した駅がすべて画面に入るように表示する
   function fitStations(list) {
+    if (LOCK) return;
     const { w, h } = vpSize();
     const xs = list.map(i => STATIONS[i][1]), ys = list.map(i => STATIONS[i][2]);
     // 上のUIと下の手札の間に収める
@@ -1878,6 +1903,7 @@
     animateView(s, w / 2 - cx * s, (top + bottom) / 2 - cy * s);
   }
   function ensureVisible(i) {
+    if (LOCK) return;
     const { w, h } = vpSize();
     const [, x, y] = STATIONS[i];
     const sx = x * V.s + V.tx, sy = y * V.s + V.ty;
@@ -1886,6 +1912,7 @@
   function focusTurn() {
     const G = A.G;
     if (!G) return;
+    if (LOCK) return lockView();
     if (G.turn === "x") { if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else if (A.role === "d") centerOn(G.det[0].pos); else fitView(); }
     else centerOn(G.det[G.turn].pos);
   }
@@ -1927,8 +1954,8 @@
     if (gesture.type === "pan" && ptrs.size === 1) {
       const dx = e.clientX - gesture.sx, dy = e.clientY - gesture.sy;
       gesture.moved = Math.max(gesture.moved, Math.hypot(dx, dy));
-      if (gesture.moved > 6) { mapEl.classList.add("dragging"); setView(V.s, gesture.tx + dx, gesture.ty + dy); }
-    } else if (gesture.type === "pinch" && ptrs.size >= 2) {
+      if (gesture.moved > 6 && !LOCK) { mapEl.classList.add("dragging"); setView(V.s, gesture.tx + dx, gesture.ty + dy); }
+    } else if (gesture.type === "pinch" && ptrs.size >= 2 && !LOCK) {
       const [a, b] = [...ptrs.values()];
       const d = Math.hypot(a.x - b.x, a.y - b.y);
       const mx = (a.x + b.x) / 2 - r.left, my = (a.y + b.y) / 2 - r.top;
@@ -1985,14 +2012,16 @@
   mapEl.addEventListener("pointercancel", endPtr);
   mapEl.addEventListener("wheel", e => {
     e.preventDefault();
+    if (LOCK) return;
     const { r } = vpSize();
     zoomAt(Math.exp(-e.deltaY * 0.0018), e.clientX - r.left, e.clientY - r.top, false);
   }, { passive: false });
   mapEl.addEventListener("dblclick", e => {
+    if (LOCK) return;
     const { r } = vpSize();
     zoomAt(1.8, e.clientX - r.left, e.clientY - r.top);
   });
-  window.addEventListener("resize", () => { V.fit = minScale(); clampView(); applyView(); });
+  window.addEventListener("resize", () => { V.fit = minScale(); clampView(); applyView(); if (LOCK && A.G && A.screen === "game") lockView(false); });
 
   // ======================================================================
   // 盤面の描画
@@ -2247,6 +2276,11 @@
     if (xVisible()) t.push({ key: "x", kind: "x", k: 0, pos: A.sec.pos, found: !G.over && exposure(G).level === "found" });
     else if (!G.over && exposure(G).level === "found") t.push({ key: "xf" + G.possible[0], kind: "x", k: 0, pos: G.possible[0], found: true });
     if (mateActive(G) && !G.over) t.push({ key: "m" + G.mate.pos, kind: "m", k: 0, pos: G.mate.pos });
+    if (LOCK && humanTurn()) {
+      const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+      for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) t.push({ key: "go" + to, kind: "dest", k: 0, pos: to });
+    }
+    if (LOCK && A.pendingCard && A.pendingCard.stage === "target") for (const p of A.pendingCard.opts) t.push({ key: "go" + p, kind: "dest", k: 0, pos: p });
     return t;
   }
   function renderEdge() {
@@ -2254,6 +2288,9 @@
     const G = A.G;
     const showDist = G && xVisible() && !G.over;
     host.innerHTML = edgeTargets().map(t => {
+      if (t.kind === "dest") return `<button class="edge-arrow dest" data-act="tapStation" data-pos="${t.pos}" data-key="${t.key}" aria-label="行き先 ${NO(t.pos)} ${NAME(t.pos)}" hidden>
+        <svg class="dir" viewBox="-28 -28 56 56"><g class="rot"><circle r="22" fill="#E3B341" stroke="#3B2C1E" stroke-width="3"></circle><path d="M22,-10 L36,0 L22,10 Z" fill="#E3B341" stroke="#3B2C1E" stroke-width="2.5" stroke-linejoin="round"></path></g></svg>
+        <span class="dest-no">${NO(t.pos)}</span></button>`;
       const color = t.kind === "x" ? "#C0271F" : t.kind === "m" ? "#8E1B16" : DCOL[t.k];
       let dist = "";
       if (showDist && t.kind === "d") {
@@ -2308,6 +2345,7 @@
   }
 
   function render() {
+    if (LOCK && A.G && A.screen === "game" && viewAnchor() !== lockedOn) lockView();
     noteExposure();
     renderMap();
     renderTop();
@@ -2903,13 +2941,15 @@
       case "closeResult": A.screen = "game"; renderScreen(); fitView(); return;
       case "openX": A.cover = "x-open"; step(); focusTurn(); return;
       case "openD": A.cover = null; render(); step(); return;
-      case "zoomIn": return zoomAt(1.5, w / 2, h / 2);
-      case "zoomOut": return zoomAt(1 / 1.5, w / 2, h / 2);
+      case "zoomIn": if (LOCK) return; return zoomAt(1.5, w / 2, h / 2);
+      case "zoomOut": if (LOCK) return; return zoomAt(1 / 1.5, w / 2, h / 2);
+      case "tapStation": return onStationTap(Number(b.dataset.pos));
       case "fit": return fitView();
       case "focusTurn": return focusTurn();
-      case "focusX": { const G = A.G; if (!G) return; if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else toast("怪盗Xはまだ姿を見せていません"); return; }
-      case "focusD": return A.G && centerOn(A.G.det[Number(b.dataset.k)].pos);
-      case "focusPos": return centerOn(Number(b.dataset.pos));
+      case "focusX": if (LOCK) return;
+      { const G = A.G; if (!G) return; if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else toast("怪盗Xはまだ姿を見せていません"); return; }
+      case "focusD": if (LOCK) return; return A.G && centerOn(A.G.det[Number(b.dataset.k)].pos);
+      case "focusPos": if (LOCK) { const p = Number(b.dataset.pos); toast(`${NO(p)} ${NAME(p)}`); return; } return centerOn(Number(b.dataset.pos));
       case "cardOk": {
         const pc = A.pendingCard;
         if (!pc || pc.stage !== "reveal") return;

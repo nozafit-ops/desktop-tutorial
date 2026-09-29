@@ -250,6 +250,102 @@ sub('aria-label="全体を表示"', 'aria-label="いちばん引いて表示"')
 # 駒へ移動するときは、いまの拡大率のまま（勝手に拡大しない）
 sub("function centerOn(i, s = Math.max(V.s, 0.95)) {", "function centerOn(i, s = V.s) {")
 
+# ---------------- プレイヤー視点に固定：画面は自分の駒を中心に動かない。見えるのは自分のまわりだけ ----------------
+sub("""  // いちばん引いたときの倍率：""", """  // 画面は自分の駒（パス&プレイでは手番の人の駒）を中心に固定する。ドラッグや拡大縮小はしない
+  const LOCK = true;
+  let lockedOn = null;
+  function viewAnchor() {
+    const G = A.G;
+    if (!G || !A.sec) return null;
+    if (A.role === "x") return A.sec.pos;
+    if (A.role === "d") return G.det[ME_DET].pos;
+    if (A.cover === "x-open") return A.sec.pos;
+    return G.det[typeof G.turn === "number" ? G.turn : 0].pos;
+  }
+  function lockView(animate = true) {
+    const pos = viewAnchor();
+    if (pos === null || pos === undefined) return;
+    lockedOn = pos;
+    const { w, h } = vpSize();
+    const [x, y] = P(pos);
+    const s = V.fit = minScale();
+    const tx = w / 2 - x * s, ty = (hudTop() + h) / 2 - y * s;
+    animate ? animateView(s, tx, ty, 520) : setView(s, tx, ty);
+  }
+  // いちばん引いたときの倍率：""")
+sub("""  function fitView(animate = true) {
+    const { w, h } = vpSize();""", """  function fitView(animate = true) {
+    if (LOCK && A.G) return lockView(animate);
+    const { w, h } = vpSize();""")
+sub("""  function fitStations(list) {
+""", """  function fitStations(list) {
+    if (LOCK) return;
+""")
+sub("""  function ensureVisible(i) {
+""", """  function ensureVisible(i) {
+    if (LOCK) return;
+""")
+sub("""  function focusTurn() {
+    const G = A.G;
+    if (!G) return;""", """  function focusTurn() {
+    const G = A.G;
+    if (!G) return;
+    if (LOCK) return lockView();""")
+sub("""      if (gesture.moved > 6) { mapEl.classList.add("dragging"); setView(V.s, gesture.tx + dx, gesture.ty + dy); }
+    } else if (gesture.type === "pinch" && ptrs.size >= 2) {""", """      if (gesture.moved > 6 && !LOCK) { mapEl.classList.add("dragging"); setView(V.s, gesture.tx + dx, gesture.ty + dy); }
+    } else if (gesture.type === "pinch" && ptrs.size >= 2 && !LOCK) {""")
+sub("""  mapEl.addEventListener("wheel", e => {
+    e.preventDefault();
+""", """  mapEl.addEventListener("wheel", e => {
+    e.preventDefault();
+    if (LOCK) return;
+""")
+sub("""  mapEl.addEventListener("dblclick", e => {
+""", """  mapEl.addEventListener("dblclick", e => {
+    if (LOCK) return;
+""")
+sub("""window.addEventListener("resize", () => { V.fit = minScale(); clampView(); applyView(); });""",
+    """window.addEventListener("resize", () => { V.fit = minScale(); clampView(); applyView(); if (LOCK && A.G && A.screen === "game") lockView(false); });""")
+# 自分の駒が動いたら（パス&プレイで手番が替わったら）画面をそこへ移す
+sub("""  function render() {
+""", """  function render() {
+    if (LOCK && A.G && A.screen === "game" && viewAnchor() !== lockedOn) lockView();
+""")
+# ボタン：拡大・縮小・全体表示はなし。中心ボタンは「自分の駒へ」
+sub("""      case "zoomIn": return zoomAt(1.5, w / 2, h / 2);
+      case "zoomOut": return zoomAt(1 / 1.5, w / 2, h / 2);""", """      case "zoomIn": if (LOCK) return; return zoomAt(1.5, w / 2, h / 2);
+      case "zoomOut": if (LOCK) return; return zoomAt(1 / 1.5, w / 2, h / 2);
+      case "tapStation": return onStationTap(Number(b.dataset.pos));""")
+sub("""      case "focusX": {""", """      case "focusX": if (LOCK) return;
+      {""")
+sub("""      case "focusD": return A.G && centerOn""", """      case "focusD": if (LOCK) return; return A.G && centerOn""")
+sub("""      case "focusPos": return centerOn(Number(b.dataset.pos));""", """      case "focusPos": if (LOCK) { const p = Number(b.dataset.pos); toast(`${NO(p)} ${NAME(p)}`); return; } return centerOn(Number(b.dataset.pos));""")
+sub('''aria-label="手番のコマへ移動"''', '''aria-label="自分の駒へ戻る"''')
+sub("""  .side .iconbtn:active""", """  .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act="fit"] { display: none; }
+  .edge-arrow.dest .dest-no { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #FFF6D8; color: #1A140C; font-weight: 900; font-size: 13px; border: 3px solid #3B2C1E; }
+  .side .iconbtn:active""")
+# 画面の外にある行き先（とカードの対象の駅）は、縁の矢印から選べる
+sub("""    if (mateActive(G) && !G.over) t.push({ key: "m" + G.mate.pos, kind: "m", k: 0, pos: G.mate.pos });
+    return t;""", """    if (mateActive(G) && !G.over) t.push({ key: "m" + G.mate.pos, kind: "m", k: 0, pos: G.mate.pos });
+    if (LOCK && humanTurn()) {
+      const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+      for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) t.push({ key: "go" + to, kind: "dest", k: 0, pos: to });
+    }
+    if (LOCK && A.pendingCard && A.pendingCard.stage === "target") for (const p of A.pendingCard.opts) t.push({ key: "go" + p, kind: "dest", k: 0, pos: p });
+    return t;""")
+sub("""    host.innerHTML = edgeTargets().map(t => {
+      const color""", """    host.innerHTML = edgeTargets().map(t => {
+      if (t.kind === "dest") return `<button class="edge-arrow dest" data-act="tapStation" data-pos="${t.pos}" data-key="${t.key}" aria-label="行き先 ${NO(t.pos)} ${NAME(t.pos)}" hidden>
+        <svg class="dir" viewBox="-28 -28 56 56"><g class="rot"><circle r="22" fill="#E3B341" stroke="#3B2C1E" stroke-width="3"></circle><path d="M22,-10 L36,0 L22,10 Z" fill="#E3B341" stroke="#3B2C1E" stroke-width="2.5" stroke-linejoin="round"></path></g></svg>
+        <span class="dest-no">${NO(t.pos)}</span></button>`;
+      const color""")
+
+# 背景画像は盤面の大きさに合わせる（ロンドン版は 3000×1900 の決め打ち）
+sub('''<image id="bgimg" x="0" y="0" width="3000" height="1900" preserveAspectRatio="none"></image>''',
+    f'''<image id="bgimg" x="0" y="0" width="{B["W"]}" height="{B["H"]}" preserveAspectRatio="none"></image>''')
+# 固定の拡大率では駅名をいつも出す
+sub("""  #map.z1 .stn-label:not(.hot) { display: none; }""", """  #map.z1 .stn-label:not(.hot) { display: inline; }""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"
