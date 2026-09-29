@@ -668,6 +668,22 @@ sub("""  .ticket.pxcard:active:not(:disabled) { transform: translateY(2px); }"""
   .gcard .gc-name { font-family: "DotGothic16", sans-serif; font-weight: 400; color: #4F6475; }
   .gcard .gc-desc { color: #5A4A40; }""")
 
+# ---------------- CPUの刑事の性格：追いかけ・先回り・待ち伏せ（tools/persona.py） ----------------
+from persona import patches as persona_patches
+for a_, b_ in persona_patches():
+    sub(a_, b_)
+# 上の刑事一覧：CPUの刑事には性格の札を出す（「切符∞」の代わり）
+sub("""<span class="tks"><span class="tk inf" title="タクシー・バス・地下鉄は使い放題">切符∞</span>""",
+    """<span class="tks">${A.role !== "pass" && !(A.role === "d" && k === ME_DET) && PERS_BY_K[k] ? `<span class="tk pers ${PERS_BY_K[k]}" title="この刑事の性格">${PERS_NAME[PERS_BY_K[k]]}</span>` : `<span class="tk inf" title="タクシー・バス・地下鉄は使い放題">切符∞</span>`}""")
+sub("""  .tk.inf { background: #E8E0CC; color: #1A140C; padding: 0 5px; }""", """  .tk.inf { background: #E8E0CC; color: #1A140C; padding: 0 5px; }
+  .tk.pers { padding: 0 5px; color: #fff; font-size: 10px; }
+  .tk.pers.chase { background: #C2464F; } .tk.pers.cut { background: #2F7FB0; } .tk.pers.ambush { background: #5E7A3A; }""")
+# 無線のひとことも性格ごとに
+sub("""radio(k, pick(["こっちの視界にはいない", "この辺りは異常なし", "見当たらない。別の方を探す"]), "");""",
+    """radio(k, pick(Math.random() < 0.5 ? ["こっちの視界にはいない", "この辺りは異常なし", "見当たらない。別の方を探す"] : ({ chase: ["足取りを追う！", "逃がさないぞ", "最後に見た方へ急ぐ"], cut: ["逃げ道の先へ回り込む", "この先で待ち構える", "向こう側をふさぐ"], ambush: ["乗り換え駅で張り込む", "ここを押さえておく", "動かず待つのが一番だ"] }[PERS_BY_K[k]] || ["見当たらない"])), "");""")
+sub("""        <li><b>仲間への指示</b>：""", """        <li><b>刑事の性格</b>：CPUの刑事にはそれぞれ性格があります。<b>追いかけ</b>は怪盗Xがいそうな駅・最後に見た駅へまっすぐ詰め、<b>先回り</b>は怪盗Xが逃げそうな先へ回り込み、<b>待ち伏せ</b>は地下鉄駅など乗り換えの多い駅を押さえて待ちます。候補が絞れてくると全員で包囲します。</li>
+        <li><b>仲間への指示</b>：""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"

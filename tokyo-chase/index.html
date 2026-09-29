@@ -213,6 +213,8 @@
   .tk.boat { background: var(--ferry); color: #fff; }
   .tk.heli { background: var(--heli); color: #fff; }
   .tk.inf { background: #E8E0CC; color: #1A140C; padding: 0 5px; }
+  .tk.pers { padding: 0 5px; color: #fff; font-size: 10px; }
+  .tk.pers.chase { background: #C2464F; } .tk.pers.cut { background: #2F7FB0; } .tk.pers.ambush { background: #5E7A3A; }
   .tk.black { background: var(--black); color: #fff; border: 1px solid #8A7A60; }
   .tk.double { background: var(--paper); color: #1A140C; }
   .tk.zero { opacity: 0.3; }
@@ -1282,6 +1284,11 @@
     for (const [p, w] of out) out.set(p, w / tot);
     return out;
   }
+  // CPUの刑事の性格（刑事モードでは刑事1＝あなた、仲間は刑事2から 先回り・待ち伏せ・追いかけ の順）
+  const PERS_BY_K = ["chase", "cut", "ambush", "chase", "cut"];
+  const PERS_NAME = { chase: "追いかけ", cut: "先回り", ambush: "待ち伏せ" };
+  let HUB_ = null;
+  const hubOf = i => (HUB_ ||= ADJ.map(a => new Set(a.map(e => e.to)).size + (a.some(e => e.type === "tube") ? 3 : 0) + (a.some(e => e.type === "bus") ? 1 : 0)))[i];
   function aiD(G, k, steady = false) {
     const moves = detMoves(G, k);
     const order = G.orders ? G.orders[k] : undefined;
@@ -1304,6 +1311,15 @@
     const P = G.possible;
     const W = candWeights(G);
     const others = G.det.filter((_, j) => j !== k).map(o => o.pos);
+    const per = PERS_BY_K[k];
+    // 先回り用：候補駅の隣で、ほかの刑事から遠い（＝怪盗Xが逃げ込みそうな）駅ほど重くする
+    const AHEAD = new Map();
+    if (per === "cut") for (const [p, w] of W) {
+      const qs = [...new Set(ADJ[p].map(e => e.to))];
+      const fl = qs.map(q => 1 + Math.min(4, 9, ...others.map(o => D[q][o])));
+      const tot = fl.reduce((a, b) => a + b, 0) || 1;
+      qs.forEach((q, i) => AHEAD.set(q, (AHEAD.get(q) || 0) + w * fl[i] / tot));
+    }
     const scoreAt = to => {
       let ed = 0, prob = 0;
       for (const [p, w] of W) { ed += dd(to, p) * w; if (p === to) prob = w; }
@@ -1325,7 +1341,12 @@
       }
       let mateV = 0;
       if (mateActive(G)) mateV = (to === G.mate.pos ? 30 : 0) - Math.min(D[to][G.mate.pos], 6) * AI_MATE_GUARD;
-      return prob * AI_PROB - ed * 4 + spread + look + mateV;
+      let extra = 0;
+      if (per === "chase") extra = prob * AI_PROB * 0.8 - ed * 4 - (G.lastSeen ? Math.min(D[to][G.lastSeen.pos], 6) * 2 : 0) - spread * 0.5;
+      else if (per === "cut") { let e2 = 0; for (const [q, w] of AHEAD) e2 += dd(to, q) * w; extra = ed * 2.5 - e2 * 5 - prob * AI_PROB * 0.4; }
+      else if (per === "ambush") { let cov = 0; for (const [p, w] of W) if (D[to][p] <= 2) cov += w; extra = ed * 3 + cov * 26 + hubOf(to) * 1.6 + spread * 1.5; }
+      if (G.possible.length <= 6) extra *= 0.3;   // 終盤は性格より全員で詰める
+      return prob * AI_PROB - ed * 4 + spread + look + mateV + extra;
     };
     let best = null, bs = -Infinity;
     for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) {
@@ -1446,7 +1467,7 @@
           else radio(e.w, `${NO(from)} ${NAME(from)} から ${e.t === "black" ? "何かに乗って消えた" : how + "で出ていった"}`, "逃げたぞ！");
         } else if (Math.random() < 0.35) {
           const k = G.det.map((_, j) => j).filter(j => A.role !== "d" || j !== ME_DET)[Math.floor(Math.random() * (G.det.length - (A.role === "d" ? 1 : 0)))];
-          if (k !== undefined) radio(k, pick(["こっちの視界にはいない", "この辺りは異常なし", "見当たらない。別の方を探す"]), "");
+          if (k !== undefined) radio(k, pick(Math.random() < 0.5 ? ["こっちの視界にはいない", "この辺りは異常なし", "見当たらない。別の方を探す"] : ({ chase: ["足取りを追う！", "逃がさないぞ", "最後に見た方へ急ぐ"], cut: ["逃げ道の先へ回り込む", "この先で待ち構える", "向こう側をふさぐ"], ambush: ["乗り換え駅で張り込む", "ここを押さえておく", "動かず待つのが一番だ"] }[PERS_BY_K[k]] || ["見当たらない"])), "");
         }
       }
       if (e.d === 1) {
@@ -3118,7 +3139,7 @@
     $("dets").innerHTML = G.det.map((d, k) => `
       <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="${A.role === "d" && k !== ME_DET ? "order" : "focusD"}" data-k="${k}" aria-label="${dName(k)}：切符は使い放題・ヘリ${d.t.heli}">
         ${portrait("d", k, "sm")}${A.role === "d" && k === ME_DET ? `<span class="me-tag">あなた</span>` : ""}${A.role === "d" && k !== ME_DET ? `<span class="me-tag order">${G.orders && G.orders[k] !== undefined ? "指示中" : "指示"}</span>` : ""}
-        <span class="tks"><span class="tk inf" title="タクシー・バス・地下鉄は使い放題">切符∞</span><span class="tk heli ${d.t.heli ? "" : "zero"}">H${d.t.heli}</span></span>
+        <span class="tks">${A.role !== "pass" && !(A.role === "d" && k === ME_DET) && PERS_BY_K[k] ? `<span class="tk pers ${PERS_BY_K[k]}" title="この刑事の性格">${PERS_NAME[PERS_BY_K[k]]}</span>` : `<span class="tk inf" title="タクシー・バス・地下鉄は使い放題">切符∞</span>`}<span class="tk heli ${d.t.heli ? "" : "zero"}">H${d.t.heli}</span></span>
       </button>`).join("");
   }
 
@@ -3301,6 +3322,7 @@
         <li>怪盗Xは <b>黒チケット</b> ${X_BLACK}枚（乗り物を隠す。水上バスにもこれで乗る）、<b>2回移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
         <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引きます（ハズレはありません）。手札のカードは自分の番に左下の手札からタップして、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」。ダッシュを使った刑事はその番に2回続けて動けます。ヘリ封鎖とランダム検問は引いたその場で発動します（ヘリ封鎖は1ゲームに1回だけ、ランダム検問はヘリポート以外のどこかの駅に検問所が敷かれます）。怪盗X側は「罠」「雲隠れ」「駅破壊」。刑事モードの手札はあなただけが使えます（仲間のCPUは使いません）。</li>
         <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
+        <li><b>刑事の性格</b>：CPUの刑事にはそれぞれ性格があります。<b>追いかけ</b>は怪盗Xがいそうな駅・最後に見た駅へまっすぐ詰め、<b>先回り</b>は怪盗Xが逃げそうな先へ回り込み、<b>待ち伏せ</b>は地下鉄駅など乗り換えの多い駅を押さえて待ちます。候補が絞れてくると全員で包囲します。</li>
         <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
         <li><b>作戦ピン</b>：刑事モードで駅を長押し（パソコンは右クリック）すると作戦ピンを立て、仲間をその駅へ向かわせたり、全員で包囲させたりできます。</li>
         <li><b>仲間の狙い</b>：刑事モードでは、CPUの仲間が次に動く駅が点線の矢印と「次は◯◯」で表示されます。</li>

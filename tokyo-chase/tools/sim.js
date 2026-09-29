@@ -81,6 +81,11 @@ if (process.env.SIGHT) {
   const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "sight_rule.py"), process.env.SIGHT, process.env.PARTIAL ?? "1"]).toString());
   for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("sight patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
 }
+// CPUの刑事の性格（PERSONA=1）
+if (process.env.PERSONA === "1") {
+  const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "persona.py")]).toString());
+  for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("persona patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
+}
 // 公開のタイミング：スコットランドヤード式（24手、3・8・13・18・24手目）
 if (process.env.SY_ROUNDS) {
   core = core.replace("const MAX_MOVES = 21;", "const MAX_MOVES = 24;");
@@ -102,6 +107,7 @@ const api = new Function(core + `
            aiUseCards, applyCard, drawCard, checkTrap, handOf, cardMove, CARD_TURNS, CARD_LAST, MAX_MOVES, REVEAL, X_TICKETS };
 `)();
 
+const DK = [];
 let selfTrap = 0, boatRides = 0, boatMaybe = 0;
 // 画面の step() と同じ流れを、全員CPUで回す（刑事側のカードもCPUが使う＝怪盗Xモードと同じ）
 function play(dets) {
@@ -144,6 +150,7 @@ function play(dets) {
       for (const [c, t] of api.aiUseCards(G, sec, "d")) api.applyCard(G, sec, c, t);
       const m = api.aiD(G, k);
       api.applyD(G, k, m.to, m.type, sec);
+      if (G.det[k].pos >= 0) { DK[k] = DK[k] || [0, 0, 0]; DK[k][0] += Math.min(api.D[G.det[k].pos][sec.pos], 9); DK[k][1]++; DK[k][2] += new Set(api.ADJ[G.det[k].pos].map(e => e.type)).has("tube") ? 1 : 0; }
     }
     if (!G.over && G.det.some(d => d.pos === sec.pos)) api.finish(G, "d", "caught");
     if (!G.over) api.checkTrap(G, sec);
@@ -178,5 +185,6 @@ console.log(JSON.stringify({
   avgCatchMove: caught.length ? +(caught.reduce((a, r) => a + r.moves, 0) / caught.length).toFixed(1) : null,
   avgCandidates: +(res.reduce((a, r) => a + r.avgPossible, 0) / games).toFixed(1),
   boatOnlyRidesPerGame: +(boatRides / games).toFixed(3), blackOnBoatOrOtherPerGame: +(boatMaybe / games).toFixed(3),
+  detAvgDistToX_onSubway: DK.map(v => v && [+(v[0] / v[1]).toFixed(2), +(v[2] / v[1]).toFixed(2)]),
   xTicketsUsedPerGame: Object.fromEntries(Object.entries(usedAvg).map(([k, v]) => [k, +v.toFixed(2)])),
 }, null, 1));
