@@ -103,7 +103,7 @@ for v in land:
     for j in sorted((j for j in land if j != v), key=lambda j: dist(v, j)):
         if len(adj[v]) >= 2 or dist(v, j) > 600: break
         e = (min(v, j), max(v, j))
-        if e in TAXI or wet(P[v], P[j]) or crosses_river(P[v], P[j]): continue
+        if e in TAXI or wet(P[v], P[j]) or (KIND[j] != "b" and crosses_river(P[v], P[j])): continue
         if any(seg_cross(P[v], P[j], P[a], P[b]) for a, b in TAXI if len({a, b, v, j}) == 4): continue
         TAXI.add(e); adj[v].add(j); adj[j].add(v)
 TAXI = sorted(TAXI)
