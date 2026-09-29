@@ -346,6 +346,54 @@ sub('''<image id="bgimg" x="0" y="0" width="3000" height="1900" preserveAspectRa
 # 固定の拡大率では駅名をいつも出す
 sub("""  #map.z1 .stn-label:not(.hot) { display: none; }""", """  #map.z1 .stn-label:not(.hot) { display: inline; }""")
 
+# 全体地図：ボタンで盤面全体を表示し、もう一度押すと自分の視点に戻る
+sub("""    <button class="iconbtn" id="hintBtn" data-act="hint\"""", """    <button class="iconbtn" id="overviewBtn" data-act="overview" aria-pressed="false" aria-label="全体地図"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"></path><path d="M9 4v14M15 6v14"></path></svg></button>
+    <button class="iconbtn" id="hintBtn" data-act="hint\"""")
+sub("""  function clampView() {
+""", """  function clampView() {
+    if (A.overview) return;   // 全体地図のあいだは自由な大きさ
+""")
+sub("""    if (LOCK && A.G && A.screen === "game" && viewAnchor() !== lockedOn) lockView();""",
+    """    if (LOCK && A.G && A.screen === "game" && !A.overview && viewAnchor() !== lockedOn) lockView();
+    const ob = $("overviewBtn");
+    if (ob) ob.setAttribute("aria-pressed", String(!!A.overview));""")
+sub("""      case "hint": A.hints = !A.hints; render(); return;""", """      case "hint": A.hints = !A.hints; render(); return;
+      case "overview": {
+        if (!A.G) return;
+        A.overview = !A.overview;
+        if (A.overview) {
+          // 盤面全体を、上の表示の下に収める
+          const top = hudTop(), s = Math.min(w / W, (h - top - 16) / H);
+          animateView(s, (w - W * s) / 2, top + (h - top - H * s) / 2, 420);
+          toast("全体地図：もう一度押すと自分の視点に戻ります");
+        } else lockView();
+        render();
+        return;
+      }""")
+# 全体地図のまま手番が進んだら、自分の視点に戻す
+sub("""  function lockView(animate = true) {
+""", """  function lockView(animate = true) {
+    A.overview = false;
+""")
+sub("""  .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act="fit"] { display: none; }""",
+    """  .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act="fit"] { display: none; }
+  #map.z0 .stn-label:not(.hot) { display: none; }""")
+
+# ---------------- 視界ルール：怪盗Xは刑事の視界（円）に入ったら見つかる ----------------
+from sight_rule import patches as sight_patches
+SIGHT = 410
+for a_, b_ in sight_patches(SIGHT):
+    sub(a_, b_)
+# 刑事の視界を地図に描く（怪盗Xも刑事側も見える）
+sub("""    if (!showX && A.hints && !G.over) for (const p of G.possible) {""", """    if (!G.over) for (const d of G.det) { const [x, y] = P(d.pos); el("circle", { cx: x, cy: y, r: SIGHT, class: "sight" }, gP); }
+    if (!showX && A.hints && !G.over) for (const p of G.possible) {""")
+sub("""  .poss { fill: var(--xrim); opacity: 0.28; }""", """  .poss { fill: var(--xrim); opacity: 0.28; }
+  .sight { fill: rgba(80, 140, 255, 0.07); stroke: rgba(60, 110, 230, 0.55); stroke-width: 4; stroke-dasharray: 16 12; }""")
+sub("""<small class="nx">${G.over ? "ゲーム終了" : nx ? `次の出現 ${nx}手目` : "出現なし"}</small>""",
+    """<small class="nx">${G.over ? "ゲーム終了" : "刑事の視界に入ると見つかる"}</small>""")
+rsub(r'        <li>怪盗Xの居場所は秘密。.*?</li>', """        <li>怪盗Xの居場所は秘密。ただし <b>刑事の視界</b>（刑事のまわりの青い点線の円）に入ると、その場で姿が見えて <b>発見</b> されます。怪盗Xが自分で視界に入っても、刑事が近づいて視界に入っても同じです。視界の中の駅には怪盗Xはいないので、候補から外れます。刑事にわかるのは、移動記録に残る <b>切符の種類</b> と、見つかった場所だけです。</li>""")
+rsub(r'<span style="color:#E5484D;font-weight:900">赤い丸と赤い枠</span>のマスは怪盗Xが姿を現す手で、現れた駅の番号が入ります。', """駅の番号が入っているマスは、その手で怪盗Xが見つかった駅です。""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"

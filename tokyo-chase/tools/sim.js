@@ -76,6 +76,11 @@ if (process.env.DET_LIMIT) {
   core = core.replace(/const dHas = \(d, type\) => [^;]*;/, 'const dHas = (d, type) => type === "boat" ? false : (d.t[type] ?? 0) > 0;');
   core = core.replace("    if (type === \"heli\") d.t.heli--;", "    if (type === \"heli\") d.t.heli--;\n    else if (d.t[type] !== undefined) { d.t[type]--; if (G.xt && G.xt[type] !== undefined) G.xt[type]++; }");
 }
+// 視界ルール：SIGHT=半径 のとき、怪盗Xは刑事の視界に入ったら見つかる（公開の手番はなし）
+if (process.env.SIGHT) {
+  const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "sight_rule.py"), process.env.SIGHT]).toString());
+  for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("sight patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
+}
 // 公開のタイミング：スコットランドヤード式（24手、3・8・13・18・24手目）
 if (process.env.SY_ROUNDS) {
   core = core.replace("const MAX_MOVES = 21;", "const MAX_MOVES = 24;");

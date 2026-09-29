@@ -90,6 +90,7 @@
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
   .sel { fill: none; stroke: var(--xrim); stroke-width: 6; }
   .poss { fill: var(--xrim); opacity: 0.28; }
+  .sight { fill: rgba(80, 140, 255, 0.07); stroke: rgba(60, 110, 230, 0.55); stroke-width: 4; stroke-dasharray: 16 12; }
   .lastseen { fill: none; stroke: var(--xrim); stroke-width: 4; stroke-dasharray: 8 6; }
   .lastseen-label { font-weight: 900; font-size: 20px; fill: var(--xrim); paint-order: stroke; stroke: var(--paper); stroke-width: 6px; text-anchor: middle; }
   .trail { fill: none; stroke: var(--xrim); stroke-width: 6; stroke-dasharray: 14 9; opacity: 0.9; }
@@ -191,6 +192,7 @@
 
   .side { right: 10px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; padding: 6px; }
   .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act="fit"] { display: none; }
+  #map.z0 .stn-label:not(.hot) { display: none; }
   .edge-arrow.dest .dest-no { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #FFF6D8; color: #1A140C; font-weight: 900; font-size: 13px; border: 3px solid #3B2C1E; }
   .side .iconbtn:active, .top .iconbtn:active { background: rgba(255,255,255,0.08); }
   .side .iconbtn[aria-pressed="true"] { background: var(--gold); }
@@ -743,6 +745,7 @@
     <button class="iconbtn" data-act="zoomOut" aria-label="縮小"><svg viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></button>
     <button class="iconbtn" data-act="fit" aria-label="いちばん引いて表示"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
     <button class="iconbtn" data-act="focusTurn" aria-label="自分の駒へ戻る"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg></button>
+    <button class="iconbtn" id="overviewBtn" data-act="overview" aria-pressed="false" aria-label="全体地図"><svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"></path><path d="M9 4v14M15 6v14"></path></svg></button>
     <button class="iconbtn" id="hintBtn" data-act="hint" aria-pressed="true" aria-label="推理ヒント（怪盗Xがいるかもしれない駅）"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg></button>
     <button class="iconbtn" data-act="log" aria-label="ログ"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"></path></svg></button>
   </div>
@@ -800,7 +803,9 @@
   const MOVE_TYPES = ["taxi", "bus", "tube", "boat"];
 
   const MAX_MOVES = 21;
-  const REVEAL = [3, 6, 9, 12, 15, 18, 21];
+  const REVEAL = [];
+  const SIGHT = 410;   // 刑事の視界の半径（盤面の座標）
+  const inSight = (G, p) => G.det.some(d => Math.hypot(STATIONS[d.pos][1] - STATIONS[p][1], STATIONS[d.pos][2] - STATIONS[p][2]) <= SIGHT);
   // 刑事の切符も有限。使った切符は怪盗Xの手持ちに加わる（スコットランドヤードのルール）
   // 水上バスは怪盗Xだけが黒チケットで乗れる。刑事は乗れない
   const DET_TICKETS = { taxi: 12, bus: 10, tube: 5, heli: 1 };
@@ -901,11 +906,11 @@
 
   function nextPossible(G, type) {
     const occ = new Set(G.det.map(d => d.pos));
-    if (type === "heli") return HELI.filter(h => !occ.has(h) && !isClosed(G.closedX, h, G));
-    if (type === "pass") return G.possible.filter(p => !occ.has(p));
+    if (type === "heli") return HELI.filter(h => !occ.has(h) && !isClosed(G.closedX, h, G) && !inSight(G, h));
+    if (type === "pass") return G.possible.filter(p => !occ.has(p) && !inSight(G, p));
     const nx = new Set();
     for (const s of G.possible) for (const e of ADJ[s]) {
-      if ((type === "black" || e.type === type) && !occ.has(e.to) && !isClosed(G.closedX, e.to, G)) nx.add(e.to);
+      if ((type === "black" || e.type === type) && !occ.has(e.to) && !isClosed(G.closedX, e.to, G) && !inSight(G, e.to)) nx.add(e.to);
     }
     return [...nx].sort((a, b) => a - b);
   }
@@ -920,7 +925,7 @@
     sec.pos = to;
     sec.path.push(to);
     const n = G.xLog.length + 1;
-    let rev = REVEAL.includes(n), vanished = false;
+    let rev = REVEAL.includes(n) || inSight(G, to), vanished = false;
     if (rev && G.skipReveal > 0) { G.skipReveal--; rev = false; vanished = true; }   // 雲隠れ
     G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0 });
     if (type === "black") G.black--;
@@ -978,7 +983,7 @@
     heliban:   { side: "d", name: "ヘリ封鎖", desc: "引いたその場で発動。すべてのヘリポートを5手のあいだ閉鎖し、誰もヘリで飛べない。" },
     reinforce: { side: "d", name: "応援要請", desc: "刑事全員にヘリの切符が1枚ずつ追加される。" },
     trap:      { side: "x", name: "罠", desc: "いまいる駅に罠を仕掛ける。踏んだ刑事は1回休み。刑事には見えない。" },
-    vanish:    { side: "x", name: "雲隠れ", desc: "次の目撃情報を1回だけ無効にする。" },
+    vanish:    { side: "x", name: "雲隠れ", desc: "次に刑事の視界に入っても、1回だけ見つからない。" },
     destroy:   { side: "x", name: "駅破壊", desc: "2手以内の駅を1つ壊す。壊れた駅は最後まで誰も通れない（怪盗Xも）。" },
     miss:      { side: "", name: "ハズレ", desc: "何も起こらなかった。" },
   };
@@ -1063,7 +1068,7 @@
       let use = last;
       if (side === "x") {
         if (c === "trap") use = use || dmin <= 3;
-        if (c === "vanish") use = use || (REVEAL.includes(G.xLog.length + 1) && !(G.skipReveal > 0));
+        if (c === "vanish") use = use || (dmin <= 3 && !(G.skipReveal > 0));
         if (c === "destroy") use = use || dmin <= 2;
       } else {
         if (c === "dash") {
@@ -1120,7 +1125,13 @@
     if (sec && to === sec.pos) { finish(G, "d", "caught"); return to; }
     const dashing = G.dash === k;
     if (mateActive(G) && to === G.mate.pos) { G.mate.out = true; G.mate.by = k; }   // 相棒を確保
-    G.possible = G.possible.filter(p => p !== to);
+    if (sec && inSight(G, sec.pos)) {
+      if (G.skipReveal > 0) { G.skipReveal--; G.possible = G.possible.filter(p => p !== to); }
+      else { G.possible = [sec.pos]; G.lastSeen = { pos: sec.pos, n: G.xLog.length }; }
+    } else {
+      const left = G.possible.filter(p => p !== to && !inSight(G, p));
+      G.possible = left.length ? left : G.possible.filter(p => p !== to);
+    }
     // ダッシュ中は同じ刑事がもう1回動く
     if (dashing) { G.dash = null; G.seq++; return to; }
     advance(G, k);
@@ -1139,6 +1150,7 @@
     const exits = ADJ[to].filter(e => !cpos.some(c => D[e.to][c] <= 1)).length;
     let s = Math.min(dmin, 4) * 10 + dsum + exits * 1.5;
     if (dmin <= 1) s -= 40;
+    if (inSight(G, to)) s -= 25;
     return { s, dmin };
   }
   function aiX(G, sec) {
@@ -1809,6 +1821,7 @@
     return t ? t.getBoundingClientRect().bottom - mapEl.getBoundingClientRect().top : 100;
   }
   function clampView() {
+    if (A.overview) return;   // 全体地図のあいだは自由な大きさ
     const { w, h } = vpSize();
     V.s = Math.min(3, Math.max(V.fit, V.s));
     const mw = W * V.s, mh = H * V.s;
@@ -1849,6 +1862,7 @@
     return G.det[typeof G.turn === "number" ? G.turn : 0].pos;
   }
   function lockView(animate = true) {
+    A.overview = false;
     const pos = viewAnchor();
     if (pos === null || pos === undefined) return;
     lockedOn = pos;
@@ -2345,7 +2359,9 @@
   }
 
   function render() {
-    if (LOCK && A.G && A.screen === "game" && viewAnchor() !== lockedOn) lockView();
+    if (LOCK && A.G && A.screen === "game" && !A.overview && viewAnchor() !== lockedOn) lockView();
+    const ob = $("overviewBtn");
+    if (ob) ob.setAttribute("aria-pressed", String(!!A.overview));
     noteExposure();
     renderMap();
     renderTop();
@@ -2415,6 +2431,7 @@
     const hot = i => $("lbl" + i)?.classList.add("hot");
     const showX = xVisible();
 
+    if (!G.over) for (const d of G.det) { const [x, y] = P(d.pos); el("circle", { cx: x, cy: y, r: SIGHT, class: "sight" }, gP); }
     if (!showX && A.hints && !G.over) for (const p of G.possible) { const [x, y] = P(p); el("circle", { cx: x, cy: y, r: 32, class: "poss" }, gP); }
     const path = G.over || showX ? A.sec.path : null;
     if (path && path.length > 1) {
@@ -2605,7 +2622,7 @@
     const nx = REVEAL.find(r => r > G.xLog.length);
     const ex = exposure(G);
     $("xcard").innerHTML = `${portrait("x")}<span class="who"><b>怪盗X</b>
-      <small class="nx">${G.over ? "ゲーム終了" : nx ? `次の出現 ${nx}手目` : "出現なし"}</small>
+      <small class="nx">${G.over ? "ゲーム終了" : "刑事の視界に入ると見つかる"}</small>
       ${G.over ? "" : `<span class="expo ${ex.level}" title="${ex.help}"><i></i>${ex.label}</span>`}
       <span class="chipsx">${G.xt ? ["taxi", "bus", "tube"].map(t => `<span class="tk ${t} ${G.xt[t] ? "" : "zero"}" title="${TYPE[t].name}の残り">${TYPE[t].short}${G.xt[t]}</span>`).join("") : ""}<span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
     $("xcard").classList.toggle("active", G.turn === "x");
@@ -2782,8 +2799,8 @@
         <li><b>水上バス</b>（青い破線）は${RIVER_NAME}と湾を結びます。乗れるのは <b>怪盗Xだけ</b>で、<b>黒チケット</b>を使います。刑事は乗れません。</li>
         <li><b>ヘリポート</b>（H）からはヘリで飛べます。行き先は選べず、ほかのヘリポートのどこかにランダムで着陸します。2つの島（夢見島・空港島）へは水上バスかヘリでしか行けません。<br>ヘリポートのうち1か所だけは <b>ガス欠</b> で飛べません。どこなのかは誰にも知らされず、飛ぼうとして初めてわかります（切符は減り、その手はその場にとどまります）。</li>
         <li>${RIVER_NAME}を渡る <b>橋</b> の上にも駅（ひし形の台座）があり、タクシーとバスは橋で一度止まります。橋は5か所だけです。</li>
-        <li>怪盗Xの居場所は秘密。刑事にわかるのは画面上部の移動記録に残る <b>切符の種類</b> だけ。${REVEAL.join("・")}手目の後だけ姿を現します。</li>
-        <li><b>移動記録の見方</b>：マスの中の文字は怪盗Xが使った乗り物（タ＝タクシー、バ＝バス、地＝地下鉄、船＝水上バス、黒＝黒チケット、H＝ヘリ、休＝パス）。<span style="color:#E5484D;font-weight:900">赤い丸と赤い枠</span>のマスは怪盗Xが姿を現す手で、現れた駅の番号が入ります。<span style="color:#E3B341;font-weight:900">金色の小さなカード印</span>はカードを引く手、金色の枠はいまの手、「2×」は2倍移動を使った手です。</li>
+        <li>怪盗Xの居場所は秘密。ただし <b>刑事の視界</b>（刑事のまわりの青い点線の円）に入ると、その場で姿が見えて <b>発見</b> されます。怪盗Xが自分で視界に入っても、刑事が近づいて視界に入っても同じです。視界の中の駅には怪盗Xはいないので、候補から外れます。刑事にわかるのは、移動記録に残る <b>切符の種類</b> と、見つかった場所だけです。</li>
+        <li><b>移動記録の見方</b>：マスの中の文字は怪盗Xが使った乗り物（タ＝タクシー、バ＝バス、地＝地下鉄、船＝水上バス、黒＝黒チケット、H＝ヘリ、休＝パス）。駅の番号が入っているマスは、その手で怪盗Xが見つかった駅です。<span style="color:#E3B341;font-weight:900">金色の小さなカード印</span>はカードを引く手、金色の枠はいまの手、「2×」は2倍移動を使った手です。</li>
         <li><b>切符</b>：刑事の切符は1人あたりタクシー${DET_TICKETS.taxi}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.tube}・ヘリ${DET_TICKETS.heli}枚。<b>刑事が使った切符は怪盗Xの手持ちに加わります</b>。怪盗Xの切符（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）も有限。切符が尽きた乗り物には乗れません。動けなくなると怪盗Xの負け、刑事が全員動けなくなると怪盗Xの勝ち。</li>
         <li><b>手札</b>：画面の左下にいつも表示されます。自分の番で使えるときは金色に光り、カードをタップするとそのまま使えます。カードを引く手は${CARD_TURNS.join("・")}手目。</li>
         <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
@@ -3008,6 +3025,18 @@
       case "pinClear": A.G.pin = null; A.G.orders = {}; A.pinSheet = null; toast("作戦ピンと指示を外しました"); save(); render(); return;
       case "pinClose": A.pinSheet = null; renderSheet(); return;
       case "hint": A.hints = !A.hints; render(); return;
+      case "overview": {
+        if (!A.G) return;
+        A.overview = !A.overview;
+        if (A.overview) {
+          // 盤面全体を、上の表示の下に収める
+          const top = hudTop(), s = Math.min(w / W, (h - top - 16) / H);
+          animateView(s, (w - W * s) / 2, top + (h - top - H * s) / 2, 420);
+          toast("全体地図：もう一度押すと自分の視点に戻ります");
+        } else lockView();
+        render();
+        return;
+      }
       case "log": $("drawer").hidden = !$("drawer").hidden; renderHandbar(); return;
       case "cancel": A.sel = null; A.useDouble = false; render(); return;
       case "double": A.useDouble = !A.useDouble; renderSheet(); return;
