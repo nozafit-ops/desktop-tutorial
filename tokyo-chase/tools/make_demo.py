@@ -527,7 +527,7 @@ a_ = out.index("  async function renderBackground() {"); b_ = out.index("  // ้ง
 out = out[:a_] + open(os.path.join(HERE, "pixel_board.js"), encoding="utf-8").read() + out[b_:]
 sub("""family=Zen+Old+Mincho:wght@700;900&display=swap">""", """family=Zen+Old+Mincho:wght@700;900&family=DotGothic16&display=swap">""")
 sub("""  .stn-num { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 15px; fill: var(--map-ink);""",
-    """  .stn-num { font-family: "DotGothic16", "Zen Kaku Gothic New", sans-serif; font-weight: 400; font-size: 17px; fill: #1C1C1C;""")
+    """  .stn-num { font-family: "DotGothic16", "Zen Kaku Gothic New", sans-serif; font-weight: 400; font-size: 16px; fill: #1C1C1C;""")
 sub("""    font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 17px; fill: var(--map-ink);
     paint-order: stroke; stroke: var(--paper); stroke-width: 6px; stroke-linejoin: round;""",
     """    font-family: "DotGothic16", "Zen Kaku Gothic New", sans-serif; font-weight: 400; font-size: 21px; fill: #141414;
@@ -537,16 +537,16 @@ sub("""  #map { position: absolute; inset: 0; width: 100%; height: 100%; display
   #bgimg { image-rendering: pixelated; image-rendering: crisp-edges; }
   .ln { fill: none; stroke-linecap: round; stroke-linejoin: round; }
   .gap { stroke: #C6C6C1; }
-  .taxi-ln { stroke: #5E5E5A; }
-  .bus-ln { stroke: #1F8A4C; }
+  .taxi-ln { stroke: #D9A11A; }
+  .bus-ln { stroke: var(--bus); }
   .bus-dash { stroke: #DDF3E4; stroke-width: 2.5; stroke-dasharray: 10 10; }
-  .tube-ln { stroke: #B8323C; }
+  .tube-ln { stroke: var(--tube); }
   .tube-dash { stroke: #F6D2D0; stroke-width: 4; stroke-dasharray: 12 8; }
   .deck { fill: #C6C6C1; stroke: none; }
   .deck-rail { fill: none; stroke: #4A4A46; stroke-width: 5; stroke-linecap: square; }
   .hport { fill: #2E2E2E; stroke: #FFFFFF; stroke-width: 4; }
   .hport-ring { fill: none; stroke: #F2C230; stroke-width: 3; }
-  .hport-h { font-family: "DotGothic16", sans-serif; font-size: 26px; fill: #FFFFFF; text-anchor: middle; pointer-events: none; }
+  .hport-h { font-family: "DotGothic16", sans-serif; font-size: 20px; fill: #FFFFFF; text-anchor: middle; pointer-events: none; }
   .st-shadow { fill: rgba(0, 0, 0, 0.28); }
   .st-side { fill: #9A9A96; stroke: #2E2E2E; stroke-width: 2.5; }
   .st-side.sub { fill: #6E1520; }

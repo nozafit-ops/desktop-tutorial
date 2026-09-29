@@ -184,23 +184,26 @@
     }
     // 重ねる順：水上バス → 橋げた → タクシー → バス → 地下鉄（あとのほど上）
     gE.append(boatL, deckL, layers.taxi.gap, layers.taxi.ln, layers.bus.gap, layers.bus.ln, layers.tube.gap, layers.tube.ln);
-    // 駅：白い楕円の台。地下鉄の駅は赤。バス停は緑の札、水上バスの桟橋は青の札。ヘリポートは H のマーク
+    // 駅：以前の複合マーク。上半分をその駅で乗れる乗り物の色で塗り分け、下半分に番号。橋の駅はひし形、ヘリポートは H のマーク
+    const R = 22;
     STATIONS.forEach(([name, x, y], i) => {
       const g = el("g", {}, gS);
-      const has = t => ADJ[i].some(e => e.type === t);
-      el("ellipse", { cx: x, cy: y + 7, rx: 30, ry: 19, class: "st-shadow" }, g);
-      el("ellipse", { cx: x, cy: y + 3, rx: 29, ry: 19, class: "st-side" + (has("tube") ? " sub" : "") }, g);
-      el("ellipse", { cx: x, cy: y, rx: 29, ry: 18, class: "st-top" + (has("tube") ? " sub" : "") }, g);
-      el("ellipse", { cx: x - 8, cy: y - 7, rx: 10, ry: 4, class: "st-hi" }, g);
-      const tags = [has("bus") && "bus", has("boat") && "boat"].filter(Boolean);
-      tags.forEach((t, k) => el("rect", { x: x + 20 + k * 11, y: y - 24, width: 9, height: 9, class: "st-tag " + t }, g));
+      if (BRIDGE_ST.includes(i)) el("rect", { x: x - R - 7, y: y - R - 7, width: 2 * R + 14, height: 2 * R + 14, rx: 6, class: "bridge-pt", transform: `rotate(45 ${x} ${y})` }, g);
+      el("circle", { cx: x, cy: y, r: R, class: "stn-base" }, g);
+      const ts = MOVE_TYPES.filter(t => ADJ[i].some(e => e.type === t));
+      ts.forEach((t, k) => {
+        const a0 = Math.PI + Math.PI * k / ts.length, a1 = Math.PI + Math.PI * (k + 1) / ts.length;
+        el("path", { d: `M${x},${y} L${(x + R * Math.cos(a0)).toFixed(2)},${(y + R * Math.sin(a0)).toFixed(2)} A${R},${R} 0 0 1 ${(x + R * Math.cos(a1)).toFixed(2)},${(y + R * Math.sin(a1)).toFixed(2)} Z`, class: "wedge " + t }, g);
+      });
+      el("path", { d: `M${x - R},${y} H${x + R}`, stroke: "#3B2C1E", "stroke-width": 1.5 }, g);
+      el("circle", { cx: x, cy: y, r: R, class: "stn-rim" }, g);
       if (HELI_SET.has(i)) {
-        const hx = x - 42, hy = y - 30;
-        el("circle", { cx: hx, cy: hy, r: 21, class: "hport" }, g);
-        el("circle", { cx: hx, cy: hy, r: 15, class: "hport-ring" }, g);
-        el("text", { x: hx, y: hy + 9, class: "hport-h" }, g).textContent = "H";
+        const hx = x - R - 18, hy = y - R - 10;
+        el("circle", { cx: hx, cy: hy, r: 17, class: "hport" }, g);
+        el("circle", { cx: hx, cy: hy, r: 12, class: "hport-ring" }, g);
+        el("text", { x: hx, y: hy + 7, class: "hport-h" }, g).textContent = "H";
       }
-      el("text", { x, y: y + 6, class: "stn-num" + (has("tube") ? " on-sub" : "") }, g).textContent = NO(i);
-      el("text", { x, y: y + 48, class: "stn-label", id: "lbl" + i }, gL).textContent = name;
+      el("text", { x, y: y + 16, class: "stn-num" }, g).textContent = NO(i);
+      el("text", { x, y: y + R + 24, class: "stn-label", id: "lbl" + i }, gL).textContent = name;
     });
   }
