@@ -1716,8 +1716,7 @@
         let landed = m.to;
         apply(() => { landed = applyD(G, k, m.to, m.type, A.sec); });
         if (m.type === "heli") heliNote(k, from, landed);
-        ensureVisible(landed);
-        step();
+                step();
       }, AI_DELAY);
       return;
     }
@@ -1851,8 +1850,7 @@
     const from = A.G.det[k].pos;
     apply(() => { landed = applyD(A.G, k, to, type, A.sec); });
     if (type === "heli") heliNote(k, from, landed);
-    ensureVisible(landed);
-    step();
+        step();
   }
 
   // 駅をタップ

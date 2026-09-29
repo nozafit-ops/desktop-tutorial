@@ -226,8 +226,7 @@ sub("""        apply(() => { landed = applyD(G, k, m.to, m.type, A.sec); });
         step();
       }, AI_DELAY);""", """        apply(() => { landed = applyD(G, k, m.to, m.type, A.sec); });
         if (m.type === "heli") heliNote(k, from, landed);
-        ensureVisible(landed);
-        step();
+                step();
       }, AI_DELAY);""")
 sub("""    if (A.role === "pass" && !A.G.over && A.G.turn !== "x") A.cover = "d";
     step();""", """    if (A.role === "pass" && !A.G.over && A.G.turn !== "x") A.cover = "d";
@@ -237,8 +236,7 @@ sub("""    apply(() => { landed = applyD(A.G, k, to, type, A.sec); });
     if (type === "heli") heliNote(k, from, landed);
     step();""", """    apply(() => { landed = applyD(A.G, k, to, type, A.sec); });
     if (type === "heli") heliNote(k, from, landed);
-    ensureVisible(landed);
-    step();""")
+        step();""")
 sub('aria-label="全体を表示"', 'aria-label="いちばん引いて表示"')
 
 # 駒へ移動するときは、いまの拡大率のまま（勝手に拡大しない）
