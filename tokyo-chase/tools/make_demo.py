@@ -196,8 +196,10 @@ sub("""    V.s = Math.min(3, Math.max(V.fit * 0.85, V.s));
 """    V.s = Math.min(3, Math.max(V.fit, V.s));
     const mw = W * V.s, mh = H * V.s;
     // 地図の端が画面の内側に入らないようにする（上だけは画面上部の表示の下まで下げられる）
-    V.tx = Math.min(0, Math.max(w - mw, V.tx));
-    V.ty = Math.min(hudTop() * 0.7, Math.max(h - mh, V.ty));""")
+    // 四隅の表示の下に隠れた駅も引き出せるよう、端から少し余分にずらせる
+    const padX = Math.min(w * 0.3, 220), padB = Math.min(h * 0.3, 190);
+    V.tx = Math.min(padX, Math.max(w - mw - padX, V.tx));
+    V.ty = Math.min(hudTop() + 10, Math.max(h - mh - padB, V.ty));""")
 sub("""    V.fit = Math.min(w / W, (h - top - 20) / H);
     const s = V.fit * 1.02, tx = (w - W * s) / 2, ty = top + (h - top - H * s) / 2;
     animate ? animateView(s, tx, ty) : setView(s, tx, ty);""",
@@ -556,6 +558,28 @@ sub("""  #map { position: absolute; inset: 0; width: 100%; height: 100%; display
   .st-tag.bus { fill: #1F8A4C; }
   .st-tag.boat { fill: #2F7FB0; }
   .stn-num.on-sub { fill: #FFFFFF; }""")
+
+# ---------------- 2倍移動をはっきり知らせる：バナー・刑事の吹き出し・記録欄の強調 ----------------
+sub("""      if (e.d === 1) s = "怪盗Xが2倍移動！ " + s;""", """      if (e.d === 1) {
+        s = "怪盗Xが2倍移動！ " + s;
+        banner("2倍移動！", A.role === "x" ? "続けてもう1駅動けます" : "怪盗Xが続けてもう1駅動く", "", 2);
+        if (A.role !== "x") say(Math.floor(Math.random() * G.det.length), "2回続けて動くぞ！", "", 3200);
+      }""")
+sub("""      if (CARD_TURNS.includes(i + 1)) cls.push("cardturn");
+      if (!G.over && i === G.xLog.length) cls.push("now");""", """      if (CARD_TURNS.includes(i + 1)) cls.push("cardturn");
+      if (e && e.d) cls.push("dx");
+      if (!G.over && i === G.xLog.length) cls.push("now");""")
+sub("""  .slot .dbl { position: absolute; bottom: 2px; right: 3px; font-size: 8px; }""",
+    """  .slot .dbl { position: absolute; top: 2px; right: 2px; font-size: 10px; font-weight: 900; line-height: 1; padding: 2px 3px; border-radius: 5px; background: #E8C872; color: #1A140C; box-shadow: 0 1px 0 rgba(0,0,0,.4); }
+  .slot.dx { box-shadow: inset 0 0 0 3px #E8C872; }""")
+
+# 同じ重さのお知らせが重なったら、上書きせず順番に出す（2倍移動と目撃が同時のときなど）
+sub("""    if (Date.now() < bannerUntil && pri < bannerPri) return;""", """    if (Date.now() < bannerUntil && pri < bannerPri) return;
+    if (Date.now() < bannerUntil && pri === bannerPri) { setTimeout(() => banner(title, sub, color, pri), bannerUntil - Date.now() + 80); return; }""")
+
+# ---------------- 横向きの携帯：上・右・左下の表示を小さくして地図を広く ----------------
+sub("""  @media (prefers-reduced-motion: reduce) { .top { transition: none; } }""", """  @media (prefers-reduced-motion: reduce) { .top { transition: none; } }
+  @media (max-height: 520px) and (orientation: landscape) { .hud.top, .hud.side, .handbar { zoom: 0.62; } }""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:

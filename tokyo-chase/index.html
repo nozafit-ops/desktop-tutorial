@@ -145,6 +145,7 @@
     body.hud-hidden .pulltab { bottom: -34px; height: 30px; }
   }
   @media (prefers-reduced-motion: reduce) { .top { transition: none; } }
+  @media (max-height: 520px) and (orientation: landscape) { .hud.top, .hud.side, .handbar { zoom: 0.62; } }
   .toprow { display: flex; gap: 8px; align-items: stretch; }
   .toprow > * { pointer-events: auto; }
   .toprow.second .xlog { flex: 1; min-width: 0; }
@@ -257,7 +258,8 @@
   .slot.taxi .n { color: rgba(0,0,0,0.55); }
   .slot.bus .n, .slot.tube .n, .slot.black .n, .slot.boat .n, .slot.heli .n { color: rgba(255,255,255,0.7); }
   .slot .st { font-size: 10px; line-height: 1; margin-top: 2px; }
-  .slot .dbl { position: absolute; bottom: 2px; right: 3px; font-size: 8px; }
+  .slot .dbl { position: absolute; top: 2px; right: 2px; font-size: 10px; font-weight: 900; line-height: 1; padding: 2px 3px; border-radius: 5px; background: #E8C872; color: #1A140C; box-shadow: 0 1px 0 rgba(0,0,0,.4); }
+  .slot.dx { box-shadow: inset 0 0 0 3px #E8C872; }
 
   /* 切符を選ぶシート */
   .sheet-wrap { position: absolute; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0.35); }
@@ -1413,7 +1415,11 @@
           if (k !== undefined) radio(k, pick(["こっちの視界にはいない", "この辺りは異常なし", "見当たらない。別の方を探す"]), "");
         }
       }
-      if (e.d === 1) s = "怪盗Xが2倍移動！ " + s;
+      if (e.d === 1) {
+        s = "怪盗Xが2倍移動！ " + s;
+        banner("2倍移動！", A.role === "x" ? "続けてもう1駅動けます" : "怪盗Xが続けてもう1駅動く", "", 2);
+        if (A.role !== "x") say(Math.floor(Math.random() * G.det.length), "2回続けて動くぞ！", "", 3200);
+      }
       if (xVisible()) s += `（→ ${NO(A.sec.path[i + 1])} ${NAME(A.sec.path[i + 1])}）`;
       pushFeed(i + 1, s);
       if (e.t === "heli" && A.sec.path[i + 1] === A.sec.path[i] && xVisible()) {
@@ -1561,6 +1567,7 @@
   let bannerPri = 0, bannerUntil = 0;
   function banner(title, sub = "", color = "", pri = 1) {
     if (Date.now() < bannerUntil && pri < bannerPri) return;
+    if (Date.now() < bannerUntil && pri === bannerPri) { setTimeout(() => banner(title, sub, color, pri), bannerUntil - Date.now() + 80); return; }
     bannerPri = pri; bannerUntil = Date.now() + 1900;
     const d = document.createElement("div");
     d.className = "bn " + color;
@@ -1897,8 +1904,10 @@
     V.s = Math.min(3, Math.max(V.fit, V.s));
     const mw = W * V.s, mh = H * V.s;
     // 地図の端が画面の内側に入らないようにする（上だけは画面上部の表示の下まで下げられる）
-    V.tx = Math.min(0, Math.max(w - mw, V.tx));
-    V.ty = Math.min(hudTop() * 0.7, Math.max(h - mh, V.ty));
+    // 四隅の表示の下に隠れた駅も引き出せるよう、端から少し余分にずらせる
+    const padX = Math.min(w * 0.3, 220), padB = Math.min(h * 0.3, 190);
+    V.tx = Math.min(padX, Math.max(w - mw - padX, V.tx));
+    V.ty = Math.min(hudTop() + 10, Math.max(h - mh - padB, V.ty));
   }
   function applyView() {
     world.setAttribute("transform", `translate(${V.tx.toFixed(1)} ${V.ty.toFixed(1)}) scale(${V.s.toFixed(4)})`);
@@ -2915,6 +2924,7 @@
       if (e) cls.push(seenT(e));
       if (REVEAL.includes(i + 1)) cls.push("reveal");
       if (CARD_TURNS.includes(i + 1)) cls.push("cardturn");
+      if (e && e.d) cls.push("dx");
       if (!G.over && i === G.xLog.length) cls.push("now");
       let st = "";
       if (e && e.p !== null) st = NO(e.p);
