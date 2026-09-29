@@ -461,6 +461,18 @@ sub("""    Object.assign(A, { role, G, sec, feed: [], sel: null, useDouble: fals
 rsub(r'(        <li>怪盗Xの居場所は秘密。.*?</li>)', r"""\1
         <li><b>無線</b>：怪盗Xが乗った乗り物は、<b>乗った駅か降りた駅が刑事の視界に入っていたときだけ</b>わかります。誰も見ていない移動は移動記録に「？」と残ります。仲間の刑事は見たことを無線で知らせてくれます（右下の「無線」欄とログ）。無線の報告をつなぎ合わせて、怪盗Xの居場所を突き止めましょう。怪盗Xの切符の残り枚数も刑事には見えません。</li>""")
 
+# 不具合の修正：決着の0.9秒後に結果画面へ切り替えるタイマーが、次のゲームを始めた後に動くと、画面が「結果」のまま止まって操作できなくなる
+sub("""    setTimeout(() => { A.screen = "result"; renderScreen(); }, 900);""",
+    """    const endedG = G;
+    setTimeout(() => { if (A.G === endedG && A.screen === "game") { A.screen = "result"; renderScreen(); } }, 900);""")
+# 地下鉄など切符が切れた乗り物は、切符を選ぶ画面で「切符切れ」と表示する
+sub("""      tickets = MOVE_TYPES.filter(t => opts.includes(t)).map(t =>""", """      const empty = MOVE_TYPES.filter(t => !opts.includes(t) && t !== "boat" && ADJ[d.pos].some(e => e.to === to && e.type === t));
+      opt = empty.length ? `<p style="margin:0;color:var(--muted);font-size:13px">${empty.map(t => TYPE[t].name).join("・")}の切符が切れています（刑事の切符は1人ずつ有限）</p>` : "";
+      tickets = MOVE_TYPES.filter(t => opts.includes(t)).map(t =>""")
+
+# 候補が空のときに「発見」と扱わない（空の候補の場所を描こうとして止まる不具合の予防）
+sub("""    if (n <= 1) return { level: "found",""", """    if (n === 1) return { level: "found",""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"

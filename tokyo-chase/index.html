@@ -944,6 +944,8 @@
     if (type === "black") G.black--;
     else if (G.xt && G.xt[type] !== undefined) G.xt[type]--;
     G.possible = rev ? [to] : nextPossible(G, known ? type : "black");
+    // 雲隠れで視界の中に隠れたときなどに候補が空になったら、視界の外のどこか、に戻す
+    if (!G.possible.length) G.possible = [...Array(N).keys()].filter(p => !inSight(G, p) && !G.det.some(d => d.pos === p) && !isRuin(G, p));
     if (rev) G.lastSeen = { pos: to, n };
     if (mateActive(G) && to === G.mate.pos) { finish(G, "x", "meet"); return to; }
     if (G.withMate !== false && !G.mate && G.xLog.length >= MATE_FROM) spawnMate(G, sec);
@@ -1144,6 +1146,7 @@
     } else {
       const left = G.possible.filter(p => p !== to && !inSight(G, p));
       G.possible = left.length ? left : G.possible.filter(p => p !== to);
+      if (!G.possible.length) G.possible = [...Array(N).keys()].filter(p => !inSight(G, p) && !G.det.some(d => d.pos === p) && !isRuin(G, p));
     }
     // ダッシュ中は同じ刑事がもう1回動く
     if (dashing) { G.dash = null; G.seq++; return to; }
@@ -1452,7 +1455,7 @@
   // 刑事側から見た怪盗Xの見つかり具合（公開情報だけで決まる）
   function exposure(G) {
     const n = G.possible.length;
-    if (n <= 1) return { level: "found", n, label: "発見されている", help: "刑事に居場所がばれています" };
+    if (n === 1) return { level: "found", n, label: "発見されている", help: "刑事に居場所がばれています" };
     if (n <= 4) return { level: "near", n, label: `追われている・候補${n}駅`, help: "刑事は候補をかなり絞り込んでいます" };
     return { level: "lost", n, label: `見失われている・候補${n}駅`, help: "刑事はまだ居場所をつかめていません" };
   }
@@ -1680,7 +1683,8 @@
     save();
     A.cover = null;
     render();
-    setTimeout(() => { A.screen = "result"; renderScreen(); }, 900);
+    const endedG = G;
+    setTimeout(() => { if (A.G === endedG && A.screen === "game") { A.screen = "result"; renderScreen(); } }, 900);
   }
 
   // ---------------- カードの処理 ----------------
@@ -2799,6 +2803,8 @@
       title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
       const k = G.turn, d = G.det[k];
       const opts = detMoves(G, k).filter(m => m.to === to).map(m => m.type);
+      const empty = MOVE_TYPES.filter(t => !opts.includes(t) && t !== "boat" && ADJ[d.pos].some(e => e.to === to && e.type === t));
+      opt = empty.length ? `<p style="margin:0;color:var(--muted);font-size:13px">${empty.map(t => TYPE[t].name).join("・")}の切符が切れています（刑事の切符は1人ずつ有限）</p>` : "";
       tickets = MOVE_TYPES.filter(t => opts.includes(t)).map(t =>
         `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}</span><span class="cnt">${d.t[t] ?? ""}</span></button>`).join("");
     }

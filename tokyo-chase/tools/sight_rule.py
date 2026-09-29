@@ -18,7 +18,9 @@ def _partial():
          "    const known = type === \"pass\" || wit >= 0;\n"
          "    G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0, k: known ? 1 : 0, w: wit });"),
         ("    G.possible = rev ? [to] : nextPossible(G, type);",
-         "    G.possible = rev ? [to] : nextPossible(G, known ? type : \"black\");"),
+         "    G.possible = rev ? [to] : nextPossible(G, known ? type : \"black\");\n"
+         "    // 雲隠れで視界の中に隠れたときなどに候補が空になったら、視界の外のどこか、に戻す\n"
+         "    if (!G.possible.length) G.possible = [...Array(N).keys()].filter(p => !inSight(G, p) && !G.det.some(d => d.pos === p) && !isRuin(G, p));"),
         # CPUの刑事の推理も、見られていない手は乗り物がわからないものとして扱う
         ("      const t = G.xLog[i].t, nx = new Map();",
          "      const t = G.xLog[i].k === 0 ? \"black\" : G.xLog[i].t, nx = new Map();"),
@@ -48,6 +50,7 @@ def _sight(sight):
          "    } else {\n"
          "      const left = G.possible.filter(p => p !== to && !inSight(G, p));\n"
          "      G.possible = left.length ? left : G.possible.filter(p => p !== to);\n"
+         "      if (!G.possible.length) G.possible = [...Array(N).keys()].filter(p => !inSight(G, p) && !G.det.some(d => d.pos === p) && !isRuin(G, p));\n"
          "    }"),
         # 雲隠れ：次に見つかるのを1回だけ防ぐ。CPUは刑事が近いときに使う
         ("        if (c === \"vanish\") use = use || (REVEAL.includes(G.xLog.length + 1) && !(G.skipReveal > 0));",
