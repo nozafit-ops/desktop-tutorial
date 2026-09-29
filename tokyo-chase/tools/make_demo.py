@@ -82,7 +82,7 @@ sub('''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべて�
 '''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
   // 水上バスは怪盗Xだけが黒チケットで乗れる。刑事は乗れない
   const DET_TICKETS = { heli: 1 };
-  const X_TICKETS = { taxi: 10, bus: 7, tube: 4, boat: 0 };
+  const X_TICKETS = { taxi: 15, bus: 11, tube: 5, boat: 0 };
   const dHas = (d, type) => type === "boat" ? false : type === "heli" ? d.t.heli > 0 : true;''')
 # ロンドン版の不具合の修正：怪盗Xが「駅破壊」で自分の最後の逃げ道を壊さないようにする
 sub('''      return [...Array(N).keys()].filter(i => i !== sec.pos && D[sec.pos][i] <= 2 && !occ.has(i) && !isRuin(G, i));''',
@@ -246,6 +246,7 @@ sub("function centerOn(i, s = Math.max(V.s, 0.95)) {", "function centerOn(i, s =
 
 # ---------------- プレイヤー視点に固定：画面は自分の駒を中心に動かない。見えるのは自分のまわりだけ ----------------
 sub("""  // いちばん引いたときの倍率：""", """  // 画面は自分の駒（パス&プレイでは手番の人の駒）を中心に固定する。ドラッグや拡大縮小はしない
+  const AUTO_CAM = false;   // true にすると駒の動きに合わせて画面が自動で動く（いまは自分でドラッグしたときだけ動く）
   const LOCK = false;   // true にすると画面を自分の駒に固定（いまはドラッグで自由にスクロール）
   let lockedOn = null;
   function viewAnchor() {
@@ -277,11 +278,12 @@ sub("""  function fitStations(list) {
 """)
 sub("""  function ensureVisible(i) {
 """, """  function ensureVisible(i) {
-    if (LOCK) return;
+    if (LOCK || !AUTO_CAM) return;
 """)
 # 自分の番の始めは、駒が画面の端寄りなら真ん中へ（行き先の駅まで見えるように）
 sub("""  function ensureVisible(i) {
 """, """  function focusOwn(i) {
+    if (!AUTO_CAM) return;
     const { w, h } = vpSize();
     const [, x, y] = STATIONS[i];
     const sx = x * V.s + V.tx, sy = y * V.s + V.ty, top = hudTop();
@@ -601,6 +603,18 @@ sub("2倍移動", "2回移動", count=0)
 sub('"dbl">2×</span>', '"dbl">2回</span>')
 sub('">2×${G.dbl}', '">2回×${G.dbl}')
 sub("「2×」", "「2回」", count=0)
+
+# ---------------- 30手：手数・カードの手・怪盗Xの切符を増やす（sim.js MOVES=30 で調整） ----------------
+sub("const MAX_MOVES = 21;", "const MAX_MOVES = 30;")
+sub("const CARD_TURNS = [5, 10, 17];", "const CARD_TURNS = [5, 12, 20];")
+sub("const CARD_LAST = 20;   // 手札のカードは20手目まで好きな時に使える", "const CARD_LAST = 28;   // 手札のカードは28手目まで好きな時に使える")
+sub("const X_DOUBLE = 4;", "const X_DOUBLE = 5;")
+sub("black: detCount,", "black: X_BLACK,")
+sub("const X_DOUBLE = 5;", "const X_DOUBLE = 5;\n  const X_BLACK = 6;     // 黒チケットの枚数（水上バスにもこれで乗る）")
+sub("<b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）", "<b>黒チケット</b> ${X_BLACK}枚（乗り物を隠す。水上バスにもこれで乗る）")
+# 水上バスで行ける駅では、黒チケットの札に「水上バス」と出す
+sub("""<span class="ja">${TYPE[t].name}${t === "black" ? "（乗り物を隠す）" : ""}</span>""",
+    """<span class="ja">${t === "black" && ADJ[A.sec.pos].some(e => e.to === to && e.type === "boat") ? "水上バス（黒チケット・乗り物は隠れる）" : TYPE[t].name + (t === "black" ? "（乗り物を隠す）" : "")}</span>""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:

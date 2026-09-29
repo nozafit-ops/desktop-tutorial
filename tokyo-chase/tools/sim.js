@@ -86,6 +86,15 @@ if (process.env.SY_ROUNDS) {
   core = core.replace("const MAX_MOVES = 21;", "const MAX_MOVES = 24;");
   core = core.replace("const REVEAL = [3, 6, 9, 12, 15, 18, 21];", "const REVEAL = [3, 8, 13, 18, 24];");
 }
+// 手数を変える：MOVES=30 CARDS=5,12,20 CARD_LAST=28 XT=14,10,5 BLACK=5 DBL=4
+if (process.env.MOVES) {
+  core = core.replace("const MAX_MOVES = 21;", `const MAX_MOVES = ${Number(process.env.MOVES)};`);
+  if (process.env.CARDS) core = core.replace("const CARD_TURNS = [5, 10, 17];", `const CARD_TURNS = [${process.env.CARDS}];`);
+  if (process.env.CARD_LAST) core = core.replace("const CARD_LAST = 20;", `const CARD_LAST = ${Number(process.env.CARD_LAST)};`);
+}
+if (process.env.XT) { const [t, b, u] = process.env.XT.split(",").map(Number); core = core.replace(/const X_TICKETS = \{[^}]*\};/, `const X_TICKETS = { taxi: ${t}, bus: ${b}, tube: ${u}, boat: 0 };`); }
+if (process.env.BLACK) core = core.replace("black: detCount,", `black: ${Number(process.env.BLACK)},`);
+if (process.env.DBL) core = core.replace(/const X_DOUBLE = \d+;/, `const X_DOUBLE = ${Number(process.env.DBL)};`);
 if (xTubeArg) core = core.replace(/tube: 4,/, `tube: ${Number(xTubeArg)},`);
 
 const api = new Function(core + `
@@ -93,7 +102,7 @@ const api = new Function(core + `
            aiUseCards, applyCard, drawCard, checkTrap, handOf, cardMove, CARD_TURNS, CARD_LAST, MAX_MOVES, REVEAL, X_TICKETS };
 `)();
 
-let selfTrap = 0;
+let selfTrap = 0, boatRides = 0, boatMaybe = 0;
 // 画面の step() と同じ流れを、全員CPUで回す（刑事側のカードもCPUが使う＝怪盗Xモードと同じ）
 function play(dets) {
   const { G, sec } = api.newGame(dets, true);
@@ -118,6 +127,7 @@ function play(dets) {
       // ロンドン版の不具合：CPUの怪盗Xが「駅破壊」で自分の最後の逃げ道を壊すことがある。ここでは袋のネズミとして扱う
       if (!api.xMoves(G, sec).length) { api.finish(G, "d", "trapped"); selfTrap++; break; }
       const m = api.aiX(G, sec);
+      if (m.type === "black") { const ts = api.ADJ[sec.pos].filter(e => e.to === m.to).map(e => e.type); if (ts.length && ts.every(t => t === "boat")) boatRides++; else if (ts.includes("boat")) boatMaybe++; }
       api.applyX(G, sec, m.to, m.type, m.useDouble);
       sizes.push(G.possible.length);
     } else {
@@ -167,5 +177,6 @@ console.log(JSON.stringify({
   xWin: pct(r => r.winner === "x"), detWin: pct(r => r.winner === "d"), reasons, selfTrapByDestroyCard: selfTrap,
   avgCatchMove: caught.length ? +(caught.reduce((a, r) => a + r.moves, 0) / caught.length).toFixed(1) : null,
   avgCandidates: +(res.reduce((a, r) => a + r.avgPossible, 0) / games).toFixed(1),
+  boatOnlyRidesPerGame: +(boatRides / games).toFixed(3), blackOnBoatOrOtherPerGame: +(boatMaybe / games).toFixed(3),
   xTicketsUsedPerGame: Object.fromEntries(Object.entries(usedAvg).map(([k, v]) => [k, +v.toFixed(2)])),
 }, null, 1));

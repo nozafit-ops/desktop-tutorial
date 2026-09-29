@@ -841,17 +841,18 @@
   const DET_TYPES = ["taxi", "bus", "tube", "boat", "heli"];
   const MOVE_TYPES = ["taxi", "bus", "tube", "boat"];
 
-  const MAX_MOVES = 21;
+  const MAX_MOVES = 30;
   const REVEAL = [];
   const SIGHT = 350;   // 刑事の視界の半径（盤面の座標）
   const inSight = (G, p) => G.det.some(d => Math.hypot(STATIONS[d.pos][1] - STATIONS[p][1], STATIONS[d.pos][2] - STATIONS[p][2]) <= SIGHT);
   // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
   // 水上バスは怪盗Xだけが黒チケットで乗れる。刑事は乗れない
   const DET_TICKETS = { heli: 1 };
-  const X_TICKETS = { taxi: 10, bus: 7, tube: 4, boat: 0 };
+  const X_TICKETS = { taxi: 15, bus: 11, tube: 5, boat: 0 };
   const dHas = (d, type) => type === "boat" ? false : type === "heli" ? d.t.heli > 0 : true;
   const xHas = (G, type) => type === "black" ? G.black > 0 : type === "heli" ? G.heli > 0 : !G.xt || G.xt[type] > 0;
-  const X_DOUBLE = 4;
+  const X_DOUBLE = 5;
+  const X_BLACK = 6;     // 黒チケットの枚数（水上バスにもこれで乗る）
   // 相棒：怪盗Xが相棒と同じ駅に着いたら逃走成功。相棒は誰からも見え、刑事が踏むと確保される
   const MATE_MIN = 9;     // 怪盗Xとの最初の距離（手数）
   const MATE_FROM = 5;    // 相棒はこの手目の移動のあとに現れる
@@ -908,7 +909,7 @@
     // 相棒は MATE_FROM 手目に現れる（それまでは G.mate は null）
     const mate = null;
     const G = {
-      seq: 1, turn: "x", det, xLog: [], xt: { ...X_TICKETS }, black: detCount, dbl: X_DOUBLE, heli: X_HELI, doubling: false,
+      seq: 1, turn: "x", det, xLog: [], xt: { ...X_TICKETS }, black: X_BLACK, dbl: X_DOUBLE, heli: X_HELI, doubling: false,
       // ガス欠のヘリポート（誰にも知らされない）。飛ぼうとして初めてわかる
       dud: pick(HELI), dudFound: false, mate, withMate,
       possible: startable.slice().sort((a, b) => a - b), lastSeen: null,
@@ -1017,8 +1018,8 @@
   const allStuck = G => G.det.every((_, k) => detMoves(G, k).length === 0);
 
   // ---------------- カード（5・10・17手目に両陣営が1枚引く。ハズレなし） ----------------
-  const CARD_TURNS = [5, 10, 17];
-  const CARD_LAST = 20;   // 手札のカードは20手目まで好きな時に使える
+  const CARD_TURNS = [5, 12, 20];
+  const CARD_LAST = 28;   // 手札のカードは28手目まで好きな時に使える
   const CARD = {
     bridge:    { side: "d", name: "橋封鎖", desc: "橋を1つ選んで封鎖する。4手のあいだ怪盗Xは通れない。" },
     rcheck:    { side: "d", name: "ランダム検問", desc: "引いたその場で発動。ヘリポート以外のどこかの駅に検問所が敷かれ、6手のあいだ怪盗Xはその駅を通れない。" },
@@ -1934,6 +1935,7 @@
     anim = requestAnimationFrame(tick);
   }
   // 画面は自分の駒（パス&プレイでは手番の人の駒）を中心に固定する。ドラッグや拡大縮小はしない
+  const AUTO_CAM = false;   // true にすると駒の動きに合わせて画面が自動で動く（いまは自分でドラッグしたときだけ動く）
   const LOCK = false;   // true にすると画面を自分の駒に固定（いまはドラッグで自由にスクロール）
   let lockedOn = null;
   function viewAnchor() {
@@ -2000,13 +2002,14 @@
     animateView(s, w / 2 - cx * s, (top + bottom) / 2 - cy * s);
   }
   function focusOwn(i) {
+    if (!AUTO_CAM) return;
     const { w, h } = vpSize();
     const [, x, y] = STATIONS[i];
     const sx = x * V.s + V.tx, sy = y * V.s + V.ty, top = hudTop();
     if (sx < w * 0.28 || sx > w * 0.72 || sy < top + (h - top) * 0.22 || sy > h - (h - top) * 0.28) centerOn(i, V.s);
   }
   function ensureVisible(i) {
-    if (LOCK) return;
+    if (LOCK || !AUTO_CAM) return;
     const { w, h } = vpSize();
     const [, x, y] = STATIONS[i];
     const sx = x * V.s + V.tx, sy = y * V.s + V.ty;
@@ -3010,7 +3013,7 @@
       title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
       const opts = xMoves(G, A.sec).filter(m => m.to === to).map(m => m.type);
       tickets = ["taxi", "bus", "tube", "boat", "black"].filter(t => opts.includes(t)).map(t =>
-        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}${t === "black" ? "（乗り物を隠す）" : ""}</span><span class="cnt">${t === "black" ? G.black : G.xt && G.xt[t] !== undefined ? G.xt[t] : ""}</span></button>`).join("");
+        `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${t === "black" && ADJ[A.sec.pos].some(e => e.to === to && e.type === "boat") ? "水上バス（黒チケット・乗り物は隠れる）" : TYPE[t].name + (t === "black" ? "（乗り物を隠す）" : "")}</span><span class="cnt">${t === "black" ? G.black : G.xt && G.xt[t] !== undefined ? G.xt[t] : ""}</span></button>`).join("");
       if (canDouble(G)) opt = `<div class="opt-row"><div><b>2回移動</b><div style="font-size:12px;color:var(--muted)">この後もう1駅続けて動く（残り${G.dbl}）</div></div><button class="switch" role="switch" aria-checked="${A.useDouble}" data-act="double" aria-label="2回移動"></button></div>`;
     } else {
       title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
@@ -3067,7 +3070,7 @@
         <li><b>移動記録の見方</b>：マスの中の文字は怪盗Xが使った乗り物（タ＝タクシー、バ＝バス、地＝地下鉄、船＝水上バス、黒＝黒チケット、H＝ヘリ、休＝パス）。駅の番号が入っているマスは、その手で怪盗Xが見つかった駅です。<span style="color:#E3B341;font-weight:900">金色の小さなカード印</span>はカードを引く手、金色の枠はいまの手、「2回」は2回移動を使った手です。</li>
         <li><b>切符</b>：刑事はタクシー・バス・地下鉄が使い放題（ヘリだけ${DET_TICKETS.heli}枚。水上バスには乗れません）。怪盗Xの切符（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・黒チケット・2回移動${X_DOUBLE}・ヘリ${X_HELI}）も有限。切符が尽きた乗り物には乗れません。動けなくなると怪盗Xの負け、刑事が全員動けなくなると怪盗Xの勝ち。</li>
         <li><b>手札</b>：画面の左下にいつも表示されます。自分の番で使えるときは金色に光り、カードをタップするとそのまま使えます。カードを引く手は${CARD_TURNS.join("・")}手目。</li>
-        <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2回移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
+        <li>怪盗Xは <b>黒チケット</b> ${X_BLACK}枚（乗り物を隠す。水上バスにもこれで乗る）、<b>2回移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
         <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引きます（ハズレはありません）。手札のカードは自分の番に左下の手札からタップして、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」。ダッシュを使った刑事はその番に2回続けて動けます。ヘリ封鎖とランダム検問は引いたその場で発動します（ヘリ封鎖は1ゲームに1回だけ、ランダム検問はヘリポート以外のどこかの駅に検問所が敷かれます）。怪盗X側は「罠」「雲隠れ」「駅破壊」。刑事モードの手札はあなただけが使えます（仲間のCPUは使いません）。</li>
         <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
         <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
