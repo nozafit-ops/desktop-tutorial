@@ -1419,8 +1419,8 @@
         }
       }
       if (e.d === 1) {
-        s = "怪盗Xが2倍移動！ " + s;
-        banner("2倍移動！", A.role === "x" ? "続けてもう1駅動けます" : "怪盗Xが続けてもう1駅動く", "", 2);
+        s = "怪盗Xが2回移動！ " + s;
+        banner("2回移動！", A.role === "x" ? "続けてもう1駅動けます" : "怪盗Xが続けてもう1駅動く", "", 2);
         if (A.role !== "x") say(Math.floor(Math.random() * G.det.length), "2回続けて動くぞ！", "", 3200);
       }
       if (xVisible()) s += `（→ ${NO(A.sec.path[i + 1])} ${NAME(A.sec.path[i + 1])}）`;
@@ -2886,7 +2886,7 @@
     $("xcard").innerHTML = `${portrait("x")}<span class="who"><b>怪盗X</b>
       <small class="nx">${G.over ? "ゲーム終了" : "刑事の視界に入ると見つかる"}</small>
       ${G.over ? "" : `<span class="expo ${ex.level}" title="${ex.help}"><i></i>${ex.label}</span>`}
-      <span class="chipsx">${G.xt && (xVisible() || G.over) ? ["taxi", "bus", "tube"].map(t => `<span class="tk ${t} ${G.xt[t] ? "" : "zero"}" title="${TYPE[t].name}の残り">${TYPE[t].short}${G.xt[t]}</span>`).join("") : ""}<span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
+      <span class="chipsx">${G.xt && (xVisible() || G.over) ? ["taxi", "bus", "tube"].map(t => `<span class="tk ${t} ${G.xt[t] ? "" : "zero"}" title="${TYPE[t].name}の残り">${TYPE[t].short}${G.xt[t]}</span>`).join("") : ""}<span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2回×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
     $("xcard").classList.toggle("active", G.turn === "x");
     $("dets").innerHTML = G.det.map((d, k) => `
       <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="${A.role === "d" && k !== ME_DET ? "order" : "focusD"}" data-k="${k}" aria-label="${dName(k)}：切符は使い放題・ヘリ${d.t.heli}">
@@ -2941,7 +2941,7 @@
       if (e && e.p !== null) st = NO(e.p);
       else if (e && showX) st = NO(A.sec.path[i + 1]);
       const title = `${i + 1}手目${CARD_TURNS.includes(i + 1) ? "（カードを引く）" : ""}${e ? "：" + TYPE[seenT(e)].name : ""}${st ? "（" + NAME(st - 1) + "）" : ""}`;
-      html += `<div class="${cls.join(" ")}" title="${esc(title)}"><span class="n">${i + 1}</span>${e ? TYPE[seenT(e)].short : ""}${st ? `<span class="st">${st}</span>` : ""}${e?.d ? `<span class="dbl">2×</span>` : ""}</div>`;
+      html += `<div class="${cls.join(" ")}" title="${esc(title)}"><span class="n">${i + 1}</span>${e ? TYPE[seenT(e)].short : ""}${st ? `<span class="st">${st}</span>` : ""}${e?.d ? `<span class="dbl">2回</span>` : ""}</div>`;
     }
     const xl = $("xlog");
     xl.innerHTML = html;
@@ -3011,7 +3011,7 @@
       const opts = xMoves(G, A.sec).filter(m => m.to === to).map(m => m.type);
       tickets = ["taxi", "bus", "tube", "boat", "black"].filter(t => opts.includes(t)).map(t =>
         `<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}${t === "black" ? "（乗り物を隠す）" : ""}</span><span class="cnt">${t === "black" ? G.black : G.xt && G.xt[t] !== undefined ? G.xt[t] : ""}</span></button>`).join("");
-      if (canDouble(G)) opt = `<div class="opt-row"><div><b>2倍移動</b><div style="font-size:12px;color:var(--muted)">この後もう1駅続けて動く（残り${G.dbl}）</div></div><button class="switch" role="switch" aria-checked="${A.useDouble}" data-act="double" aria-label="2倍移動"></button></div>`;
+      if (canDouble(G)) opt = `<div class="opt-row"><div><b>2回移動</b><div style="font-size:12px;color:var(--muted)">この後もう1駅続けて動く（残り${G.dbl}）</div></div><button class="switch" role="switch" aria-checked="${A.useDouble}" data-act="double" aria-label="2回移動"></button></div>`;
     } else {
       title = `<span class="no">${NO(to)}</span>${esc(NAME(to))} へ`;
       const k = G.turn, d = G.det[k];
@@ -3064,10 +3064,10 @@
         <li>${RIVER_NAME}を渡る <b>橋</b> の上にも駅（ひし形の台座）があり、タクシーとバスは橋で一度止まります。橋は5か所だけです。</li>
         <li>怪盗Xの居場所は秘密。ただし <b>刑事の視界</b>（刑事のまわりの青い点線の円）に入ると、その場で姿が見えて <b>発見</b> されます。怪盗Xが自分で視界に入っても、刑事が近づいて視界に入っても同じです。視界の中の駅には怪盗Xはいないので、候補から外れます。刑事にわかるのは、移動記録に残る <b>切符の種類</b> と、見つかった場所だけです。</li>
         <li><b>無線</b>：怪盗Xが乗った乗り物は、<b>乗った駅か降りた駅が刑事の視界に入っていたときだけ</b>わかります。誰も見ていない移動は移動記録に「？」と残ります。仲間の刑事は見たことを無線で知らせてくれます（右下の「無線」欄とログ）。無線の報告をつなぎ合わせて、怪盗Xの居場所を突き止めましょう。怪盗Xの切符の残り枚数も刑事には見えません。</li>
-        <li><b>移動記録の見方</b>：マスの中の文字は怪盗Xが使った乗り物（タ＝タクシー、バ＝バス、地＝地下鉄、船＝水上バス、黒＝黒チケット、H＝ヘリ、休＝パス）。駅の番号が入っているマスは、その手で怪盗Xが見つかった駅です。<span style="color:#E3B341;font-weight:900">金色の小さなカード印</span>はカードを引く手、金色の枠はいまの手、「2×」は2倍移動を使った手です。</li>
-        <li><b>切符</b>：刑事はタクシー・バス・地下鉄が使い放題（ヘリだけ${DET_TICKETS.heli}枚。水上バスには乗れません）。怪盗Xの切符（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）も有限。切符が尽きた乗り物には乗れません。動けなくなると怪盗Xの負け、刑事が全員動けなくなると怪盗Xの勝ち。</li>
+        <li><b>移動記録の見方</b>：マスの中の文字は怪盗Xが使った乗り物（タ＝タクシー、バ＝バス、地＝地下鉄、船＝水上バス、黒＝黒チケット、H＝ヘリ、休＝パス）。駅の番号が入っているマスは、その手で怪盗Xが見つかった駅です。<span style="color:#E3B341;font-weight:900">金色の小さなカード印</span>はカードを引く手、金色の枠はいまの手、「2回」は2回移動を使った手です。</li>
+        <li><b>切符</b>：刑事はタクシー・バス・地下鉄が使い放題（ヘリだけ${DET_TICKETS.heli}枚。水上バスには乗れません）。怪盗Xの切符（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・黒チケット・2回移動${X_DOUBLE}・ヘリ${X_HELI}）も有限。切符が尽きた乗り物には乗れません。動けなくなると怪盗Xの負け、刑事が全員動けなくなると怪盗Xの勝ち。</li>
         <li><b>手札</b>：画面の左下にいつも表示されます。自分の番で使えるときは金色に光り、カードをタップするとそのまま使えます。カードを引く手は${CARD_TURNS.join("・")}手目。</li>
-        <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2倍移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
+        <li>怪盗Xは <b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）、<b>2回移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
         <li><b>カード</b>：5・10・17手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引きます（ハズレはありません）。手札のカードは自分の番に左下の手札からタップして、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」。ダッシュを使った刑事はその番に2回続けて動けます。ヘリ封鎖とランダム検問は引いたその場で発動します（ヘリ封鎖は1ゲームに1回だけ、ランダム検問はヘリポート以外のどこかの駅に検問所が敷かれます）。怪盗X側は「罠」「雲隠れ」「駅破壊」。刑事モードの手札はあなただけが使えます（仲間のCPUは使いません）。</li>
         <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
         <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>
@@ -3076,7 +3076,7 @@
         <li>刑事の駒の吹き出しは、刑事がどこまで怪盗Xをつかんでいるかの合図です。<b>？</b>は見失っている、<b>！</b>は捕捉している。怪盗Xの札には「見失われている／追われている／発見されている」が表示されます。</li>
         <li>刑事の番に怪盗Xのいる駅へ入った時点で <b>確保（逮捕）</b>。最後の手でも確保が優先です。刑事どうしは同じ駅に重なってもかまいません。${MAX_MOVES}手逃げ切れば怪盗Xの勝ち。</li>
         <li><b>相棒</b>：${MATE_FROM}手目になると怪盗Xの相棒が現れます（怪盗Xから${MATE_MIN}駅以上離れた場所）。相棒は誰からも見え、${MATE_EVERY}手ごとに1駅、怪盗Xのほうへ自動で動きます。怪盗Xが相棒と同じ駅に着いた時点で <b>合流成功＝怪盗Xの勝ち</b>。刑事が相棒の駅に入ると相棒を確保でき、もう合流はできません。</li>
-        <li><b>パス</b>：自分の番に「パス」を押すと、その場にとどまれます（切符は使いません）。怪盗Xのパスは記録に「休」と残ります。2倍移動の途中と、どこへも動けないときはパスできません。</li>
+        <li><b>パス</b>：自分の番に「パス」を押すと、その場にとどまれます（切符は使いません）。怪盗Xのパスは記録に「休」と残ります。2回移動の途中と、どこへも動けないときはパスできません。</li>
         <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは画面上部の手番表示にある「ヘリ」ボタンから。</li>
       </ol><button class="btn wide" data-act="title">戻る</button></div>`;
       return;

@@ -596,6 +596,12 @@ sub("""  @media (prefers-reduced-motion: reduce) { .top { transition: none; } }"
   @media (max-width: 760px), (max-height: 520px) { .edge-arrow { opacity: 0.82; } .edge-arrow:active { opacity: 1; } .edge-arrow svg.dir { transform: scale(0.72); } .edge-arrow .portrait, .edge-arrow .portrait img { width: 27px !important; height: 27px !important; } .edge-arrow .ea-d { font-size: 9px; bottom: -6px; padding: 0 4px; } }
   @media (max-width: 760px) { .hud.side, .handbar { zoom: 0.8; } }""")
 
+# ---------------- 「2倍移動」は「2回移動」と呼ぶ ----------------
+sub("2倍移動", "2回移動", count=0)
+sub('"dbl">2×</span>', '"dbl">2回</span>')
+sub('">2×${G.dbl}', '">2回×${G.dbl}')
+sub("「2×」", "「2回」", count=0)
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"
