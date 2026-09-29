@@ -3,6 +3,7 @@
   // 道路・バス・地下鉄は、縦横と45度の線でつなぎ、角を丸める（地下鉄の路線図風）
   // ======================================================================
   const PX = 3;   // 背景の1ドットが盤面の何単位か（大きいほどドットが粗い）
+  const PLAIN_BG = true;   // 背景は地面と水だけ（ビル・木・公園は描かない）
 
   // 駅 a→b を、縦横の直線と45度の斜めで結ぶ折れ線（端は縦横、真ん中が斜め）
   function octPts(a, b, off = 0) {
@@ -68,6 +69,7 @@
       g.fillStyle = "#E4DCC2"; g.beginPath(); g.ellipse(px(x), px(y), px(124), px(84), 0, 0, Math.PI * 2); g.fill();
       g.fillStyle = "#7DBB5E"; g.beginPath(); g.ellipse(px(x), px(y) - 2, px(100), px(62), 0, 0, Math.PI * 2); g.fill();
     }
+    if (PLAIN_BG) { img.setAttribute("href", c.toDataURL("image/png")); return; }
     // 道・線路の通り道（ビルを置かない）
     const segs = [];
     for (const key of edgeTypes.keys()) {
