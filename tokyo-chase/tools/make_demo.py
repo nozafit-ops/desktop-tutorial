@@ -539,7 +539,7 @@ sub("""      b.style.transform = `translate(${ax.toFixed(1)}px, ${ay.toFixed(1)}
 
 # ---------------- ドット絵風の盤面（tools/pixel_board.js）：背景と道・線路・駅の描き方を差し替える ----------------
 a_ = out.index("  async function renderBackground() {"); b_ = out.index("  // 駒（ボードゲームのポーン）")
-out = out[:a_] + open(os.path.join(HERE, "pixel_board.js"), encoding="utf-8").read() + out[b_:]
+out = out[:a_] + open(os.path.join(HERE, "pixel_board.js"), encoding="utf-8").read() + open(os.path.join(HERE, "pixel_cards.js"), encoding="utf-8").read() + out[b_:]
 sub("""family=Zen+Old+Mincho:wght@700;900&display=swap">""", """family=Zen+Old+Mincho:wght@700;900&family=DotGothic16&display=swap">""")
 sub("""  .stn-num { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 15px; fill: var(--map-ink);""",
     """  .stn-num { font-family: "DotGothic16", "Zen Kaku Gothic New", sans-serif; font-weight: 400; font-size: 16px; fill: #1C1C1C;""")
@@ -615,6 +615,33 @@ sub("<b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚�
 # 水上バスで行ける駅では、黒チケットの札に「水上バス」と出す
 sub("""<span class="ja">${TYPE[t].name}${t === "black" ? "（乗り物を隠す）" : ""}</span>""",
     """<span class="ja">${t === "black" && ADJ[A.sec.pos].some(e => e.to === to && e.type === "boat") ? "水上バス（黒チケット・乗り物は隠れる）" : TYPE[t].name + (t === "black" ? "（乗り物を隠す）" : "")}</span>""")
+
+# ---------------- 切符をドット絵のカードに（tools/pixel_cards.js の pxCard） ----------------
+sub("""tickets = `<button class="ticket heli" data-act="ticket" data-type="heli"><span class="en">Helicopter</span><span class="ja">ほかのヘリポートのどこかへ着陸（ランダム）</span><span class="cnt">${cnt}</span></button>`;""",
+    """tickets = pxCard("heli", cnt, "heli");""")
+sub("""`<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${t === "black" && ADJ[A.sec.pos].some(e => e.to === to && e.type === "boat") ? "水上バス（黒チケット・乗り物は隠れる）" : TYPE[t].name + (t === "black" ? "（乗り物を隠す）" : "")}</span><span class="cnt">${t === "black" ? G.black : G.xt && G.xt[t] !== undefined ? G.xt[t] : ""}</span></button>`).join("");""",
+    """pxCard(t === "black" && ADJ[A.sec.pos].some(e => e.to === to && e.type === "boat") ? "boat" : t, t === "black" ? G.black : G.xt && G.xt[t] !== undefined ? G.xt[t] : "", t)).join("");""")
+sub("""`<button class="ticket ${t}" data-act="ticket" data-type="${t}"><span class="en">${TYPE[t].en}</span><span class="ja">${TYPE[t].name}</span><span class="cnt">${t === "heli" ? d.t.heli : "∞"}</span></button>`).join("");""",
+    """pxCard(t, t === "heli" ? d.t.heli : "∞", t)).join("");""")
+sub("""  .tickets { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }""",
+    """  .tickets { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  .tickets:has(.pxcard) { grid-template-columns: repeat(auto-fit, minmax(104px, 150px)); justify-content: center; }
+  .tickets .ticket.pxcard { background: #FBF7EA; color: #4F6475; border: 3px solid #C2464F; border-radius: 12px; padding: 6px 7px 7px; gap: 5px; justify-content: flex-start;
+    box-shadow: inset 0 0 0 2px #FBF7EA, inset 0 0 0 3px rgba(194,70,79,.35), 0 4px 0 rgba(0,0,0,.35); font-family: "DotGothic16", sans-serif; }
+  .ticket.pxcard::before, .ticket.pxcard::after { display: none; }
+  .pxcard .pc-top { display: flex; align-items: center; gap: 3px; height: 28px; }
+  .pxcard .pc-run { width: 24px; height: 22px; image-rendering: pixelated; }
+  .pxcard .pc-no { align-self: flex-start; font-size: 9px; color: #9FB3C2; }
+  .pxcard .pc-cnt { margin-left: auto; font-size: 25px; line-height: 1; color: #FFFFFF; text-shadow: 1px 0 0 #7E2A63, -1px 0 0 #7E2A63, 0 1px 0 #7E2A63, 0 -1px 0 #7E2A63, 2px 2px 0 #7E2A63, 3px 3px 0 #7E2A63; }
+  .pxcard .pc-type { width: 26px; height: 26px; display: grid; place-items: center; border: 2px solid #7E2A63; border-radius: 3px; color: #fff; font-size: 14px; }
+  .pxcard .pc-type.taxi { background: var(--taxi); color: #1A140C; } .pxcard .pc-type.bus { background: var(--bus); } .pxcard .pc-type.tube { background: var(--tube); }
+  .pxcard .pc-type.boat { background: var(--ferry); } .pxcard .pc-type.black { background: #1C1830; } .pxcard .pc-type.heli { background: var(--heli); }
+  .pxcard .pc-art { width: 100%; aspect-ratio: 3 / 2; image-rendering: pixelated; border-radius: 2px; display: block; }
+  .pxcard .pc-bot { display: flex; align-items: stretch; gap: 4px; }
+  .pxcard .pc-chase { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 8px; letter-spacing: .05em; background: #4F6475; color: #FBF7EA; padding: 2px 1px; text-align: center; }
+  .pxcard .pc-title { font-size: 15px; line-height: 1.05; color: #4F6475; letter-spacing: .02em; }
+  .pxcard .pc-ja { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 11px; font-weight: 700; color: #8A5A4A; line-height: 1.3; }
+  .ticket.pxcard:active:not(:disabled) { transform: translateY(2px); }""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
