@@ -1,10 +1,10 @@
 // CPU どうしの対戦をたくさん回して、盤面の遊びやすさ（勝率・決着の手数など）を調べる
 // ロンドン版の HTML から「CORE」（ルールとCPU。画面に依存しない部分）をそのまま取り出して使う
-//   node sim.js <london.html> [games=400] [board=tokyo|london] [dets=4] [xTube=4]
+//   node sim.js <london.html> [games=400] [board=tokyo|london] [dets=4] [xTube=4] [xRail=3]
 const fs = require("fs");
 const path = require("path");
 
-const [, , htmlPath, gamesArg = "400", which = "tokyo", detsArg = "4", xTubeArg = ""] = process.argv;
+const [, , htmlPath, gamesArg = "400", which = "tokyo", detsArg = "4", xTubeArg = "", xRailArg = "3"] = process.argv;
 const html = fs.readFileSync(htmlPath, "utf8");
 let core = html.slice(html.indexOf("// CORE-START"), html.indexOf("// CORE-END"));
 
@@ -18,6 +18,7 @@ if (which === "tokyo") {
   const STATIONS = ${JSON.stringify(B.stations)};
   const TAXI = ${JSON.stringify(B.taxi)};
   const TUBE = ${JSON.stringify(B.tube.map(([n, , s]) => [n, s]))};
+  const RAIL = ${JSON.stringify((B.rail || []).map(([n, , s]) => [n, s]))};
   const BUS = ${JSON.stringify(B.bus)};
   const BOATS = ${JSON.stringify(B.boat)};
   const BOAT = [];
@@ -33,9 +34,15 @@ if (which === "tokyo") {
   // 水上バスは複数路線
   core = core.replace(
     'for (let k = 0; k < BOAT.length - 1; k++) addEdge(BOAT[k], BOAT[k + 1], "boat", "テムズ水上バス");',
-    'for (const [line, seq] of BOATS) for (let k = 0; k < seq.length - 1; k++) addEdge(seq[k], seq[k + 1], "boat", line);');
+    'for (const [line, seq] of BOATS) for (let k = 0; k < seq.length - 1; k++) addEdge(seq[k], seq[k + 1], "boat", line);' +
+    'for (const [line, seq] of RAIL) for (let k = 0; k < seq.length - 1; k++) addEdge(seq[k], seq[k + 1], "rail", line);');
+  // 鉄道（JR）を5つめの乗り物として足す（地下鉄とは別の切符）
+  core = core.replace('tube:  { name: "地下鉄", en: "Underground", short: "地" },', 'tube:  { name: "地下鉄", en: "Subway", short: "地" },\n    rail:  { name: "鉄道", en: "Rail", short: "鉄" },');
+  core = core.replace('const DET_TYPES = ["taxi", "bus", "tube", "boat", "heli"];', 'const DET_TYPES = ["taxi", "bus", "tube", "rail", "boat", "heli"];');
+  core = core.replace('const MOVE_TYPES = ["taxi", "bus", "tube", "boat"];', 'const MOVE_TYPES = ["taxi", "bus", "tube", "rail", "boat"];');
+  core = core.replace(/tube: 4, boat: 2 \}/, `tube: 4, rail: ${Number(xRailArg)}, boat: 2 }`);
 }
-if (xTubeArg) core = core.replace(/tube: 4, boat: 2 \}/, `tube: ${Number(xTubeArg)}, boat: 2 }`);
+if (xTubeArg) core = core.replace(/tube: 4,/, `tube: ${Number(xTubeArg)},`);
 
 const api = new Function(core + `
   return { N, ADJ, D, newGame, xMoves, applyX, detMoves, applyD, skipD, finish, allStuck, aiX, aiD,
@@ -112,7 +119,7 @@ const caught = res.filter(r => r.winner === "d");
 const usedAvg = {};
 for (const r of res) for (const [t, n] of Object.entries(r.used)) usedAvg[t] = (usedAvg[t] || 0) + n / games;
 console.log(JSON.stringify({
-  board: which, detectives: dets, games, xTube: xTubeArg || api.X_TICKETS.tube, ...boardStats(),
+  board: which, detectives: dets, games, xTickets: api.X_TICKETS, ...boardStats(),
   xWin: pct(r => r.winner === "x"), detWin: pct(r => r.winner === "d"), reasons, selfTrapByDestroyCard: selfTrap,
   avgCatchMove: caught.length ? +(caught.reduce((a, r) => a + r.moves, 0) / caught.length).toFixed(1) : null,
   avgCandidates: +(res.reduce((a, r) => a + r.avgPossible, 0) / games).toFixed(1),

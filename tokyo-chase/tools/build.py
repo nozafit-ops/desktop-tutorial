@@ -80,11 +80,13 @@ def angle_gap(adj, v, w):
 adj = adj_of(TAXI)
 LAND = set(land)
 skip = set()
+THIN_MIN = 3                                        # 道を抜くとき、これより少ない駅は残す
+EXTRA = int(os.environ.get("THIN_EXTRA", "13"))      # そのあと、さらに抜く本数（行き止まりの少ない袋小路を作ってバランスを取る）
 while True:
     best = None
     for a, b in TAXI:
         if (a, b) in skip or KIND[a] == "b" or KIND[b] == "b": continue
-        if len(adj[a]) <= 3 or len(adj[b]) <= 3: continue
+        if len(adj[a]) <= THIN_MIN or len(adj[b]) <= THIN_MIN: continue
         sc = -min(angle_gap(adj, a, b), angle_gap(adj, b, a)) * 300 + dist(a, b)
         if best is None or sc > best[0]: best = (sc, (a, b))
     if best is None: break
@@ -94,6 +96,22 @@ while True:
         adj[a].add(b); adj[b].add(a); skip.add((a, b))
         continue
     TAXI.discard((a, b))
+# 追加の間引き：3本の駅を2本にしてよい。長い道・角度の狭い道から EXTRA 本
+removed = 0
+skip = set()
+while removed < EXTRA:
+    best = None
+    for a, b in TAXI:
+        if (a, b) in skip or KIND[a] == "b" or KIND[b] == "b": continue
+        if len(adj[a]) <= 2 or len(adj[b]) <= 2: continue
+        sc = -min(angle_gap(adj, a, b), angle_gap(adj, b, a)) * 300 + dist(a, b)
+        if best is None or sc > best[0]: best = (sc, (a, b))
+    if best is None: break
+    a, b = best[1]
+    adj[a].discard(b); adj[b].discard(a)
+    if len(bfs(adj, land[0])) < len(LAND):
+        adj[a].add(b); adj[b].add(a); skip.add((a, b)); continue
+    TAXI.discard((a, b)); removed += 1
 # 行き止まりを作らない：道が1本しかない駅には、近い候補から道を足す
 for v in land:
     for e in sorted((e for e in cand if v in e and e not in TAXI and road_ok(*e)), key=lambda e: dist(*e)):
@@ -211,16 +229,19 @@ def through_line(theta, shift):
     return line
 # 路線は仮想。遊びやすさで手で決める（乗換駅を散らし、どの地域にも駅があるように）
 def L(names): return [IDX[n] for n in names]
-LINES = [
-    ("外周環状線", "#7AC943", L(["練馬", "赤羽", "西新井", "綾瀬", "青砥", "小岩", "船堀", "葛西", "新木場", "越中島", "日の出",
-                              "大森", "蒲田", "武蔵小山", "二子玉川", "方南町", "荻窪", "練馬"])),
-    ("センターサークル", "#E4007F", L(["神楽坂", "後楽園", "御茶ノ水", "東京", "築地", "虎ノ門", "赤坂", "神楽坂"])),
-    ("東西線", "#00A7DB", L(["荻窪", "中野坂上", "早稲田", "神楽坂", "御茶ノ水", "秋葉原", "錦糸町", "船堀"])),
-    ("京葉線", "#C1272D", L(["下北沢", "原宿", "青山一丁目", "虎ノ門", "新橋", "月島", "豊洲", "葛西臨海公園", "葛西"])),
-    ("銀座線", "#F39700", L(["赤羽", "池袋", "早稲田", "四ツ谷", "代々木", "表参道", "恵比寿", "目黒", "蒲田"])),
-    ("半蔵門線", "#8F76D6", L(["西新井", "南千住", "浅草", "人形町", "門前仲町", "豊洲"])),
+# 鉄道（JR）：地上を走る長距離の急行。停車駅は少なく、一気に遠くへ行ける
+RAIL = [
+    ("外周環状線", "#3C3C3C", L(["練馬", "赤羽", "西新井", "青砥", "小岩", "葛西", "越中島", "日の出", "大森", "二子玉川", "方南町", "練馬"])),
+    ("中央・総武線", "#F15A22", L(["荻窪", "新宿", "御茶ノ水", "錦糸町", "小岩"])),
 ]
-LINES = [(n, c, s) for n, c, s in LINES if len(s) >= 2]
+# 地下鉄：都心を中心に、駅間の短い路線。路線ごとに色分け
+METRO = [
+    ("センターサークル", "#E4007F", L(["神楽坂", "後楽園", "御茶ノ水", "東京", "築地", "虎ノ門", "赤坂", "神楽坂"])),
+    ("銀座線", "#F39700", L(["渋谷", "表参道", "赤坂", "銀座", "日本橋", "上野", "浅草"])),
+    ("丸ノ内線", "#E60012", L(["池袋", "後楽園", "東京", "四ツ谷", "新宿", "中野坂上"])),
+    ("東西線", "#00A7DB", L(["高田馬場", "神楽坂", "日本橋", "門前仲町", "東陽町"])),
+]
+LINES = RAIL + METRO
 
 # ======================================================================
 # 水上バス・ヘリ
@@ -253,19 +274,23 @@ def add(a, b, t, name):
 for a, b in TAXI: add(a, b, "taxi", "タクシー")
 for k, bus in enumerate(BUSES):
     for a, b in zip(bus["stops"], bus["stops"][1:]): add(a, b, "bus", f"バス {k + 1}番")
-for name, col, seq in LINES:
+for name, col, seq in RAIL:
+    for a, b in zip(seq, seq[1:]): add(a, b, "rail", name)
+for name, col, seq in METRO:
     for a, b in zip(seq, seq[1:]): add(a, b, "tube", name)
 for name, seq in BOATS:
     for a, b in zip(seq, seq[1:]): add(a, b, "boat", name)
 ADJ = adj_of(edges.keys())
 tadj = adj_of(TAXI)
-tube_st = {i for _, _, s in LINES for i in s}
+rail_st = {i for _, _, s in RAIL for i in s}
+metro_st = {i for _, _, s in METRO for i in s}
+tube_st = rail_st | metro_st
 report = {
     "stations": N, "connected": len(bfs(ADJ, 0)) == N,
     "taxi edges": len(TAXI),
     "taxi degree min/avg/max": (min(len(tadj[i]) for i in land), round(2 * len(TAXI) / len(land), 2), max(len(tadj[i]) for i in land)),
-    "bus routes": len(BUSES), "bus stops": len(stops), "rail stations": len(tube_st),
-    "rail lines": [(n, [ST[i][0] for i in s]) for n, _, s in LINES],
+    "bus routes": len(BUSES), "bus stops": len(stops), "rail stations": len(rail_st), "metro stations": len(metro_st), "rail+metro": len(tube_st),
+    "lines": [(n, [ST[i][0] for i in s]) for n, _, s in LINES],
     "boat": [(n, [ST[i][0] for i in s]) for n, s in BOATS],
     "heli": [ST[i][0] for i in HELI],
 }
@@ -277,7 +302,8 @@ board = {
     "taxi": [list(e) for e in TAXI],
     "roads": ROADS,
     "bus": [b["stops"] for b in BUSES], "busRoads": [b["road"] for b in BUSES],
-    "tube": [[n, c, s] for n, c, s in LINES],
+    "rail": [[n, c, s] for n, c, s in RAIL],
+    "tube": [[n, c, s] for n, c, s in METRO],
     "boat": [[n, s] for n, s in BOATS],
     "heli": HELI, "islands": isl,
     "bridges": [i for i in range(N) if KIND[i] == "b"],
@@ -315,21 +341,35 @@ if len(sys.argv) > 1:
     for r in ROADS: dr.line(catmull([sc(P[i]) for i in r]), fill="#FFFFFF", width=int(20 * K), joint="curve")
     for b in BUSES: dr.line(catmull([sc(P[i]) for i in b["road"]]), fill="#16935B", width=int(5 * K), joint="curve")
     for name, seq in BOATS: dr.line([sc(P[i]) for i in seq], fill="#2F7FB0", width=int(6 * K))
-    for name, col, seq in LINES:
+    for name, col, seq in METRO:
         pts = [sc(P[i]) for i in seq]
-        dr.line(pts, fill="#222222", width=int(17 * K), joint="curve")
-        dr.line(pts, fill=col, width=int(12 * K), joint="curve")
+        dr.line(pts, fill="#222222", width=int(15 * K), joint="curve")
+        dr.line(pts, fill=col, width=int(10 * K), joint="curve")
+    # 鉄道は線路らしく、太い線に白い破線（枕木）
+    for name, col, seq in RAIL:
+        for a_, b_ in zip(seq, seq[1:]):
+            (x1, y1), (x2, y2) = sc(P[a_]), sc(P[b_])
+            dr.line([(x1, y1), (x2, y2)], fill=col, width=int(20 * K))
+            L_ = math.hypot(x2 - x1, y2 - y1); n_ = int(L_ // 14)
+            for k in range(0, n_, 2):
+                t0, t1 = k / n_, (k + 1) / n_
+                dr.line([(x1 + (x2 - x1) * t0, y1 + (y2 - y1) * t0), (x1 + (x2 - x1) * t1, y1 + (y2 - y1) * t1)], fill="#FFFFFF", width=int(7 * K))
     for i, (x, y) in enumerate(P):
         x, y = x * K, y * K
         if i in HELI: dr.ellipse([x - 22, y - 22, x + 22, y + 22], outline="#7C3AED", width=4)
         if KIND[i] == "b": dr.polygon([(x, y - 19), (x + 19, y), (x, y + 19), (x - 19, y)], fill="#CDB98C", outline="#3B2C1E")
-        fill = "#333333" if i in tube_st else "#BFE3C9" if i in stops else "#FFFFFF"
+        fill = "#333333" if i in rail_st else "#1E4E9C" if i in metro_st else "#BFE3C9" if i in stops else "#FFFFFF"
         dr.ellipse([x - 17, y - 13, x + 17, y + 13], fill=fill, outline="#3B2C1E", width=2)
         dr.text((x, y), str(i + 1), fill="#FFFFFF" if i in tube_st else "#1A140C", font=f, anchor="mm")
         dr.text((x, y + 15), ST[i][0], fill="#1A140C", font=f, anchor="ma", stroke_width=3, stroke_fill="#FFFFFF")
-    lx, ly = 24, 24
-    dr.rectangle([lx - 10, ly - 10, lx + 250, ly + 30 * len(LINES) + 4], fill="#FFFFFF", outline="#3B2C1E")
-    for k, (name, col, seq) in enumerate(LINES):
-        dr.line([(lx, ly + k * 30 + 13), (lx + 50, ly + k * 30 + 13)], fill=col, width=11)
-        dr.text((lx + 62, ly + k * 30), name, fill="#1A140C", font=fb)
+    # 凡例（右下の海の上）
+    items = [(n, c, "rail") for n, c, _ in RAIL] + [(n, c, "metro") for n, c, _ in METRO] + [("バス", "#16935B", "bus"), ("水上バス", "#2F7FB0", "boat")]
+    lx, ly = W * K - 330, H * K - 36 - 32 * len(items)
+    dr.rectangle([lx - 14, ly - 14, lx + 300, ly + 32 * len(items) + 4], fill="#FFFFFF", outline="#3B2C1E")
+    for k, (name, col, kind) in enumerate(items):
+        y0 = ly + k * 32 + 13
+        dr.line([(lx, y0), (lx + 56, y0)], fill=col, width=14 if kind == "rail" else 10)
+        if kind == "rail":
+            for x0 in range(int(lx) + 4, int(lx) + 56, 14): dr.line([(x0, y0), (x0 + 7, y0)], fill="#FFFFFF", width=5)
+        dr.text((lx + 68, ly + k * 32), ("鉄道 " if kind == "rail" else "地下鉄 " if kind == "metro" else "") + name, fill="#1A140C", font=fb)
     im.save(sys.argv[1])
