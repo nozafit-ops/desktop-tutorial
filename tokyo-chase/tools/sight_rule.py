@@ -5,7 +5,26 @@
 # シミュレーター（sim.js）とデモ版（make_demo.py）の両方がこの一覧を使うので、ルールは必ず同じになる
 import json, os, sys
 
-def patches(sight):
+def patches(sight, partial=True):
+    """partial=True：怪盗Xの乗り物は、乗った駅か降りた駅が誰かの視界に入っていたときだけ刑事にわかる"""
+    return _sight(sight) + (_partial() if partial else [])
+
+def _partial():
+    return [
+        ("    sec.pos = to;\n", "    const from = sec.pos;\n    sec.pos = to;\n"),
+        # k=1：乗り物が刑事に見られた（w=見た刑事の番号）。k=0：誰も見ていない（刑事には「？」）
+        ("    G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0 });",
+         "    const wit = G.det.findIndex(d => { const r = q => Math.hypot(STATIONS[d.pos][1] - STATIONS[q][1], STATIONS[d.pos][2] - STATIONS[q][2]) <= SIGHT; return r(from) || r(to); });\n"
+         "    const known = type === \"pass\" || wit >= 0;\n"
+         "    G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0, k: known ? 1 : 0, w: wit });"),
+        ("    G.possible = rev ? [to] : nextPossible(G, type);",
+         "    G.possible = rev ? [to] : nextPossible(G, known ? type : \"black\");"),
+        # CPUの刑事の推理も、見られていない手は乗り物がわからないものとして扱う
+        ("      const t = G.xLog[i].t, nx = new Map();",
+         "      const t = G.xLog[i].k === 0 ? \"black\" : G.xLog[i].t, nx = new Map();"),
+    ]
+
+def _sight(sight):
     return [
         # 公開の手番はなくす
         ("const REVEAL = [3, 6, 9, 12, 15, 18, 21];",
@@ -41,4 +60,4 @@ def patches(sight):
     ]
 
 if __name__ == "__main__":
-    json.dump(patches(float(sys.argv[1])), sys.stdout, ensure_ascii=False)
+    json.dump(patches(float(sys.argv[1]), (sys.argv[2] if len(sys.argv) > 2 else "1") == "1"), sys.stdout, ensure_ascii=False)

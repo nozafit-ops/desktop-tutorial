@@ -381,7 +381,7 @@ sub("""  .side [data-act="zoomIn"], .side [data-act="zoomOut"], .side [data-act=
 
 # ---------------- 視界ルール：怪盗Xは刑事の視界（円）に入ったら見つかる ----------------
 from sight_rule import patches as sight_patches
-SIGHT = 410
+SIGHT = 450
 for a_, b_ in sight_patches(SIGHT):
     sub(a_, b_)
 # 刑事の視界を地図に描く（怪盗Xも刑事側も見える）
@@ -393,6 +393,73 @@ sub("""<small class="nx">${G.over ? "ゲーム終了" : nx ? `次の出現 ${nx}
     """<small class="nx">${G.over ? "ゲーム終了" : "刑事の視界に入ると見つかる"}</small>""")
 rsub(r'        <li>怪盗Xの居場所は秘密。.*?</li>', """        <li>怪盗Xの居場所は秘密。ただし <b>刑事の視界</b>（刑事のまわりの青い点線の円）に入ると、その場で姿が見えて <b>発見</b> されます。怪盗Xが自分で視界に入っても、刑事が近づいて視界に入っても同じです。視界の中の駅には怪盗Xはいないので、候補から外れます。刑事にわかるのは、移動記録に残る <b>切符の種類</b> と、見つかった場所だけです。</li>""")
 rsub(r'<span style="color:#E5484D;font-weight:900">赤い丸と赤い枠</span>のマスは怪盗Xが姿を現す手で、現れた駅の番号が入ります。', """駅の番号が入っているマスは、その手で怪盗Xが見つかった駅です。""")
+
+# ---------------- 無線：見た刑事だけが乗り物を知り、仲間に無線で知らせる ----------------
+# 乗り物がわからない手は「？」
+sub("""    pass:  { name: "パス", en: "Pass", short: "休" },""", """    pass:  { name: "パス", en: "Pass", short: "休" },
+    unk:   { name: "不明", en: "Unknown", short: "？" },""")
+sub("""  .slot.heli { background: var(--heli); }""", """  .slot.heli { background: var(--heli); }
+  .slot.unk { background: #4A4540; color: #D8CDBA; }""")
+sub("""  function pushFeed(n, text, hot = false) {""", """  // 刑事側から見た乗り物（誰も見ていない手は「？」）
+  const seenT = e => (e.k === 0 && !xVisible() && !(A.G && A.G.over)) ? "unk" : e.t;
+  function pushFeed(n, text, hot = false) {""")
+sub("""      if (e) cls.push(e.t);""", """      if (e) cls.push(seenT(e));""")
+sub("""${e ? "：" + TYPE[e.t].name : ""}""", """${e ? "：" + TYPE[seenT(e)].name : ""}""")
+sub("""<span class="n">${i + 1}</span>${e ? TYPE[e.t].short : ""}""", """<span class="n">${i + 1}</span>${e ? TYPE[seenT(e)].short : ""}""")
+sub("""${G.xt ? ["taxi", "bus", "tube"].map(""", """${G.xt && (xVisible() || G.over) ? ["taxi", "bus", "tube"].map(""")
+sub("""      let s = e.t === "pass" ? "怪盗Xはパス（その場にとどまった）" : `怪盗Xが ${TYPE[e.t].name} で移動`;""",
+    """      let s = e.t === "pass" ? "怪盗Xはパス（その場にとどまった）" : seenT(e) === "unk" ? "怪盗Xが移動（誰にも見られていない）" : `怪盗Xが ${TYPE[e.t].name} で移動`;
+      // 仲間の刑事からの無線（刑事側で遊んでいるときだけ）
+      if (A.role !== "x" && e.t !== "pass") {
+        const from = A.sec.path[i], to = A.sec.path[i + 1];
+        if (e.k && e.w >= 0) {
+          const how = e.t === "black" ? "乗り物は見えなかった" : `${TYPE[e.t].name}`;
+          if (e.p !== null) radio(e.w, `${NO(to)} ${NAME(to)} で見つけた！ ${e.t === "black" ? "何かに乗って来た" : how + "で来た"}`, "見つけた！");
+          else radio(e.w, `${NO(from)} ${NAME(from)} から ${e.t === "black" ? "何かに乗って消えた" : how + "で出ていった"}`, "逃げたぞ！");
+        } else if (Math.random() < 0.35) {
+          const k = G.det.map((_, j) => j).filter(j => A.role !== "d" || j !== ME_DET)[Math.floor(Math.random() * (G.det.length - (A.role === "d" ? 1 : 0)))];
+          if (k !== undefined) radio(k, pick(["こっちの視界にはいない", "この辺りは異常なし", "見当たらない。別の方を探す"]), "");
+        }
+      }""")
+sub("""        banner("発見！", `刑事が怪盗Xの居場所をつかんだ（${NAME(G.possible[0])}）`, "", 1);""",
+    """        banner("発見！", `刑事が怪盗Xの居場所をつかんだ（${NAME(G.possible[0])}）`, "", 1);
+        if (A.role !== "x") radio(nearestDet(G.possible), `${NO(G.possible[0])} ${NAME(G.possible[0])} にいる！`, "");""")
+# 無線の欄
+sub("""  <div class="panel drawer" id="drawer" hidden>""", """  <div class="panel radio" id="radio" hidden aria-live="polite"></div>
+  <div class="panel drawer" id="drawer" hidden>""")
+sub("""  .toast {""", """  .radio { position: absolute; z-index: 6; right: 10px; bottom: 10px; width: min(380px, calc(100% - 20px)); padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .radio .rh { font-size: 11px; font-weight: 900; letter-spacing: .12em; color: var(--gold); }
+  .radio .rm { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.35; }
+  .radio .rm .portrait { width: 28px; height: 28px; flex: none; }
+  .radio .rm b { white-space: nowrap; }
+  .radio .rm.old { opacity: .6; }
+  @media (max-width: 640px) { .radio { right: 60px; left: 8px; width: auto; bottom: 120px; } .radio .rm.old { display: none; } }
+  .toast {""")
+sub("""  function render() {
+""", """  // 無線：仲間の刑事からの報告（画面右下に最新3件）
+  function radio(k, text, bubble) {
+    const G = A.G;
+    if (!G || !G.det[k]) return;
+    const me = A.role === "d" && k === ME_DET;
+    A.radio = [{ k, text, me }, ...(A.radio || [])].slice(0, 12);
+    pushFeed(G.xLog.length, `無線｜${me ? "あなた" : dName(k)}：${text}`, true);
+    if (bubble) say(k, bubble, "hot", 2200);
+  }
+  function renderRadio() {
+    const el_ = $("radio");
+    const on = A.G && A.screen === "game" && A.role !== "x" && (A.radio || []).length;
+    el_.hidden = !on;
+    if (!on) return;
+    el_.innerHTML = `<div class="rh">無線</div>` + A.radio.slice(0, 3).map((m, i) =>
+      `<div class="rm ${i ? "old" : ""}">${portrait("d", m.k, "sm")}<span><b>${m.me ? "あなた" : dName(m.k)}</b>：${esc(m.text)}</span></div>`).join("");
+  }
+  function render() {
+    renderRadio();
+""")
+sub("""    Object.assign(A, { role, G, sec, feed: [], sel: null, useDouble: false, screen: "game", busy: false });""",
+    """    Object.assign(A, { role, G, sec, feed: [], radio: [], sel: null, useDouble: false, screen: "game", busy: false });""")
+rsub(r'(        <li>怪盗Xの居場所は秘密。.*?</li>)', r"""\1
+        <li><b>無線</b>：怪盗Xが乗った乗り物は、<b>乗った駅か降りた駅が刑事の視界に入っていたときだけ</b>わかります。誰も見ていない移動は移動記録に「？」と残ります。仲間の刑事は見たことを無線で知らせてくれます（右下の「無線」欄とログ）。無線の報告をつなぎ合わせて、怪盗Xの居場所を突き止めましょう。怪盗Xの切符の残り枚数も刑事には見えません。</li>""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:

@@ -78,7 +78,7 @@ if (process.env.DET_LIMIT) {
 }
 // 視界ルール：SIGHT=半径 のとき、怪盗Xは刑事の視界に入ったら見つかる（公開の手番はなし）
 if (process.env.SIGHT) {
-  const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "sight_rule.py"), process.env.SIGHT]).toString());
+  const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "sight_rule.py"), process.env.SIGHT, process.env.PARTIAL ?? "1"]).toString());
   for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("sight patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
 }
 // 公開のタイミング：スコットランドヤード式（24手、3・8・13・18・24手目）

@@ -232,6 +232,7 @@
   .slot.black { background: var(--black); }
   .slot.boat { background: var(--ferry); }
   .slot.heli { background: var(--heli); }
+  .slot.unk { background: #4A4540; color: #D8CDBA; }
   .slot.taxi .n { color: rgba(0,0,0,0.55); }
   .slot.bus .n, .slot.tube .n, .slot.black .n, .slot.boat .n, .slot.heli .n { color: rgba(255,255,255,0.7); }
   .slot .st { font-size: 10px; line-height: 1; margin-top: 2px; }
@@ -511,6 +512,13 @@
   #banner .bn small { display: block; font-size: 14px; margin-top: 2px; }
   @keyframes bannerIn { 0% { transform: scale(.4); opacity: 0; } 12% { transform: scale(1.12); opacity: 1; } 20% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
   @media (prefers-reduced-motion: reduce) { .talk.pop, #banner .bn { animation: none; } }
+  .radio { position: absolute; z-index: 6; right: 10px; bottom: 10px; width: min(380px, calc(100% - 20px)); padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .radio .rh { font-size: 11px; font-weight: 900; letter-spacing: .12em; color: var(--gold); }
+  .radio .rm { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.35; }
+  .radio .rm .portrait { width: 28px; height: 28px; flex: none; }
+  .radio .rm b { white-space: nowrap; }
+  .radio .rm.old { opacity: .6; }
+  @media (max-width: 640px) { .radio { right: 60px; left: 8px; width: auto; bottom: 120px; } .radio .rm.old { display: none; } }
   .toast {
     position: absolute; left: 50%; top: 84px; transform: translateX(-50%); z-index: 25;
     padding: 8px 14px; border-radius: 999px; background: var(--hud-solid); border: 1px solid var(--rule);
@@ -750,6 +758,7 @@
     <button class="iconbtn" data-act="log" aria-label="ログ"><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"></path></svg></button>
   </div>
 
+  <div class="panel radio" id="radio" hidden aria-live="polite"></div>
   <div class="panel drawer" id="drawer" hidden>
     <div class="row" style="justify-content:space-between;align-items:center"><b>ログ</b><button class="btn ghost" data-act="log" style="min-height:36px;flex:none">閉じる</button></div>
     <ul id="feed"></ul>
@@ -798,13 +807,14 @@
     heli:  { name: "ヘリ", en: "Helicopter", short: "H" },
     black: { name: "黒チケット", en: "Black", short: "黒" },
     pass:  { name: "パス", en: "Pass", short: "休" },
+    unk:   { name: "不明", en: "Unknown", short: "？" },
   };
   const DET_TYPES = ["taxi", "bus", "tube", "boat", "heli"];
   const MOVE_TYPES = ["taxi", "bus", "tube", "boat"];
 
   const MAX_MOVES = 21;
   const REVEAL = [];
-  const SIGHT = 410;   // 刑事の視界の半径（盤面の座標）
+  const SIGHT = 450;   // 刑事の視界の半径（盤面の座標）
   const inSight = (G, p) => G.det.some(d => Math.hypot(STATIONS[d.pos][1] - STATIONS[p][1], STATIONS[d.pos][2] - STATIONS[p][2]) <= SIGHT);
   // 刑事の切符も有限。使った切符は怪盗Xの手持ちに加わる（スコットランドヤードのルール）
   // 水上バスは怪盗Xだけが黒チケットで乗れる。刑事は乗れない
@@ -922,15 +932,18 @@
       if (sec.pos === G.dud) { to = sec.pos; sec.dudKnown = true; }   // ガス欠：その場から動けない
       else to = pick(heliTargets(G, sec.pos, true));
     }
+    const from = sec.pos;
     sec.pos = to;
     sec.path.push(to);
     const n = G.xLog.length + 1;
     let rev = REVEAL.includes(n) || inSight(G, to), vanished = false;
     if (rev && G.skipReveal > 0) { G.skipReveal--; rev = false; vanished = true; }   // 雲隠れ
-    G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0 });
+    const wit = G.det.findIndex(d => { const r = q => Math.hypot(STATIONS[d.pos][1] - STATIONS[q][1], STATIONS[d.pos][2] - STATIONS[q][2]) <= SIGHT; return r(from) || r(to); });
+    const known = type === "pass" || wit >= 0;
+    G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0, k: known ? 1 : 0, w: wit });
     if (type === "black") G.black--;
     else if (G.xt && G.xt[type] !== undefined) G.xt[type]--;
-    G.possible = rev ? [to] : nextPossible(G, type);
+    G.possible = rev ? [to] : nextPossible(G, known ? type : "black");
     if (rev) G.lastSeen = { pos: to, n };
     if (mateActive(G) && to === G.mate.pos) { finish(G, "x", "meet"); return to; }
     if (G.withMate !== false && !G.mate && G.xLog.length >= MATE_FROM) spawnMate(G, sec);
@@ -1193,7 +1206,7 @@
     const safe = q => Math.exp(AI_BIAS * Math.min(3, ...occ.map(o => D[q][o])));
     let cur = new Map([[G.lastSeen.pos, 1]]);
     for (let i = G.lastSeen.n; i < G.xLog.length; i++) {
-      const t = G.xLog[i].t, nx = new Map();
+      const t = G.xLog[i].k === 0 ? "black" : G.xLog[i].t, nx = new Map();
       for (const [p, w] of cur) {
         const tos = t === "heli" ? HELI.filter(h => h !== p) : [...new Set(ADJ[p].filter(e => t === "black" || e.type === t).map(e => e.to))];
         const ws = tos.map(safe), tot = ws.reduce((a, b) => a + b, 0);
@@ -1352,6 +1365,8 @@
   };
   const sideName = () => A.role === "x" ? "x" : A.role === "d" ? "d" : null;
 
+  // 刑事側から見た乗り物（誰も見ていない手は「？」）
+  const seenT = e => (e.k === 0 && !xVisible() && !(A.G && A.G.over)) ? "unk" : e.t;
   function pushFeed(n, text, hot = false) {
     A.feed.unshift({ n, text, hot });
     if (A.feed.length > 200) A.feed.length = 200;
@@ -1359,7 +1374,19 @@
   function describe(prev, G) {
     for (let i = prev.xLog.length; i < G.xLog.length; i++) {
       const e = G.xLog[i];
-      let s = e.t === "pass" ? "怪盗Xはパス（その場にとどまった）" : `怪盗Xが ${TYPE[e.t].name} で移動`;
+      let s = e.t === "pass" ? "怪盗Xはパス（その場にとどまった）" : seenT(e) === "unk" ? "怪盗Xが移動（誰にも見られていない）" : `怪盗Xが ${TYPE[e.t].name} で移動`;
+      // 仲間の刑事からの無線（刑事側で遊んでいるときだけ）
+      if (A.role !== "x" && e.t !== "pass") {
+        const from = A.sec.path[i], to = A.sec.path[i + 1];
+        if (e.k && e.w >= 0) {
+          const how = e.t === "black" ? "乗り物は見えなかった" : `${TYPE[e.t].name}`;
+          if (e.p !== null) radio(e.w, `${NO(to)} ${NAME(to)} で見つけた！ ${e.t === "black" ? "何かに乗って来た" : how + "で来た"}`, "見つけた！");
+          else radio(e.w, `${NO(from)} ${NAME(from)} から ${e.t === "black" ? "何かに乗って消えた" : how + "で出ていった"}`, "逃げたぞ！");
+        } else if (Math.random() < 0.35) {
+          const k = G.det.map((_, j) => j).filter(j => A.role !== "d" || j !== ME_DET)[Math.floor(Math.random() * (G.det.length - (A.role === "d" ? 1 : 0)))];
+          if (k !== undefined) radio(k, pick(["こっちの視界にはいない", "この辺りは異常なし", "見当たらない。別の方を探す"]), "");
+        }
+      }
       if (e.d === 1) s = "怪盗Xが2倍移動！ " + s;
       if (xVisible()) s += `（→ ${NO(A.sec.path[i + 1])} ${NAME(A.sec.path[i + 1])}）`;
       pushFeed(i + 1, s);
@@ -1518,6 +1545,7 @@
         toast("刑事が怪盗Xを発見！");
         say(nearestDet(G.possible), pick(FOUND_LINES), "hot");
         banner("発見！", `刑事が怪盗Xの居場所をつかんだ（${NAME(G.possible[0])}）`, "", 1);
+        if (A.role !== "x") radio(nearestDet(G.possible), `${NO(G.possible[0])} ${NAME(G.possible[0])} にいる！`, "");
       } else if (lv === "lost") {
         toast("刑事は怪盗Xを見失った");
         say(Math.floor(Math.random() * G.det.length), pick(LOST_LINES), "sad");
@@ -1546,7 +1574,7 @@
     lastSight = null;
     SPEECH.clear();
     const { G, sec } = newGame(A.detCount);
-    Object.assign(A, { role, G, sec, feed: [], sel: null, useDouble: false, screen: "game", busy: false });
+    Object.assign(A, { role, G, sec, feed: [], radio: [], sel: null, useDouble: false, screen: "game", busy: false });
     A.cover = role === "pass" ? "x" : null;
     pushFeed(0, role === "x" ? `あなたは怪盗X。${MAX_MOVES}手逃げ切るか、相棒と合流すれば勝ち！` : role === "d" ? `あなたは刑事1。ほかの刑事${A.detCount - 1}人はCPUの仲間です。怪盗Xを逮捕せよ！` : "パス&プレイ。怪盗X役の人から始めます。", true);
     buildTokens();
@@ -2358,7 +2386,25 @@
     }
   }
 
+  // 無線：仲間の刑事からの報告（画面右下に最新3件）
+  function radio(k, text, bubble) {
+    const G = A.G;
+    if (!G || !G.det[k]) return;
+    const me = A.role === "d" && k === ME_DET;
+    A.radio = [{ k, text, me }, ...(A.radio || [])].slice(0, 12);
+    pushFeed(G.xLog.length, `無線｜${me ? "あなた" : dName(k)}：${text}`, true);
+    if (bubble) say(k, bubble, "hot", 2200);
+  }
+  function renderRadio() {
+    const el_ = $("radio");
+    const on = A.G && A.screen === "game" && A.role !== "x" && (A.radio || []).length;
+    el_.hidden = !on;
+    if (!on) return;
+    el_.innerHTML = `<div class="rh">無線</div>` + A.radio.slice(0, 3).map((m, i) =>
+      `<div class="rm ${i ? "old" : ""}">${portrait("d", m.k, "sm")}<span><b>${m.me ? "あなた" : dName(m.k)}</b>：${esc(m.text)}</span></div>`).join("");
+  }
   function render() {
+    renderRadio();
     if (LOCK && A.G && A.screen === "game" && !A.overview && viewAnchor() !== lockedOn) lockView();
     const ob = $("overviewBtn");
     if (ob) ob.setAttribute("aria-pressed", String(!!A.overview));
@@ -2624,7 +2670,7 @@
     $("xcard").innerHTML = `${portrait("x")}<span class="who"><b>怪盗X</b>
       <small class="nx">${G.over ? "ゲーム終了" : "刑事の視界に入ると見つかる"}</small>
       ${G.over ? "" : `<span class="expo ${ex.level}" title="${ex.help}"><i></i>${ex.label}</span>`}
-      <span class="chipsx">${G.xt ? ["taxi", "bus", "tube"].map(t => `<span class="tk ${t} ${G.xt[t] ? "" : "zero"}" title="${TYPE[t].name}の残り">${TYPE[t].short}${G.xt[t]}</span>`).join("") : ""}<span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
+      <span class="chipsx">${G.xt && (xVisible() || G.over) ? ["taxi", "bus", "tube"].map(t => `<span class="tk ${t} ${G.xt[t] ? "" : "zero"}" title="${TYPE[t].name}の残り">${TYPE[t].short}${G.xt[t]}</span>`).join("") : ""}<span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
     $("xcard").classList.toggle("active", G.turn === "x");
     $("dets").innerHTML = G.det.map((d, k) => `
       <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="${A.role === "d" && k !== ME_DET ? "order" : "focusD"}" data-k="${k}" aria-label="${dName(k)}：タクシー${d.t.taxi}・バス${d.t.bus}・地下鉄${d.t.tube}・ヘリ${d.t.heli}">
@@ -2670,15 +2716,15 @@
     for (let i = 0; i < MAX_MOVES; i++) {
       const e = G.xLog[i];
       const cls = ["slot"];
-      if (e) cls.push(e.t);
+      if (e) cls.push(seenT(e));
       if (REVEAL.includes(i + 1)) cls.push("reveal");
       if (CARD_TURNS.includes(i + 1)) cls.push("cardturn");
       if (!G.over && i === G.xLog.length) cls.push("now");
       let st = "";
       if (e && e.p !== null) st = NO(e.p);
       else if (e && showX) st = NO(A.sec.path[i + 1]);
-      const title = `${i + 1}手目${CARD_TURNS.includes(i + 1) ? "（カードを引く）" : ""}${e ? "：" + TYPE[e.t].name : ""}${st ? "（" + NAME(st - 1) + "）" : ""}`;
-      html += `<div class="${cls.join(" ")}" title="${esc(title)}"><span class="n">${i + 1}</span>${e ? TYPE[e.t].short : ""}${st ? `<span class="st">${st}</span>` : ""}${e?.d ? `<span class="dbl">2×</span>` : ""}</div>`;
+      const title = `${i + 1}手目${CARD_TURNS.includes(i + 1) ? "（カードを引く）" : ""}${e ? "：" + TYPE[seenT(e)].name : ""}${st ? "（" + NAME(st - 1) + "）" : ""}`;
+      html += `<div class="${cls.join(" ")}" title="${esc(title)}"><span class="n">${i + 1}</span>${e ? TYPE[seenT(e)].short : ""}${st ? `<span class="st">${st}</span>` : ""}${e?.d ? `<span class="dbl">2×</span>` : ""}</div>`;
     }
     const xl = $("xlog");
     xl.innerHTML = html;
@@ -2800,6 +2846,7 @@
         <li><b>ヘリポート</b>（H）からはヘリで飛べます。行き先は選べず、ほかのヘリポートのどこかにランダムで着陸します。2つの島（夢見島・空港島）へは水上バスかヘリでしか行けません。<br>ヘリポートのうち1か所だけは <b>ガス欠</b> で飛べません。どこなのかは誰にも知らされず、飛ぼうとして初めてわかります（切符は減り、その手はその場にとどまります）。</li>
         <li>${RIVER_NAME}を渡る <b>橋</b> の上にも駅（ひし形の台座）があり、タクシーとバスは橋で一度止まります。橋は5か所だけです。</li>
         <li>怪盗Xの居場所は秘密。ただし <b>刑事の視界</b>（刑事のまわりの青い点線の円）に入ると、その場で姿が見えて <b>発見</b> されます。怪盗Xが自分で視界に入っても、刑事が近づいて視界に入っても同じです。視界の中の駅には怪盗Xはいないので、候補から外れます。刑事にわかるのは、移動記録に残る <b>切符の種類</b> と、見つかった場所だけです。</li>
+        <li><b>無線</b>：怪盗Xが乗った乗り物は、<b>乗った駅か降りた駅が刑事の視界に入っていたときだけ</b>わかります。誰も見ていない移動は移動記録に「？」と残ります。仲間の刑事は見たことを無線で知らせてくれます（右下の「無線」欄とログ）。無線の報告をつなぎ合わせて、怪盗Xの居場所を突き止めましょう。怪盗Xの切符の残り枚数も刑事には見えません。</li>
         <li><b>移動記録の見方</b>：マスの中の文字は怪盗Xが使った乗り物（タ＝タクシー、バ＝バス、地＝地下鉄、船＝水上バス、黒＝黒チケット、H＝ヘリ、休＝パス）。駅の番号が入っているマスは、その手で怪盗Xが見つかった駅です。<span style="color:#E3B341;font-weight:900">金色の小さなカード印</span>はカードを引く手、金色の枠はいまの手、「2×」は2倍移動を使った手です。</li>
         <li><b>切符</b>：刑事の切符は1人あたりタクシー${DET_TICKETS.taxi}・バス${DET_TICKETS.bus}・地下鉄${DET_TICKETS.tube}・ヘリ${DET_TICKETS.heli}枚。<b>刑事が使った切符は怪盗Xの手持ちに加わります</b>。怪盗Xの切符（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・黒チケット・2倍移動${X_DOUBLE}・ヘリ${X_HELI}）も有限。切符が尽きた乗り物には乗れません。動けなくなると怪盗Xの負け、刑事が全員動けなくなると怪盗Xの勝ち。</li>
         <li><b>手札</b>：画面の左下にいつも表示されます。自分の番で使えるときは金色に光り、カードをタップするとそのまま使えます。カードを引く手は${CARD_TURNS.join("・")}手目。</li>
