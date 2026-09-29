@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from stations import RAW, W, H, proj
 from PIL import Image, ImageDraw, ImageFont
 
-RIVER_LL = [(35.803, 139.690), (35.7835, 139.723), (35.772, 139.742), (35.760, 139.762), (35.752, 139.780),
+RIVER_LL = [(35.815, 139.735), (35.7835, 139.735), (35.772, 139.742), (35.760, 139.762), (35.752, 139.780),
             (35.7405, 139.7975), (35.728, 139.8065), (35.713, 139.8015), (35.703, 139.7975), (35.693, 139.790),
             (35.683, 139.7925), (35.674, 139.789), (35.666, 139.781), (35.663, 139.776), (35.652, 139.770)]
 COAST_LL = [(35.530, 139.742), (35.585, 139.744), (35.608, 139.747), (35.628, 139.757), (35.642, 139.764),
@@ -117,6 +117,21 @@ def constrain():
         push_bay(p, kind[i] == "i")
 
 relax(700)
+# 盤面いっぱいに広げる：陸地を細かい点で埋め、各駅を「自分の受け持つ陸地」の重心へ寄せる（Lloyd法）
+import numpy as np
+SP = 24
+samp = np.array([(x, y) for x in np.arange(40, W - 40, SP) for y in np.arange(40, H - 40, SP) if not in_bay((x, y))])
+for it in range(140):
+    A = np.array(pts)
+    d = ((samp[:, None, :] - A[None, :, :]) ** 2).sum(-1)
+    own = d.argmin(1)
+    for i, p in enumerate(pts):
+        m = samp[own == i]
+        if not len(m) or kind[i] == "b": continue
+        cx, cy = m.mean(0)
+        p[0] += (cx - p[0]) * 0.5; p[1] += (cy - p[1]) * 0.5
+        p[0] = min(W - 80, max(80, p[0])); p[1] = min(H - 80, max(80, p[1]))
+    constrain()
 # 区間の長さがそろいすぎないよう、駅をそれぞれ少しずつずらす（再現できるよう乱数の種は固定）
 import random
 rj = random.Random(11)
