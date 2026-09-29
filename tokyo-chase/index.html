@@ -2602,7 +2602,8 @@
       const fk = humanTurn() ? String(A.G.turn) : null;
       if (fk !== A.focusKey) {
         A.focusKey = fk;
-        if (fk !== null && !A.overview) ensureVisible(A.G.turn === "x" ? A.sec.pos : A.G.det[A.G.turn].pos);
+        // 直前の駒の追いかけ（同じ処理の中で動く）が終わってから、自分の駒へ寄せる
+        if (fk !== null) setTimeout(() => { if (A.G && !A.overview && humanTurn() && String(A.G.turn) === fk) ensureVisible(A.G.turn === "x" ? A.sec.pos : A.G.det[A.G.turn].pos); }, 0);
       }
     }
     noteExposure();
