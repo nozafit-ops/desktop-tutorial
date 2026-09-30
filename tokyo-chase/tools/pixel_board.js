@@ -55,10 +55,10 @@
     const river = new Path2D();
     RIVER.forEach(([x, y], i) => i ? river.lineTo(px(x), px(y)) : river.moveTo(px(x), px(y)));
     g.lineJoin = "round"; g.lineCap = "round";
-    g.fillStyle = "#E4DCC2"; g.strokeStyle = "#E4DCC2"; g.lineWidth = px(122); g.stroke(river);
+    g.fillStyle = "#E4DCC2"; g.strokeStyle = "#E4DCC2"; g.lineWidth = px(196); g.stroke(river);
     g.save(); g.translate(0, -2); g.fill(bay); g.restore();
-    g.fillStyle = "#4E86C8"; g.strokeStyle = "#4E86C8"; g.lineWidth = px(108); g.stroke(river); g.fill(bay);
-    g.lineWidth = px(108);
+    g.fillStyle = "#4E86C8"; g.strokeStyle = "#4E86C8"; g.lineWidth = px(176); g.stroke(river); g.fill(bay);
+    g.lineWidth = px(176);
     const wet = (x, y) => g.isPointInPath(bay, x, y) || g.isPointInStroke(river, x, y);
     for (let y = 2; y < ch; y += 5) for (let x = (y * 7) % 11; x < cw; x += 11) {
       if (wet(x, y) && wet(x + 4, y)) { g.fillStyle = rnd() < 0.5 ? "#7FB0E6" : "#6A9FDA"; g.fillRect(x, y, 3, 1); }
@@ -177,7 +177,7 @@
       const j2 = Math.min(RIVER.length - 1, k + 3), j1 = Math.max(0, k - 2);
       let tx = RIVER[j2][0] - RIVER[j1][0], ty = RIVER[j2][1] - RIVER[j1][1];
       const L = Math.hypot(tx, ty) || 1; tx /= L; ty /= L;
-      const ux = -ty, uy = tx, len = 70, half = 34;
+      const ux = -ty, uy = tx, len = 112, half = 34;
       const c = [[+len, +half], [-len, +half], [-len, -half], [+len, -half]].map(([u, v]) => [x + ux * u + tx * v, y + uy * u + ty * v]);
       el("path", { d: "M" + c.map(q => q.map(v => v.toFixed(1)).join(",")).join(" L") + " Z", class: "deck" }, deckL);
       for (const v of [-half, half]) el("path", { d: `M${(x + ux * len + tx * v).toFixed(1)},${(y + uy * len + ty * v).toFixed(1)} L${(x - ux * len + tx * v).toFixed(1)},${(y - uy * len + ty * v).toFixed(1)}`, class: "deck-rail" }, deckL);
@@ -198,10 +198,9 @@
       el("path", { d: `M${x - R},${y} H${x + R}`, stroke: "#3B2C1E", "stroke-width": 1.5 }, g);
       el("circle", { cx: x, cy: y, r: R, class: "stn-rim" }, g);
       if (HELI_SET.has(i)) {
-        const hx = x - R - 18, hy = y - R - 10;
-        el("circle", { cx: hx, cy: hy, r: 17, class: "hport" }, g);
-        el("circle", { cx: hx, cy: hy, r: 12, class: "hport-ring" }, g);
-        el("text", { x: hx, y: hy + 7, class: "hport-h" }, g).textContent = "H";
+        // ヘリポート：駅の左上にヘリのドット絵
+        el("ellipse", { cx: x - R - 22, cy: y - R + 6, rx: 26, ry: 6, fill: "rgba(0,0,0,0.25)" }, g);
+        el("image", { href: pxHeliSprite(), x: x - R - 52, y: y - R - 34, width: 60, height: 36, class: "heli-sprite" }, g);
       }
       el("text", { x, y: y + 16, class: "stn-num" }, g).textContent = NO(i);
       el("text", { x, y: y + R + 24, class: "stn-label", id: "lbl" + i }, gL).textContent = name;

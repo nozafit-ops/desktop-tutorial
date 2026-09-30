@@ -15,8 +15,27 @@ sys.path.insert(0, HERE)
 from stations import W, H
 
 geo = json.load(open(os.path.join(HERE, "geo.json")))
-ST0 = geo["stations"]
-RIVER, COAST = geo["river"], geo["coast"]
+# 盤面をさらに横長に：x を SX 倍に伸ばす。川は太く描くので、川に近すぎる駅は川から RIVER_CLEAR まで離す
+SX = float(os.environ.get("SX", "1.3"))
+RIVER_CLEAR = float(os.environ.get("RIVER_CLEAR", "135"))
+W = W * SX
+ST0 = [[s[0], s[1] * SX, s[2], s[3]] for s in geo["stations"]]
+RIVER = [[x * SX, y] for x, y in geo["river"]]
+COAST = [[x * SX, y] for x, y in geo["coast"]]
+def _river_near(p):
+    best = None
+    for a, b in zip(RIVER, RIVER[1:]):
+        vx, vy = b[0] - a[0], b[1] - a[1]; L = vx * vx + vy * vy or 1e-9
+        t = max(0, min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / L))
+        q = (a[0] + vx * t, a[1] + vy * t); d = math.hypot(p[0] - q[0], p[1] - q[1])
+        if best is None or d < best[0]: best = (d, q)
+    return best
+for st in ST0:
+    if st[3] == "b": continue
+    d, q = _river_near((st[1], st[2]))
+    if d < RIVER_CLEAR:
+        k = RIVER_CLEAR / max(d, 1e-6)
+        st[1], st[2] = q[0] + (st[1] - q[0]) * k, q[1] + (st[2] - q[1]) * k
 
 # 駅番号は読みやすいよう、上の帯から左→右の順に振り直す
 BAND = 240
@@ -238,7 +257,7 @@ def net_edges(nodes, maxlen, maxdeg, allow_river=False, gap=65, minang=28):
 
 FAMOUS = {"新宿", "渋谷", "池袋", "東京", "上野", "品川", "銀座", "秋葉原", "押上", "錦糸町", "北千住", "新木場", "浅草", "六本木", "中野", "目黒"}
 fame = lambda i: 30 if ST[i][0] in FAMOUS else 0
-BUS_R = float(os.environ.get("BUS_R", "240"))
+BUS_R = float(os.environ.get("BUS_R", "265"))
 bridges = [i for i in range(N) if KIND[i] == "b"]
 # 橋とその両岸の隣駅はバス停。バスは橋を「両岸の隣駅 → 橋 → 隣駅」と渡る（タクシーと同じ道）
 must_bus = bridges + [j for nb in BRIDGE_NB.values() for j in nb]

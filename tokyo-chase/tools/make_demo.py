@@ -539,7 +539,7 @@ sub("""      b.style.transform = `translate(${ax.toFixed(1)}px, ${ay.toFixed(1)}
 
 # ---------------- ドット絵風の盤面（tools/pixel_board.js）：背景と道・線路・駅の描き方を差し替える ----------------
 a_ = out.index("  async function renderBackground() {"); b_ = out.index("  // 駒（ボードゲームのポーン）")
-out = out[:a_] + open(os.path.join(HERE, "pixel_board.js"), encoding="utf-8").read() + open(os.path.join(HERE, "pixel_cards.js"), encoding="utf-8").read() + out[b_:]
+out = out[:a_] + open(os.path.join(HERE, "pixel_board.js"), encoding="utf-8").read() + open(os.path.join(HERE, "pixel_cards.js"), encoding="utf-8").read() + open(os.path.join(HERE, "layout.js"), encoding="utf-8").read() + out[b_:]
 sub("""family=Zen+Old+Mincho:wght@700;900&display=swap">""", """family=Zen+Old+Mincho:wght@700;900&family=DotGothic16&display=swap">""")
 sub("""  .stn-num { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 15px; fill: var(--map-ink);""",
     """  .stn-num { font-family: "DotGothic16", "Zen Kaku Gothic New", sans-serif; font-weight: 400; font-size: 16px; fill: #1C1C1C;""")
@@ -750,6 +750,102 @@ sub("""      el("text", { x, y: y - 48, class: "lastseen-label" }, gM).textConte
 sub("""  .mark-label.block { stroke: #C0271F; }""", """  .mark-label.block { stroke: #C0271F; }
   .mark-label.dog { stroke: #6E4A28; }
   .dog-piece { image-rendering: pixelated; pointer-events: none; }""")
+
+# ---------------- 視界＝画面の長方形・ヘリはカードでだけ（tools/view_rule.py） ----------------
+from view_rule import patches as view_patches, det_patches
+VIEW_W, VIEW_H = 780, 520   # sim.js VIEW=780,520 で調整（怪盗Xの勝率 刑事4人51%・5人37%）
+for a_, b_ in view_patches(VIEW_W, VIEW_H) + det_patches("const DET_TICKETS = { heli: 1 };"):
+    sub(a_, b_)
+
+# ---------------- 4分割の画面（tools/layout.js） ----------------
+sub("""    <g id="world">
+""", """    <g id="world">
+      <g id="worldIn">
+""")
+sub("""      <g id="gTalk"></g>
+    </g>
+  </svg>""", """      <g id="gTalk"></g>
+      </g>
+      <g id="viewMask"></g>
+    </g>
+  </svg>""")
+sub("  const LOCK = false;", "  const LOCK = true;")
+sub("    return Math.max(w / (W * 0.5), h / H);", "    return Math.min(w / VIEW_W, h / VIEW_H);   // 刑事の視界（画面の範囲）がちょうど入る倍率")
+sub("""    const t = document.querySelector(".hud.top");
+    return t ? t.getBoundingClientRect().bottom - mapEl.getBoundingClientRect().top : 100;""", """    return 0;   // 上の表示は地図の外（右上）にある""")
+sub("""    if (A.overview) return;   // 全体地図のあいだは自由な大きさ
+""", """    if (A.overview) return;   // 全体地図のあいだは自由な大きさ
+    if (LOCK) return;         // 自分の駒をいつも真ん中に（端でもずらさない）
+""")
+sub("""    if (!G.over) for (const d of G.det) { const [x, y] = P(d.pos); el("circle", { cx: x, cy: y, r: SIGHT, class: "sight" }, gP); }
+""", "")
+sub("""    if (LOCK && A.G && A.screen === "game" && !A.overview && viewAnchor() !== lockedOn) lockView();""",
+    """    if (LOCK && A.G && A.screen === "game" && !A.overview && viewAnchor() !== lockedOn) lockView();
+    renderMini(); renderViewMask(); renderTalkLog();""")
+sub("""    const covered = !$("drawer").hidden || !$("sheet").hidden || !$("screen").hidden;""", """    const covered = !$("sheet").hidden || !$("screen").hidden;""")
+sub("""  #app { position: relative; height: 100%; overflow: hidden; }""", """  #app { position: relative; height: 100%; overflow: hidden; }
+  /* 4分割の画面 */
+  #app.layout4 { display: grid; gap: 6px; padding: 6px; background: #17130E;
+    grid-template-columns: minmax(0, 1fr) clamp(290px, 31vw, 470px); grid-template-rows: minmax(0, 1fr) clamp(150px, 29vh, 270px);
+    grid-template-areas: "map info" "cards mini"; }
+  #app.layout4 #map { position: relative; inset: auto; grid-area: map; width: 100%; height: 100%; border-radius: 10px; cursor: default; }
+  .pane { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--hud-solid); border: 1px solid var(--rule); border-radius: 10px; }
+  .pane.info { grid-area: info; display: flex; flex-direction: column; gap: 6px; padding: 6px; }
+  .pane.cards { grid-area: cards; display: flex; gap: 8px; padding: 6px; }
+  .pane.mini { grid-area: mini; display: flex; flex-direction: column; }
+  #paneInfo .hud.top { position: static; transform: none; pointer-events: auto; flex: none; }
+  #paneInfo .toprow.second, #paneInfo .pulltab, .hud.side, #overviewBtn { display: none !important; }
+  #paneInfo .toprow.first { flex-wrap: wrap; }
+  #paneInfo .toprow.first .xcard { flex: 1 1 0; min-width: 0; }
+  #paneInfo .toprow.first .prompt { flex: 1 1 100%; max-width: none; order: 3; }
+  #paneInfo .toprow.first .dets { flex: 1 1 100%; margin-left: 0; order: 4; }
+  #paneInfo .drawer { position: static; width: auto; max-height: none; flex: 1; min-height: 0; padding: 6px 8px; box-shadow: none; }
+  #paneInfo .drawer .row { display: flex; justify-content: space-between; align-items: center; }
+  .hint-btn { min-height: 30px; padding: 0 10px; font-size: 12px; flex: none; }
+  .hint-btn[aria-pressed="false"] { opacity: .55; }
+  #paneCards .handbar { position: static; max-width: none; flex: 0 1 auto; min-width: 0; zoom: 1; }
+  #paneCards .handbar[hidden] { display: none; }
+  .talklog { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; background: #FFF6D8; color: #3A2C1E; border-radius: 8px; padding: 6px 8px; }
+  .talklog .tl-h { font-weight: 900; font-size: 12px; color: #8A6A2A; }
+  .talklog ul { list-style: none; margin: 4px 0 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+  .talklog li { display: flex; gap: 6px; align-items: center; }
+  .talklog li .portrait { width: 24px; height: 24px; flex: none; }
+  .talklog li b { margin-right: 4px; }
+  .talklog li.empty { color: #9A8A70; }
+  .mini-h { font-size: 12px; font-weight: 900; padding: 4px 8px 0; display: flex; gap: 8px; align-items: baseline; }
+  .mini-h span { font-weight: 400; font-size: 10px; color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #mini { flex: 1; min-height: 0; width: 100%; display: block; cursor: pointer; }
+  #mini use { --lbl: hidden; }
+  .stn-label, #gTalk { visibility: var(--lbl, visible); }
+  .mini-view { fill: none; stroke-width: 8; opacity: .55; }
+  .mini-me { fill: rgba(255, 230, 120, .15); stroke: #F2C230; stroke-width: 16; }
+  .view-shade { fill: rgba(20, 16, 30, .38); pointer-events: none; }
+  .view-frame { fill: none; stroke: #F2C230; stroke-width: 4; stroke-dasharray: 16 10; pointer-events: none; }
+  .heli-sprite { image-rendering: pixelated; }
+  @media (max-width: 760px) and (orientation: portrait) {
+    #app.layout4 { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 46fr) minmax(0, 24fr) minmax(0, 30fr);
+      grid-template-areas: "map map" "mini info" "cards info"; gap: 4px; padding: 4px; }
+    .pane.cards { flex-direction: column; }
+    #paneInfo .dets { zoom: .8; }
+  }
+  @media (max-height: 520px) and (orientation: landscape) {
+    #app.layout4 { grid-template-rows: minmax(0, 1fr) 118px; grid-template-columns: minmax(0, 1fr) clamp(240px, 30vw, 360px); }
+    #paneInfo .hud.top, #paneCards .handbar { zoom: .7; }
+  }""")
+
+# ルール説明（視界・ヘリ・操作）
+sub("""<li><b>ヘリポート</b>（H）からはヘリで飛べます。""", """<li><b>ヘリポート</b>（ヘリの絵の駅）からはヘリで飛べます。ただしヘリの切符は最初は0枚で、<b>ヘリのカードを引いたときだけ</b>使えます（怪盗Xは「ヘリ」、刑事は「ヘリ出動」）。""")
+sub("""ただし <b>刑事の視界</b>（刑事のまわりの青い点線の円）に入ると、""", """ただし <b>刑事の視界</b>（刑事を真ん中にした画面の範囲。左上の地図に映る四角）に入ると、""")
+sub("""        <li><b>移動記録の見方</b>：""", """        <li style="display:none"><b>移動記録の見方</b>：""")
+sub("""        <li>操作：ドラッグで移動、ピンチ・ホイール・ダブルタップで拡大。光る駅をタップすると切符を選べます。ヘリは画面上部の手番表示にある「ヘリ」ボタンから。</li>""",
+    """        <li>画面：<b>左上</b>は自分の駒を真ん中にした地図（動かしたり拡大はできません）。<b>右上</b>はプレイヤー情報と履歴、<b>左下</b>は手札と無線、<b>右下</b>は全体図です。自分の番に光る駅をタップすると切符を選べます。左上の地図に映らない遠い行き先や、橋封鎖などカードの対象は全体図の駅をタップして選べます。</li>""")
+
+# 画面の端の矢印：地図の四辺の内側に置く（上の表示・右のボタン列はもう地図に重ならない）
+sub("""    const top = (topEl ? topEl.getBoundingClientRect().bottom - r.top : 100) + 36;""", """    const top = 36;""")
+sub("""    const sideR = sideEl ? sideEl.getBoundingClientRect() : null;""", """    const sideR = null;""")
+sub("""  .hint-btn { min-height: 30px; padding: 0 10px; font-size: 12px; flex: none; }""", """  .hint-btn { min-height: 30px !important; padding: 0 10px !important; font-size: 12px !important; flex: 0 0 auto !important; width: auto !important; }
+  .mini-h { white-space: nowrap; }
+  #app.layout4 #edge { grid-area: map; position: relative; inset: auto; }""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:

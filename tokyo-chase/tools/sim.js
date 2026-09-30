@@ -94,6 +94,12 @@ if (process.env.PERSONA === "1") {
   const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "persona.py")]).toString());
   for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("persona patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
 }
+// 視界＝画面の長方形・ヘリはカードでだけ（VIEW=横,縦。SIGHT と DOGMATE=1 のあとに当てる）
+if (process.env.VIEW) {
+  const [vw, vh] = process.env.VIEW.split(",");
+  const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "view_rule.py"), vw, vh]).toString());
+  for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("view patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
+}
 // 公開のタイミング：スコットランドヤード式（24手、3・8・13・18・24手目）
 if (process.env.SY_ROUNDS) {
   core = core.replace("const MAX_MOVES = 21;", "const MAX_MOVES = 24;");

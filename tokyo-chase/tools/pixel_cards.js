@@ -179,7 +179,7 @@
       q.forEach((row, y) => [...row].forEach((v, x) => { if (v === "1") r(20 + x * 2, 8 + y * 2, 2, 2, "#D8D4CC"); }));
     }
   }
-  function pxHandArt(c) { return pxScene("c_" + c); }
+  function pxHandArt(c) { return c === "xheli" ? pxScene("heli") : pxScene("c_" + c); }
   // 走る人の小さなシルエット（カード左上）
   function pxRunner() {
     if (pxCache.has("runner")) return pxCache.get("runner");
@@ -221,5 +221,23 @@
     r(7, 7, 6, 1, "#C08850");                               // 背中の光
     const url = c.toDataURL("image/png");
     pxCache.set("dogsprite", url);
+    return url;
+  }
+  // ヘリポートに置くヘリのドット絵（背景なし）
+  function pxHeliSprite() {
+    if (pxCache.has("helisprite")) return pxCache.get("helisprite");
+    const c = document.createElement("canvas");
+    c.width = 30; c.height = 18;
+    const g = c.getContext("2d");
+    const r = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+    const O = "#2A2230", Pu = "#7C3AED";
+    r(4, 1, 24, 1, O); r(15, 2, 2, 2, O);                       // 回転翼
+    r(11, 4, 13, 8, O); r(12, 5, 11, 6, Pu);                     // 胴体
+    r(19, 5, 4, 4, "#CDEBFA"); r(20, 6, 1, 1, "#F4FBFF");         // 窓
+    r(1, 7, 11, 3, O); r(2, 8, 10, 1, Pu); r(0, 4, 2, 8, "#4B2391"); // しっぽ
+    r(13, 12, 1, 3, O); r(21, 12, 1, 3, O); r(10, 15, 15, 1, O);  // 脚
+    r(13, 6, 5, 1, "#9C6BF2");
+    const url = c.toDataURL("image/png");
+    pxCache.set("helisprite", url);
     return url;
   }
