@@ -336,6 +336,9 @@ while len(HELI) < 8:
 # 盤面の中央付近のヘリポートは置かない（端と島だけ）
 HELI = [h for h in HELI if KIND[h] == "i" or not (abs(P[h][0] - W / 2) < W * 0.3 and abs(P[h][1] - H / 2) < H * 0.3)]
 
+# 夢見島（98番）と材木浜（81番）のヘリポートは置かない
+HELI = [h for h in HELI if h not in (97, 80)]
+
 # お台場（夢見島）は大きな島にして、北東と西の岸からバスの橋を渡す（タクシーは渡れない）
 def odaiba_bus(side):
     c = [i for i in LANDP if (P[i][0] > P[odaiba][0] + 100 if side == "e" else P[i][0] < P[odaiba][0] - 200) and P[i][1] < P[odaiba][1]]
