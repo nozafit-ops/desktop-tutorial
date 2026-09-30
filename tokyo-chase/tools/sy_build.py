@@ -361,6 +361,8 @@ BUS_DROPPED = [e for e in BUS_E if tuple(sorted(e)) in _mono]
 BUS_E = [e for e in BUS_E if tuple(sorted(e)) not in _mono]
 # 100番（雲雀ヶ丘）から87番（広野）までは、モノレールと重なるタクシーの道もなくす
 _drop_taxi = {tuple(sorted(p)) for p in [(99, 100), (100, 93), (93, 86)]}
+# 1–13（風見野–楓町）と 84–99（三つ茶屋–双子川）のタクシーもなくす（駅番号−1で指定）
+_drop_taxi |= {tuple(sorted(p)) for p in [(0, 12), (83, 98)]}
 TAXI = [e for e in TAXI if tuple(sorted(e)) not in _drop_taxi]
 
 # ======================================================================
