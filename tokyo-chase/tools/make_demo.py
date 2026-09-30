@@ -57,6 +57,7 @@ data = f'''const W = {B["W"]}, H = {B["H"]};
   const TUBE = {json.dumps([["地下鉄", e] for e in B["subwayEdges"]], ensure_ascii=False)};
   const BUS = {json.dumps(B["busEdges"])};
   const BOATS = {json.dumps([["水上バス", e] for e in B["boatEdges"]], ensure_ascii=False)};
+  const MONO = {json.dumps(B.get("monoEdges", []))};
   const BOAT_PATH = new Map(Object.entries({json.dumps(boat_paths)}));
   const HELI = {json.dumps(B["heli"])};
   const RIVER = {json.dumps(B["river"])};
@@ -82,7 +83,7 @@ sub('''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべて�
 '''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
   // 水上バスは怪盗Xだけが黒チケットで乗れる。刑事は乗れない
   const DET_TICKETS = { heli: 1 };
-  const X_TICKETS = { taxi: 22, bus: 15, tube: 7, boat: 5 };
+  const X_TICKETS = { taxi: 22, bus: 15, tube: 7, boat: 5, mono: 6 };
   const dHas = (d, type) => type === "boat" ? false : type === "heli" ? d.t.heli > 0 : true;''')
 # ロンドン版の不具合の修正：怪盗Xが「駅破壊」で自分の最後の逃げ道を壊さないようにする
 sub('''      return [...Array(N).keys()].filter(i => i !== sec.pos && D[sec.pos][i] <= 2 && !occ.has(i) && !isRuin(G, i));''',
@@ -961,6 +962,25 @@ sub("""  .heli-sprite { image-rendering: pixelated; }""", """  .heli-sprite { im
 sub("""${G.xt && (xVisible() || G.over) ? ["taxi", "bus", "tube"].map(t =>""", """${G.xt && (xVisible() || G.over) ? ["taxi", "bus", "tube", "boat"].map(t =>""")
 sub("""地下鉄${X_TICKETS.tube}・黒チケット・""", """地下鉄${X_TICKETS.tube}・水上バス${X_TICKETS.boat}・黒チケット・""")
 sub("""乗れるのは <b>怪盗Xだけ</b>で、<b>黒チケット</b>を使います。""", """乗れるのは <b>怪盗Xだけ</b>で、<b>水上バスの切符</b>（${X_TICKETS.boat}枚）か<b>黒チケット</b>を使います（黒チケットなら乗り物は隠れます）。桟橋のある駅では、行き先を選ぶと「WATER BUS」のカードが出ます。""")
+
+# ---------------- モノレール・怪盗Xのヘリはいつでも（tools/mono_rule.py） ----------------
+from mono_rule import patches as mono_patches
+for a_, b_ in mono_patches(6, 99):
+    sub(a_, b_)
+sub("""["taxi", "bus", "tube", "boat"].map(t => `<span class="tk ${t}""", """["taxi", "bus", "tube", "mono", "boat"].map(t => `<span class="tk ${t}""")
+sub("""<span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span>""", """<span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli >= 50 ? "∞" : G.heli}</span>""")
+sub("""<b>×${left}</b></span>""", """<b>×${left >= 50 ? "∞" : left}</b></span>""")
+sub("""  .tk.boat { background: var(--ferry); color: #fff; }""", """  .tk.boat { background: var(--ferry); color: #fff; }
+  .tk.mono, .pxcard .pc-type.mono { background: #E08A2E; color: #fff; }
+  .wedge.mono { fill: #E08A2E; }
+  .mono-ln { stroke: #E08A2E; }
+  .mono-dash { stroke: #FFF1DC; stroke-width: 5; stroke-dasharray: 3 9; }""")
+sub("""地下鉄${X_TICKETS.tube}・水上バス${X_TICKETS.boat}・黒チケット・""", """地下鉄${X_TICKETS.tube}・モノレール${X_TICKETS.mono}・水上バス${X_TICKETS.boat}・黒チケット・""")
+sub("""（ヘリだけ${DET_TICKETS.heli}枚。水上バスには乗れません）""", """（ヘリはカード「ヘリ出動」でだけ。水上バスには乗れません）""")
+sub("""        <li><b>水上バス</b>（青い破線）""", """        <li><b>モノレール</b>（オレンジの線）は湾岸を走る高架の路線です。広野から夢見島・潮月町を通って岬町まで、夢見島から空港島へも行けます。刑事は使い放題、怪盗Xは切符${X_TICKETS.mono}枚。</li>
+        <li><b>水上バス</b>（青い破線）""")
+sub("""ただしヘリの切符は最初は0枚で、<b>ヘリのカードを引いたときだけ</b>使えます（怪盗Xは「ヘリ」、刑事は「ヘリ出動」）。""", """<b>怪盗Xはいつでも</b>ヘリで飛べます。刑事はカード「ヘリ出動」を引いたときだけ使えます。""")
+sub("""（怪盗Xは「罠」「雲隠れ」「駅破壊」「ヘリ」「煙幕」「変装」）""", """（怪盗Xは「罠」「雲隠れ」「駅破壊」「煙幕」「変装」）""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:

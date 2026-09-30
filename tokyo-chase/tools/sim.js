@@ -20,6 +20,7 @@ if (which === "sy") {
   const TUBE = ${JSON.stringify(B.subwayEdges.map(e => ["地下鉄", e]))};
   const BUS = ${JSON.stringify(B.busEdges)};
   const BOATS = ${JSON.stringify(B.boatEdges.map(e => ["水上バス", e]))};
+  const MONO = ${JSON.stringify(B.monoEdges || [])};
   const BOAT = [];
   const HELI = ${JSON.stringify(B.heli)};
   const RIVER = [], ISLANDS = [];
@@ -105,6 +106,13 @@ if (process.env.VIEW) {
 if (process.env.STRONG) {
   const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "strong_cards.py"), process.env.STRONG]).toString());
   for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("strong patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
+}
+// モノレール・怪盗Xのヘリ（MONO=怪盗Xのモノレール切符,怪盗Xのヘリ切符。STRONG のあとに当てる）
+if (process.env.MONO) {
+  const [mx, hn] = process.env.MONO.split(",");
+  const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "mono_rule.py"), mx, hn]).toString());
+  for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("mono patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
+  core = core.replace(/(const X_TICKETS = \{[^}]*?) \};/, `$1, mono: ${Number(mx)} };`);
 }
 // 公開のタイミング：スコットランドヤード式（24手、3・8・13・18・24手目）
 if (process.env.SY_ROUNDS) {

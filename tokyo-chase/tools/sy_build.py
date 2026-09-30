@@ -347,6 +347,13 @@ BUS_E += ODAIBA_BUS
 ISLAND_SIZE = {odaiba: [230, 150], haneda: [124, 84]}
 
 # ======================================================================
+# モノレール：湾岸を走る高架の路線。島（夢見島・空港島）にも刑事が行ける。1駅ずつ停まる
+#  広野 – 浜風通 – 夢見島 – 潮月町 – 汐風台 – 材木浜 – 岬町、夢見島 – 空港島（番号は盤面の駅番号−1）
+# ======================================================================
+MONO_LINES = [[86, 90, 97, 76, 79, 80, 82], [97, 103]]
+MONO_E = [tuple(sorted((l[k], l[k + 1]))) for l in MONO_LINES for k in range(len(l) - 1)]
+
+# ======================================================================
 # 検証と書き出し
 # ======================================================================
 edges = {}
@@ -356,6 +363,7 @@ for a, b in TAXI: add(a, b, "taxi")
 for a, b in BUS_E: add(a, b, "bus")
 for a, b in SUB_E: add(a, b, "tube")
 for a, b in BOAT_E: add(a, b, "boat")
+for a, b in MONO_E: add(a, b, "mono")
 ADJ = adj_of(edges.keys())
 report = {
     "stations": N, "connected": len(bfs(ADJ, 0)) == N,
@@ -373,7 +381,7 @@ board = {
     "W": W, "H": H, "style": "scotland-yard",
     "stations": [[s[0], s[1], s[2]] for s in ST],
     "taxi": [list(e) for e in TAXI], "busEdges": [list(e) for e in BUS_E], "subwayEdges": [list(e) for e in SUB_E],
-    "boatEdges": [list(e) for e in BOAT_E], "boatPaths": BOAT_PATHS,
+    "boatEdges": [list(e) for e in BOAT_E], "monoEdges": [list(e) for e in MONO_E], "monoLines": MONO_LINES, "boatPaths": BOAT_PATHS,
     "heli": HELI, "islands": isl, "islandSize": [ISLAND_SIZE[i] for i in isl], "bridges": bridges, "river": RIVER, "coast": COAST,
 }
 json.dump(board, open(os.path.join(HERE, "board_sy.json"), "w"), ensure_ascii=False)

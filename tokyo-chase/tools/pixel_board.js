@@ -136,18 +136,18 @@
   }
 
   // 線の太さ：タクシー（細い1本線）＜バス＜地下鉄。上に重ねるほど太い線で、交差する所は下の線が途切れて見える（立体交差）
-  const LINE_W = { taxi: 5, bus: 11, tube: 17 };
+  const LINE_W = { taxi: 5, bus: 11, tube: 17, mono: 15 };
   const GAP = 5;   // 線のまわりの地面色のすき間（交差や並走を見分けやすく）
   function buildBoard() {
     const gE = $("gEdges"), gS = $("gStations"), gL = $("gLabels");
     const layer = () => ({ gap: el("g", {}, gE), ln: el("g", {}, gE) });
     const boatL = el("g", {}, gE), deckL = el("g", {}, gE);
-    const layers = { taxi: layer(), bus: layer(), tube: layer() };
+    const layers = { taxi: layer(), bus: layer(), tube: layer(), mono: layer() };
     const title = (g, key, t) => { el("title", {}, g).textContent = t; };
     for (const [key, types] of edgeTypes) {
       const [a, b] = key.split("-").map(Number);
       // 同じ区間を走る線は、地下鉄・タクシー・バスの順に横へ並べる
-      const here = ["tube", "taxi", "bus"].filter(t => types.has(t));
+      const here = ["tube", "taxi", "bus", "mono"].filter(t => types.has(t));
       const total = here.reduce((s_, t) => s_ + LINE_W[t], 0) + GAP * 2 * (here.length - 1);
       let at = -total / 2;
       for (const t of here) {
@@ -183,7 +183,7 @@
       for (const v of [-half, half]) el("path", { d: `M${(x + ux * len + tx * v).toFixed(1)},${(y + uy * len + ty * v).toFixed(1)} L${(x - ux * len + tx * v).toFixed(1)},${(y - uy * len + ty * v).toFixed(1)}`, class: "deck-rail" }, deckL);
     }
     // 重ねる順：水上バス → 橋げた → タクシー → バス → 地下鉄（あとのほど上）
-    gE.append(boatL, deckL, layers.taxi.gap, layers.taxi.ln, layers.bus.gap, layers.bus.ln, layers.tube.gap, layers.tube.ln);
+    gE.append(boatL, deckL, layers.taxi.gap, layers.taxi.ln, layers.bus.gap, layers.bus.ln, layers.tube.gap, layers.tube.ln, layers.mono.gap, layers.mono.ln);
     // 駅：以前の複合マーク。上半分をその駅で乗れる乗り物の色で塗り分け、下半分に番号。橋の駅はひし形、ヘリポートは H のマーク
     const R = 22;
     STATIONS.forEach(([name, x, y], i) => {
