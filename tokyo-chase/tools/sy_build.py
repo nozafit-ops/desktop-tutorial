@@ -359,6 +359,9 @@ MONO_E = [tuple(sorted((l[k], l[k + 1]))) for l in MONO_LINES for k in range(len
 _mono = set(MONO_E)
 BUS_DROPPED = [e for e in BUS_E if tuple(sorted(e)) in _mono]
 BUS_E = [e for e in BUS_E if tuple(sorted(e)) not in _mono]
+# 100番（雲雀ヶ丘）から87番（広野）までは、モノレールと重なるタクシーの道もなくす
+_drop_taxi = {tuple(sorted(p)) for p in [(99, 100), (100, 93), (93, 86)]}
+TAXI = [e for e in TAXI if tuple(sorted(e)) not in _drop_taxi]
 
 # ======================================================================
 # 検証と書き出し
