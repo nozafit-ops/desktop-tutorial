@@ -1003,7 +1003,10 @@ sub("""  .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-wid
     #paneInfo .prompt .btn { min-height: 28px; padding: 0 8px; font-size: 11px; }
     #paneInfo .toprow.first .dets { flex: 1 1 100% !important; order: 4 !important; zoom: 1 !important; padding: 2px !important; gap: 1px !important; justify-content: space-around; }
     #paneInfo .xcard { min-width: 55% !important; }
-    #paneInfo .det { flex: none !important; min-width: 0 !important; padding: 1px !important; gap: 1px !important; }
+    #paneInfo .toprow.first .dets { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); overflow: hidden !important; }
+    #paneInfo .det { flex: none !important; min-width: 0 !important; width: auto !important; padding: 1px !important; gap: 1px !important; overflow: hidden; }
+    #paneInfo .det .tks { max-width: 100% !important; flex-wrap: nowrap !important; justify-content: center; }
+    #paneInfo .det .tk.heli { display: none; }
     .x-full { height: 44px !important; } .det-full { height: 36px !important; } .mate-full { display: none !important; }
     .tk { font-size: 8px !important; padding: 0 2px !important; line-height: 1.4; }
     .me-tag { font-size: 7px !important; padding: 0 3px !important; }
@@ -1085,7 +1088,7 @@ sub("""    const cell = document.createElement("div");
 
 sub("    if (LOCK) return lockView();", "    return lockView();   // 自分の駒へ戻る")
 sub("    if (LOCK && A.G && A.screen === \"game\" && !A.overview && viewAnchor() !== lockedOn) lockView();",
-    "    if (A.G && A.screen === \"game\" && !A.overview && viewAnchor() !== lockedOn) lockView();   // 自分の駒が動いたときだけ寄せる")
+    "    if (LOCK && A.G && A.screen === \"game\" && !A.overview && viewAnchor() !== lockedOn) lockView();   // パソコンだけ自分の駒に寄せる（携帯は自分で動かした表示のまま）")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
