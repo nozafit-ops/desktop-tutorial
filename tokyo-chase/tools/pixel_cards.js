@@ -8,7 +8,7 @@
     taxi:  { no: "01", en: "TAXI",      ja: "タクシー", mark: "タ" },
     bus:   { no: "02", en: "BUS",       ja: "バス",     mark: "バ" },
     tube:  { no: "03", en: "SUBWAY",    ja: "地下鉄",   mark: "地" },
-    boat:  { no: "04", en: "WATER BUS", ja: "水上バス（黒チケット・乗り物は隠れる）", mark: "船" },
+    boat:  { no: "04", en: "WATER BUS", ja: "水上バス（怪盗Xだけが乗れる）", mark: "船" },
     black: { no: "05", en: "BLACK",     ja: "黒チケット（乗り物を隠す）", mark: "黒" },
     heli:  { no: "06", en: "HELI",      ja: "ヘリ（ほかのヘリポートのどこかへ着陸）", mark: "H" },
   };
@@ -208,7 +208,8 @@
   }
   // 切符カードのボタン。art は絵の種類（黒チケットで水上バスに乗るときは "boat"）、type は実際に使う切符
   function pxCard(art, cnt, type) {
-    const info = CARD_INFO[art] || CARD_INFO.taxi;
+    const info = { ...(CARD_INFO[art] || CARD_INFO.taxi) };
+    if (type === "black" && art === "boat") { info.ja = "黒チケットで水上バス（乗り物は隠れる）"; info.mark = "黒"; }
     return `<button class="ticket pxcard ${type}" data-act="ticket" data-type="${type}" aria-label="${info.ja} 残り${cnt}">
       <span class="pc-top"><img class="pc-run" src="${pxRunner()}" alt=""><span class="pc-no">${info.no}</span><span class="pc-cnt">${cnt}</span><span class="pc-type ${art}">${info.mark}</span></span>
       <img class="pc-art" src="${pxScene(art)}" alt="">

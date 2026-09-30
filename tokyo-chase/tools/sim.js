@@ -117,7 +117,7 @@ if (process.env.MOVES) {
   if (process.env.CARDS) core = core.replace("const CARD_TURNS = [5, 10, 17];", `const CARD_TURNS = [${process.env.CARDS}];`);
   if (process.env.CARD_LAST) core = core.replace("const CARD_LAST = 20;", `const CARD_LAST = ${Number(process.env.CARD_LAST)};`);
 }
-if (process.env.XT) { const [t, b, u] = process.env.XT.split(",").map(Number); core = core.replace(/const X_TICKETS = \{[^}]*\};/, `const X_TICKETS = { taxi: ${t}, bus: ${b}, tube: ${u}, boat: 0 };`); }
+if (process.env.XT) { const [t, b, u, bo = 0] = process.env.XT.split(",").map(Number); core = core.replace(/const X_TICKETS = \{[^}]*\};/, `const X_TICKETS = { taxi: ${t}, bus: ${b}, tube: ${u}, boat: ${bo} };`); }
 if (process.env.BLACK) core = core.replace("black: detCount,", `black: ${Number(process.env.BLACK)},`);
 if (process.env.DBL) core = core.replace(/const X_DOUBLE = \d+;/, `const X_DOUBLE = ${Number(process.env.DBL)};`);
 if (xTubeArg) core = core.replace(/tube: 4,/, `tube: ${Number(xTubeArg)},`);

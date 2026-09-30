@@ -82,7 +82,7 @@ sub('''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべて�
 '''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
   // 水上バスは怪盗Xだけが黒チケットで乗れる。刑事は乗れない
   const DET_TICKETS = { heli: 1 };
-  const X_TICKETS = { taxi: 22, bus: 15, tube: 7, boat: 0 };
+  const X_TICKETS = { taxi: 22, bus: 15, tube: 7, boat: 5 };
   const dHas = (d, type) => type === "boat" ? false : type === "heli" ? d.t.heli > 0 : true;''')
 # ロンドン版の不具合の修正：怪盗Xが「駅破壊」で自分の最後の逃げ道を壊さないようにする
 sub('''      return [...Array(N).keys()].filter(i => i !== sec.pos && D[sec.pos][i] <= 2 && !occ.has(i) && !isRuin(G, i));''',
@@ -956,6 +956,11 @@ sub("""  .heli-sprite { image-rendering: pixelated; }""", """  .heli-sprite { im
   }
   .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-width: 14; }
   .mini-dest.tgt { fill: rgba(229, 72, 77, .3); stroke: #E5484D; }""")
+
+# ---------------- 水上バスの切符：怪盗Xは水上バス専用の切符5枚でも乗れる（黒チケットでも乗れる） ----------------
+sub("""${G.xt && (xVisible() || G.over) ? ["taxi", "bus", "tube"].map(t =>""", """${G.xt && (xVisible() || G.over) ? ["taxi", "bus", "tube", "boat"].map(t =>""")
+sub("""地下鉄${X_TICKETS.tube}・黒チケット・""", """地下鉄${X_TICKETS.tube}・水上バス${X_TICKETS.boat}・黒チケット・""")
+sub("""乗れるのは <b>怪盗Xだけ</b>で、<b>黒チケット</b>を使います。""", """乗れるのは <b>怪盗Xだけ</b>で、<b>水上バスの切符</b>（${X_TICKETS.boat}枚）か<b>黒チケット</b>を使います（黒チケットなら乗り物は隠れます）。桟橋のある駅では、行き先を選ぶと「WATER BUS」のカードが出ます。""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
