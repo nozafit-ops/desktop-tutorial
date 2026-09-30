@@ -97,6 +97,22 @@
     #app.mini-big #paneCards { padding-right: calc(min(2 * var(--colR), 100vw - 24px) - var(--colR) + 6px); }
   }
   .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-width: 14; }
+  .recenter { display: none; }
+  @media (max-width: 760px) and (orientation: portrait), (max-height: 520px) and (orientation: landscape) {
+    #paneMini { display: none !important; }
+    #app #mapCell { aspect-ratio: auto !important; width: auto !important; }
+    #app.layout4 #map { cursor: grab; }
+    .recenter { display: grid; place-items: center; grid-area: map; justify-self: end; align-self: end; margin: 8px; z-index: 6; width: 40px; height: 40px;
+      border-radius: 50%; border: 2px solid var(--gold); background: var(--hud-solid); color: var(--gold); font: inherit; font-size: 11px; font-weight: 900; }
+    .recenter svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; }
+  }
+  @media (max-width: 760px) and (orientation: portrait) {
+    #app.layout4.layout4 { grid-template-columns: 1fr !important; grid-template-rows: minmax(0, 1fr) auto auto !important; grid-template-areas: "map" "info" "cards" !important; }
+  }
+  @media (max-height: 520px) and (orientation: landscape) {
+    #app.layout4.layout4 { grid-template-rows: auto minmax(0, 1fr) !important; grid-template-areas: "map info" "map cards" !important; }
+    #paneCards { align-self: stretch; }
+  }
   /* 携帯（縦）：上に地図（横いっぱい）、その下に情報の帯、いちばん下に全体図と手札 */
   @media (max-width: 760px) and (orientation: portrait) {
     #app.layout4 { gap: 3px !important; padding: 3px !important; grid-template-columns: 1fr 1fr !important;
@@ -2223,7 +2239,10 @@
   }
   // 画面は自分の駒（パス&プレイでは手番の人の駒）を中心に固定する。ドラッグや拡大縮小はしない
   const AUTO_CAM = false;   // true にすると駒の動きに合わせて画面が自動で動く（いまは自分でドラッグしたときだけ動く）
-  const LOCK = true;   // true にすると画面を自分の駒に固定（いまはドラッグで自由にスクロール）
+  // 携帯では地図を自由に動かせる（パソコンは自分の駒に固定）
+  const PHONE_Q = "(max-width: 760px) and (orientation: portrait), (max-height: 520px) and (orientation: landscape)";
+  const isPhone = () => window.matchMedia(PHONE_Q).matches;
+  let LOCK = !isPhone();
   let lockedOn = null;
   function viewAnchor() {
     const G = A.G;
@@ -2240,13 +2259,15 @@
     lockedOn = pos;
     const { w, h } = vpSize();
     const [x, y] = P(pos);
-    const s = V.fit = minScale();
+    V.fit = minScale();
+    const s = LOCK ? V.fit : Math.min(w / VIEW_W, h / VIEW_H);
     const tx = w / 2 - x * s, ty = (hudTop() + h) / 2 - y * s;
     animate ? animateView(s, tx, ty, 520) : setView(s, tx, ty);
   }
   // いちばん引いたときの倍率：横は地図の半分くらいが見え、縦は画面いっぱい
   function minScale() {
     const { w, h } = vpSize();
+    if (!LOCK) return Math.min(w / W, h / H);   // 携帯：盤面全体まで引ける
     return w / VIEW_W;   // 地図の枠は視界と同じ縦横比にしてあるので、映っている範囲＝視界
   }
   function fitView(animate = true) {
@@ -2305,7 +2326,7 @@
   function focusTurn() {
     const G = A.G;
     if (!G) return;
-    if (LOCK) return lockView();
+    return lockView();   // 自分の駒へ戻る
     if (G.turn === "x") { if (xVisible()) centerOn(A.sec.pos); else if (G.lastSeen) centerOn(G.lastSeen.pos); else if (A.role === "d") centerOn(G.det[0].pos); else fitView(); }
     else centerOn(G.det[G.turn].pos);
   }
@@ -2984,9 +3005,18 @@
     // 地図のマス目（grid の map 領域）の大きさを測り、その中に視界と同じ縦横比の地図を置く
     const cell = document.createElement("div");
     cell.id = "mapCell";
+    // 携帯：自分の駒へ戻るボタン（地図の右下）
+    const rc = document.createElement("button");
+    rc.className = "recenter"; rc.dataset.act = "focusTurn"; rc.setAttribute("aria-label", "自分の駒へ戻る");
+    rc.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg>`;
+    app.appendChild(rc);
     app.insertBefore(cell, app.firstChild);
     const fit = () => {
+      const was = LOCK;
+      LOCK = !isPhone();
+      if (was !== LOCK && A.G && A.screen === "game") setTimeout(() => lockView(false), 0);
       const r = cell.getBoundingClientRect(), k = Math.min(r.width / VIEW_W, r.height / VIEW_H);
+      if (!LOCK) { mapEl.style.width = Math.floor(r.width) + "px"; mapEl.style.height = Math.floor(r.height) + "px"; app.style.setProperty("--mw", mapEl.style.width); app.style.setProperty("--mh", mapEl.style.height); return; }
       mapEl.style.width = Math.floor(VIEW_W * k) + "px";
       mapEl.style.height = Math.floor(VIEW_H * k) + "px";
       app.style.setProperty("--mw", mapEl.style.width); app.style.setProperty("--mh", mapEl.style.height);
@@ -3066,7 +3096,7 @@
     const g = $("viewMask"), G = A.G;
     if (!g) return;
     g.replaceChildren();
-    return;   // 地図に映っている範囲すべてが視界なので、枠や影は描かない
+    if (LOCK) return;   // パソコン：地図に映っている範囲すべてが視界なので、枠は描かない
     const pos = G && !G.over ? viewAnchor() : null;
     if (pos === null || pos === undefined) return;
     const isDet = A.role === "d" || (A.role === "pass" && G.turn !== "x" && A.cover !== "x-open");
@@ -3179,7 +3209,7 @@
     if (xVisible()) t.push({ key: "x", kind: "x", k: 0, pos: A.sec.pos, found: !G.over && exposure(G).level === "found" });
     else if (!G.over && exposure(G).level === "found") t.push({ key: "xf" + G.possible[0], kind: "x", k: 0, pos: G.possible[0], found: true });
     if (mateActive(G) && !G.over) t.push({ key: "m" + G.mate.pos, kind: "m", k: 0, pos: G.mate.pos });
-    if (LOCK && humanTurn()) {
+    if (humanTurn()) {
       const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
       for (const to of new Set(moves.filter(m => m.to >= 0).map(m => m.to))) t.push({ key: "go" + to, kind: "dest", k: 0, pos: to });
     }
@@ -3273,7 +3303,7 @@
   }
   function render() {
     renderRadio();
-    if (LOCK && A.G && A.screen === "game" && !A.overview && viewAnchor() !== lockedOn) lockView();
+    if (A.G && A.screen === "game" && !A.overview && viewAnchor() !== lockedOn) lockView();   // 自分の駒が動いたときだけ寄せる
     renderMini(); renderViewMask(); renderTalkLog();
     const ob = $("overviewBtn");
     if (ob) ob.setAttribute("aria-pressed", String(!!A.overview));

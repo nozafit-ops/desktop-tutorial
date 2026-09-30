@@ -1037,6 +1037,56 @@ sub("""  .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-wid
     #app.mini-big #paneMini { width: calc(100% - 6px) !important; height: calc(100% - 6px) !important; }
   }""")
 
+# ---------------- 携帯：全体図なし、メインの地図は自由にドラッグ・拡大縮小（視界は黄色い枠で示す） ----------------
+sub("  const LOCK = true;   // true にすると画面を自分の駒に固定（いまはドラッグで自由にスクロール）",
+    """  // 携帯では地図を自由に動かせる（パソコンは自分の駒に固定）
+  const PHONE_Q = "(max-width: 760px) and (orientation: portrait), (max-height: 520px) and (orientation: landscape)";
+  const isPhone = () => window.matchMedia(PHONE_Q).matches;
+  let LOCK = !isPhone();""")
+sub("    const s = V.fit = minScale();", "    V.fit = minScale();\n    const s = LOCK ? V.fit : Math.min(w / VIEW_W, h / VIEW_H);")
+sub("    return w / VIEW_W;   // 地図の枠は視界と同じ縦横比にしてあるので、映っている範囲＝視界",
+    "    if (!LOCK) return Math.min(w / W, h / H);   // 携帯：盤面全体まで引ける\n    return w / VIEW_W;   // 地図の枠は視界と同じ縦横比にしてあるので、映っている範囲＝視界")
+sub("    if (LOCK && humanTurn()) {", "    if (humanTurn()) {")
+sub("""    return;   // 地図に映っている範囲すべてが視界なので、枠や影は描かない""",
+    """    if (LOCK) return;   // パソコン：地図に映っている範囲すべてが視界なので、枠は描かない""")
+sub("""    const fit = () => {
+      const r = cell.getBoundingClientRect(), k = Math.min(r.width / VIEW_W, r.height / VIEW_H);""",
+    """    const fit = () => {
+      const was = LOCK;
+      LOCK = !isPhone();
+      if (was !== LOCK && A.G && A.screen === "game") setTimeout(() => lockView(false), 0);
+      const r = cell.getBoundingClientRect(), k = Math.min(r.width / VIEW_W, r.height / VIEW_H);
+      if (!LOCK) { mapEl.style.width = Math.floor(r.width) + "px"; mapEl.style.height = Math.floor(r.height) + "px"; app.style.setProperty("--mw", mapEl.style.width); app.style.setProperty("--mh", mapEl.style.height); return; }""")
+sub("""  .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-width: 14; }""", """  .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-width: 14; }
+  .recenter { display: none; }
+  @media (max-width: 760px) and (orientation: portrait), (max-height: 520px) and (orientation: landscape) {
+    #paneMini { display: none !important; }
+    #app #mapCell { aspect-ratio: auto !important; width: auto !important; }
+    #app.layout4 #map { cursor: grab; }
+    .recenter { display: grid; place-items: center; grid-area: map; justify-self: end; align-self: end; margin: 8px; z-index: 6; width: 40px; height: 40px;
+      border-radius: 50%; border: 2px solid var(--gold); background: var(--hud-solid); color: var(--gold); font: inherit; font-size: 11px; font-weight: 900; }
+    .recenter svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; }
+  }
+  @media (max-width: 760px) and (orientation: portrait) {
+    #app.layout4.layout4 { grid-template-columns: 1fr !important; grid-template-rows: minmax(0, 1fr) auto auto !important; grid-template-areas: "map" "info" "cards" !important; }
+  }
+  @media (max-height: 520px) and (orientation: landscape) {
+    #app.layout4.layout4 { grid-template-rows: auto minmax(0, 1fr) !important; grid-template-areas: "map info" "map cards" !important; }
+    #paneCards { align-self: stretch; }
+  }""")
+sub("""    const cell = document.createElement("div");
+    cell.id = "mapCell";""", """    const cell = document.createElement("div");
+    cell.id = "mapCell";
+    // 携帯：自分の駒へ戻るボタン（地図の右下）
+    const rc = document.createElement("button");
+    rc.className = "recenter"; rc.dataset.act = "focusTurn"; rc.setAttribute("aria-label", "自分の駒へ戻る");
+    rc.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M2 12h4M18 12h4"></path></svg>`;
+    app.appendChild(rc);""")
+
+sub("    if (LOCK) return lockView();", "    return lockView();   // 自分の駒へ戻る")
+sub("    if (LOCK && A.G && A.screen === \"game\" && !A.overview && viewAnchor() !== lockedOn) lockView();",
+    "    if (A.G && A.screen === \"game\" && !A.overview && viewAnchor() !== lockedOn) lockView();   // 自分の駒が動いたときだけ寄せる")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"
