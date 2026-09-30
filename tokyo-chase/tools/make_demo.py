@@ -67,6 +67,7 @@ data = f'''const W = {B["W"]}, H = {B["H"]};
   const ISLAND_LIST = {json.dumps(B["islands"])};
   const ISLAND_SIZE = {json.dumps(B["islandSize"])};
   const LANDS = {json.dumps(B.get("lands", []))};
+  const LAND_NECK = {json.dumps(B.get("landNeck"))};
   '''
 a = out.index("const W = 3000, H = 1900;"); b = out.index("const N = STATIONS.length;")
 out = out[:a] + data + out[b:]
@@ -1090,6 +1091,50 @@ sub("""    const cell = document.createElement("div");
 sub("    if (LOCK) return lockView();", "    return lockView();   // 自分の駒へ戻る")
 sub("    if (LOCK && A.G && A.screen === \"game\" && !A.overview && viewAnchor() !== lockedOn) lockView();",
     "    if (LOCK && A.G && A.screen === \"game\" && !A.overview && viewAnchor() !== lockedOn) lockView();   // パソコンだけ自分の駒に寄せる（携帯は自分で動かした表示のまま）")
+
+# ---------------- カードを引いたら、裏向きのカードをタップしてめくる ----------------
+sub("""        <div class="gcard ${pc.card === "miss" ? "miss" : pc.side}">
+          <div class="gc-kind">""", """        <div class="flip3d ${pc.flipped ? "open" : ""}" data-act="flipCard" role="button" aria-label="カードをめくる">
+        <div class="flip-inner">
+        <div class="flip-back ${pc.side}"><div class="fb-logo">CHASE</div><div class="fb-mark">?</div><div class="fb-tap">タップしてめくる</div></div>
+        <div class="gcard ${pc.card === "miss" ? "miss" : pc.side}">
+          <div class="gc-kind">""")
+sub("""          <div class="gc-desc">${c.desc}</div>
+        </div>
+        <button class="btn wide" data-act="cardOk">""", """          <div class="gc-desc">${c.desc}</div>
+        </div></div></div>
+        <button class="btn wide" data-act="cardOk">""")
+sub("""      case "cardOk": {""", """      case "flipCard": {
+        const pc = A.pendingCard;
+        if (!pc || pc.flipped) return;
+        pc.flipped = true;
+        b.classList.add("open");
+        return;
+      }
+      case "cardOk": {""")
+sub("""  .heli-sprite { image-rendering: pixelated; }""", """  .heli-sprite { image-rendering: pixelated; }
+  /* カードめくり */
+  .flip3d { perspective: 1000px; cursor: pointer; display: flex; justify-content: center; }
+  .flip-inner { display: grid; } .flip-inner > * { grid-area: 1 / 1; }
+  .flip-inner { position: relative; transform-style: preserve-3d; transform: rotateY(180deg); transition: transform .75s cubic-bezier(.3, 1.3, .5, 1); }
+  .flip3d.open { cursor: default; }
+  .flip3d.open .flip-inner { transform: rotateY(0deg); }
+  .flip-inner > .gcard, .flip-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .flip-back { transform: rotateY(180deg); border-radius: 14px; border: 4px solid #2F5FB8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    background: repeating-linear-gradient(45deg, #1C3570 0 10px, #24428A 10px 20px); box-shadow: inset 0 0 0 4px #FBF7EA, 0 10px 30px rgba(0,0,0,.5); color: #FBF7EA; font-family: "DotGothic16", sans-serif; }
+  .flip-back.x { border-color: #C2464F; background: repeating-linear-gradient(45deg, #5E0F0B 0 10px, #7A1712 10px 20px); }
+  .fb-logo { font-size: 26px; letter-spacing: .2em; }
+  .fb-mark { font-size: 72px; line-height: 1; color: #E3B341; text-shadow: 3px 3px 0 rgba(0,0,0,.4); animation: fbPulse 1.2s ease-in-out infinite; }
+  .fb-tap { font-size: 13px; opacity: .9; }
+  @keyframes fbPulse { 50% { transform: scale(1.12); } }
+  @media (prefers-reduced-motion: reduce) { .flip-inner { transition: none; } .fb-mark { animation: none; } }""")
+
+sub("""        const pc = A.pendingCard;
+        if (!pc || pc.stage !== "reveal") return;
+        A.pendingCard = null;""", """        const pc = A.pendingCard;
+        if (!pc || pc.stage !== "reveal") return;
+        if (!pc.flipped) { pc.flipped = true; document.querySelector(".flip3d")?.classList.add("open"); return; }   // まずめくる
+        A.pendingCard = null;""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:

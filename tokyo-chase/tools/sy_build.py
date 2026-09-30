@@ -383,8 +383,12 @@ TAXI = sorted(set(TAXI) | {tuple(sorted(e)) for e in [(A_, B_), (B_, C_), (C_, D
 BUS_E += [tuple(sorted(e)) for e in [(A_, B_), (B_, C_), (C_, D_), (97, A_)]]   # 夢見島からバスの橋
 MONO_LINES[1] = MONO_LINES[1] + [F_, E_]                                        # 夢見島 – 空港島 – 星見浜 – 海風ヶ丘
 MONO_E = [tuple(sorted((l[k], l[k + 1]))) for l in MONO_LINES for k in range(len(l) - 1)]
-BOAT_E.append(tuple(sorted((82, D_)))); BOAT_PATHS.append([list(P[min(82, D_)]), list(P[max(82, D_)])])   # 岬町 – 潮騒ヶ浜
+# 岬町とは陸続きになったので水上バスは通さない
 HELI.append(C_)                                                                 # 灯台岬のヘリポート
+# 陸続き：北の岸（汐風台・材木浜・渚公園・岬町）と地面でつなぎ、タクシーの道を渡す
+LAND_NECK = [3330, 1150, 4330, 1520]   # 岸から島までを埋める四角（左, 上, 右, 下）
+TAXI = sorted(set(TAXI) | {tuple(sorted(e)) for e in [(A_, 79), (B_, 80), (C_, 81), (D_, 82)]})
+BUS_E.append(tuple(sorted((A_, 79))))                                           # 汐風台からもバス
 
 # ======================================================================
 # 検証と書き出し
@@ -416,7 +420,7 @@ board = {
     "stations": [[s[0], s[1], s[2]] for s in ST],
     "taxi": [list(e) for e in TAXI], "busEdges": [list(e) for e in BUS_E], "subwayEdges": [list(e) for e in SUB_E],
     "boatEdges": [list(e) for e in BOAT_E], "monoEdges": [list(e) for e in MONO_E], "monoLines": MONO_LINES, "boatPaths": BOAT_PATHS,
-    "heli": HELI, "lands": LANDS, "islands": isl, "islandSize": [ISLAND_SIZE[i] for i in isl], "bridges": bridges, "river": RIVER, "coast": COAST,
+    "heli": HELI, "lands": LANDS, "landNeck": LAND_NECK, "islands": isl, "islandSize": [ISLAND_SIZE[i] for i in isl], "bridges": bridges, "river": RIVER, "coast": COAST,
 }
 json.dump(board, open(os.path.join(HERE, "board_sy.json"), "w"), ensure_ascii=False)
 

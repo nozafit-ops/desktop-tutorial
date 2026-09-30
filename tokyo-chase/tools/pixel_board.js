@@ -70,10 +70,16 @@
       g.fillStyle = "#C6C6C1"; g.beginPath(); g.ellipse(px(x), px(y) - 2, px(rx - 22), px(ry - 20), 0, 0, Math.PI * 2); g.fill();
       g.fillStyle = "#7DBB5E"; g.beginPath(); g.ellipse(px(x - rx * 0.45), px(y + ry * 0.3), px(rx * 0.3), px(ry * 0.3), 0, 0, Math.PI * 2); g.fill();
     });
-    // 埋立地（新港島）：岸の縁どり＋地面
+    // 埋立地（新港島）：北の岸と地続き。砂浜の縁どりは水の上だけに描く
     for (const [x, y, rx, ry] of LANDS) {
-      g.fillStyle = "#E4DCC2"; g.beginPath(); g.ellipse(px(x), px(y), px(rx), px(ry), 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = "#C6C6C1"; g.beginPath(); g.ellipse(px(x), px(y) - 2, px(rx - 24), px(ry - 22), 0, 0, Math.PI * 2); g.fill();
+      const shape = (grow) => {
+        const pth = new Path2D();
+        pth.ellipse(px(x), px(y), px(rx + grow), px(ry + grow), 0, 0, Math.PI * 2);
+        if (LAND_NECK) { const [l, t, r, b] = LAND_NECK; pth.rect(px(l - grow), px(t), px(r - l + grow * 2), px(b - t)); }
+        return pth;
+      };
+      g.save(); g.clip(bay); g.fillStyle = "#E4DCC2"; g.fill(shape(0)); g.restore();
+      g.fillStyle = "#C6C6C1"; g.fill(shape(-24));
       for (let yy = Math.round(px(y - ry + 30)); yy < px(y + ry - 30); yy += 6) for (let xx = Math.round(px(x - rx + 40)) + (yy / 6) % 2 * 3; xx < px(x + rx - 40); xx += 6) {
         const dx = (xx - px(x)) / px(rx - 30), dy = (yy - px(y)) / px(ry - 28);
         if (dx * dx + dy * dy < 1) { g.fillStyle = "#CDCDC8"; g.fillRect(xx, yy, 3, 3); }
