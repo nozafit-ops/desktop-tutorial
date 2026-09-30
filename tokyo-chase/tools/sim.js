@@ -88,6 +88,7 @@ if (process.env.DOGMATE === "1") {
 }
 // 相棒の調整（MATEDIST=刑事から何駅以上離れて現れるか、MATEEVERY=何手ごとに動くか）
 if (process.env.MATEDIST) core = core.replace("occ.every(o => D[p][o] >= 3));", `occ.every(o => D[p][o] >= ${Number(process.env.MATEDIST)}));`);
+if (process.env.MATEMIN) core = core.replace(/const MATE_MIN = \d+;/, `const MATE_MIN = ${Number(process.env.MATEMIN)};`);
 if (process.env.MATEEVERY) core = core.replace(/const MATE_EVERY = \d+;/, `const MATE_EVERY = ${Number(process.env.MATEEVERY)};`);
 // CPUの刑事の性格（PERSONA=1）
 if (process.env.PERSONA === "1") {

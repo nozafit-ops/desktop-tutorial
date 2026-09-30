@@ -52,7 +52,8 @@
   #app.layout4 { display: grid; gap: 6px; padding: 6px; background: #17130E;
     grid-template-columns: minmax(0, 1fr) clamp(290px, 31vw, 470px); grid-template-rows: minmax(0, 1fr) clamp(150px, 29vh, 270px);
     grid-template-areas: "map info" "cards mini"; }
-  #app.layout4 #map { position: relative; inset: auto; grid-area: map; width: 100%; height: 100%; border-radius: 10px; cursor: default; }
+  #app.layout4 #map { position: relative; inset: auto; grid-area: map; justify-self: center; align-self: center; border-radius: 10px; cursor: default; }
+  #mapCell { grid-area: map; min-width: 0; min-height: 0; }
   .pane { position: relative; z-index: 1; min-width: 0; min-height: 0; overflow: hidden; background: var(--hud-solid); border: 1px solid var(--rule); border-radius: 10px; }
   .pane.info { grid-area: info; display: flex; flex-direction: column; gap: 6px; padding: 6px; }
   .pane.cards { grid-area: cards; display: flex; gap: 8px; padding: 6px; }
@@ -67,7 +68,7 @@
   #paneInfo .drawer .row { display: flex; justify-content: space-between; align-items: center; }
   .hint-btn { min-height: 30px !important; padding: 0 10px !important; font-size: 12px !important; flex: 0 0 auto !important; width: auto !important; }
   .mini-h { white-space: nowrap; }
-  #app.layout4 #edge { grid-area: map; position: relative; inset: auto; }
+  #app.layout4 #edge { grid-area: map; position: relative; inset: auto; justify-self: center; align-self: center; width: var(--mw); height: var(--mh); }
   .hint-btn[aria-pressed="false"] { opacity: .55; }
   #paneCards .handbar { position: static; max-width: none; flex: 0 1 auto; min-width: 0; zoom: 1; }
   #paneCards .handbar[hidden] { display: none; }
@@ -288,6 +289,17 @@
   .det .tks { display: flex; gap: 2px; }
   .det { position: relative; }
   .det .tks { flex-wrap: wrap; justify-content: center; max-width: 92px; }
+  .det-full { height: clamp(70px, 13vh, 130px); width: auto; aspect-ratio: 3 / 5; object-fit: contain; object-position: bottom; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+  .x-full { height: clamp(80px, 15vh, 140px); width: auto; aspect-ratio: 3 / 5; object-fit: contain; object-position: bottom; flex: none; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+  .mate-full { display: flex; flex-direction: column; align-items: center; flex: none; font-size: 10px; color: var(--muted); }
+  .mate-full img { height: clamp(50px, 9vh, 90px); width: auto; aspect-ratio: 3 / 5; object-fit: contain; object-position: bottom; }
+  #paneInfo .dets { justify-content: space-around; }
+  #paneInfo .det { flex: 1 1 0; }
+  @media (max-width: 760px) and (orientation: portrait) {
+    #app.layout4 { grid-template-rows: auto minmax(0, 40fr) minmax(0, 60fr); }
+    #mapCell { aspect-ratio: 1050 / 650; width: 100%; }
+    .x-full { height: 64px; } .mate-full { display: none; } .det-full { height: 64px; }
+  }
   .me-tag { position: absolute; top: -2px; right: -2px; font-size: 9px; font-weight: 900; padding: 1px 5px; border-radius: 999px; background: var(--gold); color: #1A140C; }
   .tk { font-size: 10px; font-weight: 900; min-width: 16px; height: 16px; border-radius: 4px; display: grid; place-items: center; padding: 0 3px; color: #1A140C; font-variant-numeric: tabular-nums; }
   .tk.taxi { background: var(--taxi); }
@@ -964,17 +976,17 @@
   const MAX_MOVES = 30;
   const REVEAL = [];
   const SIGHT = 350;   // 刑事の視界の半径（盤面の座標）
-  const VIEW_W = 780, VIEW_H = 520;   // 刑事の視界＝画面の範囲（盤面の座標）
-  const inView = (d, q) => Math.abs(STATIONS[d.pos][1] - STATIONS[q][1]) <= 390.0 && Math.abs(STATIONS[d.pos][2] - STATIONS[q][2]) <= 260.0;
+  const VIEW_W = 1050, VIEW_H = 650;   // 刑事の視界＝画面の範囲（盤面の座標）
+  const inView = (d, q) => Math.abs(STATIONS[d.pos][1] - STATIONS[q][1]) <= 525.0 && Math.abs(STATIONS[d.pos][2] - STATIONS[q][2]) <= 325.0;
   const inSight = (G, p) => G.det.some(d => inView(d, p));
   // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
   // 水上バスは怪盗Xだけが黒チケットで乗れる。刑事は乗れない
   const DET_TICKETS = { heli: 0 };
-  const X_TICKETS = { taxi: 15, bus: 11, tube: 5, boat: 0 };
+  const X_TICKETS = { taxi: 22, bus: 15, tube: 7, boat: 0 };
   const dHas = (d, type) => type === "boat" ? false : type === "heli" ? d.t.heli > 0 : true;
   const xHas = (G, type) => type === "black" ? G.black > 0 : type === "heli" ? G.heli > 0 : !G.xt || G.xt[type] > 0;
   const X_DOUBLE = 5;
-  const X_BLACK = 6;     // 黒チケットの枚数（水上バスにもこれで乗る）
+  const X_BLACK = 10;    // 黒チケットの枚数（水上バスにもこれで乗る）
   // 相棒：怪盗Xが相棒と同じ駅に着いたら逃走成功。相棒は誰からも見え、刑事が踏むと確保される
   const MATE_MIN = 9;     // 怪盗Xとの最初の距離（手数）
   const MATE_FROM = 5;    // 相棒はこの手目の移動のあとに現れる
@@ -2153,7 +2165,7 @@
   // いちばん引いたときの倍率：横は地図の半分くらいが見え、縦は画面いっぱい
   function minScale() {
     const { w, h } = vpSize();
-    return Math.min(w / (VIEW_W * 1.45), h / (VIEW_H * 1.45));   // 視界（黄色い枠）のまわりも少し見える引いた倍率
+    return w / VIEW_W;   // 地図の枠は視界と同じ縦横比にしてあるので、映っている範囲＝視界
   }
   function fitView(animate = true) {
     if (LOCK && A.G) return lockView(animate);
@@ -2864,6 +2876,18 @@
   // ======================================================================
   (function setupLayout() {
     const app = $("app");
+    // 地図のマス目（grid の map 領域）の大きさを測り、その中に視界と同じ縦横比の地図を置く
+    const cell = document.createElement("div");
+    cell.id = "mapCell";
+    app.insertBefore(cell, app.firstChild);
+    const fit = () => {
+      const r = cell.getBoundingClientRect(), k = Math.min(r.width / VIEW_W, r.height / VIEW_H);
+      mapEl.style.width = Math.floor(VIEW_W * k) + "px";
+      mapEl.style.height = Math.floor(VIEW_H * k) + "px";
+      app.style.setProperty("--mw", mapEl.style.width); app.style.setProperty("--mh", mapEl.style.height);
+    };
+    fit();
+    new ResizeObserver(() => { fit(); window.dispatchEvent(new Event("resize")); }).observe(cell);
     app.classList.add("layout4");
     const pane = (id, cls) => { const d = document.createElement("div"); d.id = id; d.className = "pane " + cls; app.insertBefore(d, $("sheet")); return d; };
     const info = pane("paneInfo", "info"), cards = pane("paneCards", "cards"), mini = pane("paneMini", "mini");
@@ -2923,6 +2947,7 @@
     const g = $("viewMask"), G = A.G;
     if (!g) return;
     g.replaceChildren();
+    return;   // 地図に映っている範囲すべてが視界なので、枠や影は描かない
     const pos = G && !G.over ? viewAnchor() : null;
     if (pos === null || pos === undefined) return;
     const isDet = A.role === "d" || (A.role === "pass" && G.turn !== "x" && A.cover !== "x-open");
@@ -3408,14 +3433,14 @@
     if (!G) { $("xcard").innerHTML = ""; $("dets").innerHTML = ""; return; }
     const nx = REVEAL.find(r => r > G.xLog.length);
     const ex = exposure(G);
-    $("xcard").innerHTML = `${portrait("x")}<span class="who"><b>怪盗X</b>
+    $("xcard").innerHTML = `<img class="x-full" src="${thief().img}" alt="">${G.mate ? `<span class="mate-full"><img src="${mateChar().img}" alt=""><small>相棒${G.mate.out ? "（確保）" : ""}</small></span>` : ""}<span class="who"><b>怪盗X</b>
       <small class="nx">${G.over ? "ゲーム終了" : "刑事の視界に入ると見つかる"}</small>
       ${G.over ? "" : `<span class="expo ${ex.level}" title="${ex.help}"><i></i>${ex.label}</span>`}
       <span class="chipsx">${G.xt && (xVisible() || G.over) ? ["taxi", "bus", "tube"].map(t => `<span class="tk ${t} ${G.xt[t] ? "" : "zero"}" title="${TYPE[t].name}の残り">${TYPE[t].short}${G.xt[t]}</span>`).join("") : ""}<span class="tk black ${G.black ? "" : "zero"}">黒${G.black}</span><span class="tk double ${G.dbl ? "" : "zero"}">2回×${G.dbl}</span><span class="tk heli ${G.heli ? "" : "zero"}">H${G.heli}</span></span></span>`;
     $("xcard").classList.toggle("active", G.turn === "x");
     $("dets").innerHTML = G.det.map((d, k) => `
       <button class="det ${!G.over && G.turn === k ? "active" : ""}" data-act="${A.role === "d" && k !== ME_DET ? "order" : "focusD"}" data-k="${k}" aria-label="${dName(k)}：切符は使い放題・ヘリ${d.t.heli}">
-        ${portrait("d", k, "sm")}${A.role === "d" && k === ME_DET ? `<span class="me-tag">あなた</span>` : ""}${A.role === "d" && k !== ME_DET ? `<span class="me-tag order">${G.orders && G.orders[k] !== undefined ? "指示中" : "指示"}</span>` : ""}
+        <img class="det-full" src="${detChar(k).img}" alt="">${A.role === "d" && k === ME_DET ? `<span class="me-tag">あなた</span>` : ""}${A.role === "d" && k !== ME_DET ? `<span class="me-tag order">${G.orders && G.orders[k] !== undefined ? "指示中" : "指示"}</span>` : ""}
         <span class="tks">${A.role !== "pass" && !(A.role === "d" && k === ME_DET) && PERS_BY_K[k] ? `<span class="tk pers ${PERS_BY_K[k]}" title="この刑事の性格">${PERS_NAME[PERS_BY_K[k]]}</span>` : `<span class="tk inf" title="タクシー・バス・地下鉄は使い放題">切符∞</span>`}<span class="tk heli ${d.t.heli ? "" : "zero"}">H${d.t.heli}</span></span>
       </button>`).join("");
   }

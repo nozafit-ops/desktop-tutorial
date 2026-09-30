@@ -82,7 +82,7 @@ sub('''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべて�
 '''  // 刑事の切符はヘリ以外は使い放題。怪盗Xはすべての切符が有限
   // 水上バスは怪盗Xだけが黒チケットで乗れる。刑事は乗れない
   const DET_TICKETS = { heli: 1 };
-  const X_TICKETS = { taxi: 15, bus: 11, tube: 5, boat: 0 };
+  const X_TICKETS = { taxi: 22, bus: 15, tube: 7, boat: 0 };
   const dHas = (d, type) => type === "boat" ? false : type === "heli" ? d.t.heli > 0 : true;''')
 # ロンドン版の不具合の修正：怪盗Xが「駅破壊」で自分の最後の逃げ道を壊さないようにする
 sub('''      return [...Array(N).keys()].filter(i => i !== sec.pos && D[sec.pos][i] <= 2 && !occ.has(i) && !isRuin(G, i));''',
@@ -610,7 +610,7 @@ sub("const CARD_TURNS = [5, 10, 17];", "const CARD_TURNS = [5, 12, 20];")
 sub("const CARD_LAST = 20;   // 手札のカードは20手目まで好きな時に使える", "const CARD_LAST = 28;   // 手札のカードは28手目まで好きな時に使える")
 sub("const X_DOUBLE = 4;", "const X_DOUBLE = 5;")
 sub("black: detCount,", "black: X_BLACK,")
-sub("const X_DOUBLE = 5;", "const X_DOUBLE = 5;\n  const X_BLACK = 6;     // 黒チケットの枚数（水上バスにもこれで乗る）")
+sub("const X_DOUBLE = 5;", "const X_DOUBLE = 5;\n  const X_BLACK = 10;    // 黒チケットの枚数（水上バスにもこれで乗る）")
 sub("<b>黒チケット</b>（乗り物を隠す。刑事の人数と同じ枚数）", "<b>黒チケット</b> ${X_BLACK}枚（乗り物を隠す。水上バスにもこれで乗る）")
 # 水上バスで行ける駅では、黒チケットの札に「水上バス」と出す
 sub("""<span class="ja">${TYPE[t].name}${t === "black" ? "（乗り物を隠す）" : ""}</span>""",
@@ -753,7 +753,7 @@ sub("""  .mark-label.block { stroke: #C0271F; }""", """  .mark-label.block { str
 
 # ---------------- 視界＝画面の長方形・ヘリはカードでだけ（tools/view_rule.py） ----------------
 from view_rule import patches as view_patches, det_patches
-VIEW_W, VIEW_H = 780, 520   # sim.js VIEW=780,520 で調整（怪盗Xの勝率 刑事4人51%・5人37%）
+VIEW_W, VIEW_H = 1050, 650   # 左上の地図に映る範囲そのもの。sim.js VIEW=1050,650 XT=22,15,7 BLACK=10（怪盗Xの勝率 刑事4人42%・5人22%）
 for a_, b_ in view_patches(VIEW_W, VIEW_H) + det_patches("const DET_TICKETS = { heli: 1 };"):
     sub(a_, b_)
 
@@ -849,7 +849,7 @@ sub("""  .hint-btn { min-height: 30px; padding: 0 10px; font-size: 12px; flex: n
 
 # ---------------- 画面の調整：少し引いた視点・全体図の拡大ボタン・大きな手札カード ----------------
 sub("    return Math.min(w / VIEW_W, h / VIEW_H);   // 刑事の視界（画面の範囲）がちょうど入る倍率",
-    "    return Math.min(w / (VIEW_W * 1.45), h / (VIEW_H * 1.45));   // 視界（黄色い枠）のまわりも少し見える引いた倍率")
+    "    return w / VIEW_W;   // 地図の枠は視界と同じ縦横比にしてあるので、映っている範囲＝視界")
 # 手札：大きなカードを横に並べる（カード名と説明つき）
 sub("""title="${esc(CARD[c].desc)}"><img src="${pxHandArt(c)}" alt=""><span>${CARD[c].name}</span></button>`""",
     """title="${esc(CARD[c].desc)}"><img src="${pxHandArt(c)}" alt=""><span>${CARD[c].name}</span><small>${esc(CARD[c].desc)}</small></button>`""")
@@ -883,6 +883,51 @@ sub("""  .heli-sprite { image-rendering: pixelated; }""", """  .heli-sprite { im
     #paneCards .talklog { flex: 1 1 auto; }
   }
   @media (max-height: 520px) and (orientation: landscape) { #app.mini-big #paneMini { height: calc(100% - 12px); } }""")
+
+# ---------------- 映っている範囲＝索敵範囲：地図の枠を視界と同じ縦横比に。右の人物は全身図 ----------------
+sub("""  function renderViewMask() {
+    const g = $("viewMask"), G = A.G;
+    if (!g) return;
+    g.replaceChildren();""", """  function renderViewMask() {
+    const g = $("viewMask"), G = A.G;
+    if (!g) return;
+    g.replaceChildren();
+    return;   // 地図に映っている範囲すべてが視界なので、枠や影は描かない""")
+sub("""  (function setupLayout() {
+    const app = $("app");""", """  (function setupLayout() {
+    const app = $("app");
+    // 地図のマス目（grid の map 領域）の大きさを測り、その中に視界と同じ縦横比の地図を置く
+    const cell = document.createElement("div");
+    cell.id = "mapCell";
+    app.insertBefore(cell, app.firstChild);
+    const fit = () => {
+      const r = cell.getBoundingClientRect(), k = Math.min(r.width / VIEW_W, r.height / VIEW_H);
+      mapEl.style.width = Math.floor(VIEW_W * k) + "px";
+      mapEl.style.height = Math.floor(VIEW_H * k) + "px";
+    };
+    fit();
+    new ResizeObserver(() => { fit(); window.dispatchEvent(new Event("resize")); }).observe(cell);""")
+sub("""  #app.layout4 #map { position: relative; inset: auto; grid-area: map; width: 100%; height: 100%; border-radius: 10px; cursor: default; }""",
+    """  #app.layout4 #map { position: relative; inset: auto; grid-area: map; justify-self: center; align-self: center; border-radius: 10px; cursor: default; }
+  #mapCell { grid-area: map; min-width: 0; min-height: 0; }""")
+sub("""  #app.layout4 #edge { grid-area: map; position: relative; inset: auto; }""", """  #app.layout4 #edge { grid-area: map; position: relative; inset: auto; justify-self: center; align-self: center; width: var(--mw); height: var(--mh); }""")
+sub("""      mapEl.style.height = Math.floor(VIEW_H * k) + "px";""", """      mapEl.style.height = Math.floor(VIEW_H * k) + "px";
+      app.style.setProperty("--mw", mapEl.style.width); app.style.setProperty("--mh", mapEl.style.height);""")
+# 右の人物：顔アイコンの代わりに全身図を大きく
+sub("""        ${portrait("d", k, "sm")}${A.role === "d" && k === ME_DET ?""", """        <img class="det-full" src="${detChar(k).img}" alt="">${A.role === "d" && k === ME_DET ?""")
+sub("""    $("xcard").innerHTML = `${portrait("x")}<span class="who">""", """    $("xcard").innerHTML = `<img class="x-full" src="${thief().img}" alt="">${G.mate ? `<span class="mate-full"><img src="${mateChar().img}" alt=""><small>相棒${G.mate.out ? "（確保）" : ""}</small></span>` : ""}<span class="who">""")
+sub("""  .det .tks { flex-wrap: wrap; justify-content: center; max-width: 92px; }""", """  .det .tks { flex-wrap: wrap; justify-content: center; max-width: 92px; }
+  .det-full { height: clamp(70px, 13vh, 130px); width: auto; aspect-ratio: 3 / 5; object-fit: contain; object-position: bottom; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+  .x-full { height: clamp(80px, 15vh, 140px); width: auto; aspect-ratio: 3 / 5; object-fit: contain; object-position: bottom; flex: none; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+  .mate-full { display: flex; flex-direction: column; align-items: center; flex: none; font-size: 10px; color: var(--muted); }
+  .mate-full img { height: clamp(50px, 9vh, 90px); width: auto; aspect-ratio: 3 / 5; object-fit: contain; object-position: bottom; }
+  #paneInfo .dets { justify-content: space-around; }
+  #paneInfo .det { flex: 1 1 0; }
+  @media (max-width: 760px) and (orientation: portrait) {
+    #app.layout4 { grid-template-rows: auto minmax(0, 40fr) minmax(0, 60fr); }
+    #mapCell { aspect-ratio: 1050 / 650; width: 100%; }
+    .x-full { height: 64px; } .mate-full { display: none; } .det-full { height: 64px; }
+  }""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
