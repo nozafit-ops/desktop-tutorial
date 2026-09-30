@@ -789,7 +789,7 @@ sub("""  #app { position: relative; height: 100%; overflow: hidden; }""", """  #
     grid-template-columns: minmax(0, 1fr) clamp(290px, 31vw, 470px); grid-template-rows: minmax(0, 1fr) clamp(150px, 29vh, 270px);
     grid-template-areas: "map info" "cards mini"; }
   #app.layout4 #map { position: relative; inset: auto; grid-area: map; width: 100%; height: 100%; border-radius: 10px; cursor: default; }
-  .pane { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--hud-solid); border: 1px solid var(--rule); border-radius: 10px; }
+  .pane { position: relative; z-index: 1; min-width: 0; min-height: 0; overflow: hidden; background: var(--hud-solid); border: 1px solid var(--rule); border-radius: 10px; }
   .pane.info { grid-area: info; display: flex; flex-direction: column; gap: 6px; padding: 6px; }
   .pane.cards { grid-area: cards; display: flex; gap: 8px; padding: 6px; }
   .pane.mini { grid-area: mini; display: flex; flex-direction: column; }
@@ -846,6 +846,43 @@ sub("""    const sideR = sideEl ? sideEl.getBoundingClientRect() : null;""", """
 sub("""  .hint-btn { min-height: 30px; padding: 0 10px; font-size: 12px; flex: none; }""", """  .hint-btn { min-height: 30px !important; padding: 0 10px !important; font-size: 12px !important; flex: 0 0 auto !important; width: auto !important; }
   .mini-h { white-space: nowrap; }
   #app.layout4 #edge { grid-area: map; position: relative; inset: auto; }""")
+
+# ---------------- 画面の調整：少し引いた視点・全体図の拡大ボタン・大きな手札カード ----------------
+sub("    return Math.min(w / VIEW_W, h / VIEW_H);   // 刑事の視界（画面の範囲）がちょうど入る倍率",
+    "    return Math.min(w / (VIEW_W * 1.45), h / (VIEW_H * 1.45));   // 視界（黄色い枠）のまわりも少し見える引いた倍率")
+# 手札：大きなカードを横に並べる（カード名と説明つき）
+sub("""title="${esc(CARD[c].desc)}"><img src="${pxHandArt(c)}" alt=""><span>${CARD[c].name}</span></button>`""",
+    """title="${esc(CARD[c].desc)}"><img src="${pxHandArt(c)}" alt=""><span>${CARD[c].name}</span><small>${esc(CARD[c].desc)}</small></button>`""")
+sub("""      <span>${why}</span></button>`;""", """      <span>ヘリ</span><small>${why}${left ? "（ヘリの絵の駅から、ほかのヘリポートのどこかへ）" : "（ヘリのカードを引くと使える）"}</small></button>`;""")
+sub("""  .heli-sprite { image-rendering: pixelated; }""", """  .heli-sprite { image-rendering: pixelated; }
+  /* 左下：手札を大きなカードで並べ、無線は右端に小さく */
+  #paneCards .handbar { flex: 1 1 auto; display: flex; flex-direction: column; padding: 6px 8px; overflow: hidden; }
+  #paneCards .hb-cards { flex: 1; min-height: 0; gap: 10px; align-items: stretch; overflow-x: auto; overflow-y: hidden; }
+  #paneCards .hb-card { width: auto; height: 100%; aspect-ratio: 5 / 7; padding: 6px; gap: 4px; justify-content: flex-start; background: #FBF7EA; color: #4F6475;
+    border: 3px solid #2F5FB8; border-radius: 10px; box-shadow: inset 0 0 0 2px #FBF7EA, inset 0 0 0 3px rgba(47,95,184,.35), 0 3px 0 rgba(0,0,0,.35); }
+  #paneCards .hb-card.x { border-color: #C2464F; }
+  #paneCards .hb-card.heli { border-color: #7C3AED; }
+  #paneCards .hb-card img { width: 100%; image-rendering: pixelated; border: 2px solid #4F6475; border-radius: 3px; }
+  #paneCards .hb-card.heli .hb-heli { background: #CFE3F5; border: 2px solid #4F6475; border-radius: 3px; position: relative; }
+  #paneCards .hb-card.heli .hb-heli img { width: 100%; border: 0; }
+  #paneCards .hb-card.heli .hb-heli b { position: absolute; right: 4px; bottom: 2px; font-size: 16px; color: #fff; text-shadow: 1px 1px 0 #3B2C6E, -1px -1px 0 #3B2C6E; }
+  #paneCards .hb-card span { font-family: "DotGothic16", sans-serif; font-weight: 400; font-size: clamp(12px, 1.6vh, 17px); color: #4F6475; white-space: normal; }
+  #paneCards .hb-card small { font-size: clamp(9px, 1.25vh, 12px); line-height: 1.35; color: #5A4A40; text-align: left; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; }
+  #paneCards .hb-card.heli.off { opacity: .75; }
+  #paneCards .talklog { flex: 0 0 clamp(150px, 22%, 250px); }
+  #paneCards .talklog ul { font-size: 11px; }
+  #paneCards .hb-empty { align-self: center; }
+  /* 全体図の拡大：右下から左上へ約2倍に広げる */
+  .mini-zoom { margin-left: auto; flex: none; font: inherit; font-size: 11px; font-weight: 900; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--rule); background: #E3B341; color: #1A140C; cursor: pointer; }
+  .mini-h { align-items: center; }
+  #app.mini-big #paneMini { grid-area: auto; position: absolute; right: 6px; bottom: 6px; z-index: 19 !important; box-shadow: 0 10px 40px rgba(0,0,0,.6);
+    width: min(calc(2 * clamp(290px, 31vw, 470px)), calc(100% - 12px)); height: min(calc(2 * clamp(150px, 29vh, 270px)), calc(100% - 12px)); }
+  @media (max-width: 760px) and (orientation: portrait) {
+    #app.mini-big #paneMini { width: calc(100% - 8px); height: 55%; right: 4px; bottom: 4px; }
+    #paneCards .hb-card { height: auto; width: 88px; aspect-ratio: auto; }
+    #paneCards .talklog { flex: 1 1 auto; }
+  }
+  @media (max-height: 520px) and (orientation: landscape) { #app.mini-big #paneMini { height: calc(100% - 12px); } }""")
 
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:

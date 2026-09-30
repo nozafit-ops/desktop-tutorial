@@ -53,7 +53,7 @@
     grid-template-columns: minmax(0, 1fr) clamp(290px, 31vw, 470px); grid-template-rows: minmax(0, 1fr) clamp(150px, 29vh, 270px);
     grid-template-areas: "map info" "cards mini"; }
   #app.layout4 #map { position: relative; inset: auto; grid-area: map; width: 100%; height: 100%; border-radius: 10px; cursor: default; }
-  .pane { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--hud-solid); border: 1px solid var(--rule); border-radius: 10px; }
+  .pane { position: relative; z-index: 1; min-width: 0; min-height: 0; overflow: hidden; background: var(--hud-solid); border: 1px solid var(--rule); border-radius: 10px; }
   .pane.info { grid-area: info; display: flex; flex-direction: column; gap: 6px; padding: 6px; }
   .pane.cards { grid-area: cards; display: flex; gap: 8px; padding: 6px; }
   .pane.mini { grid-area: mini; display: flex; flex-direction: column; }
@@ -88,6 +88,34 @@
   .view-shade { fill: rgba(20, 16, 30, .38); pointer-events: none; }
   .view-frame { fill: none; stroke: #F2C230; stroke-width: 4; stroke-dasharray: 16 10; pointer-events: none; }
   .heli-sprite { image-rendering: pixelated; }
+  /* 左下：手札を大きなカードで並べ、無線は右端に小さく */
+  #paneCards .handbar { flex: 1 1 auto; display: flex; flex-direction: column; padding: 6px 8px; overflow: hidden; }
+  #paneCards .hb-cards { flex: 1; min-height: 0; gap: 10px; align-items: stretch; overflow-x: auto; overflow-y: hidden; }
+  #paneCards .hb-card { width: auto; height: 100%; aspect-ratio: 5 / 7; padding: 6px; gap: 4px; justify-content: flex-start; background: #FBF7EA; color: #4F6475;
+    border: 3px solid #2F5FB8; border-radius: 10px; box-shadow: inset 0 0 0 2px #FBF7EA, inset 0 0 0 3px rgba(47,95,184,.35), 0 3px 0 rgba(0,0,0,.35); }
+  #paneCards .hb-card.x { border-color: #C2464F; }
+  #paneCards .hb-card.heli { border-color: #7C3AED; }
+  #paneCards .hb-card img { width: 100%; image-rendering: pixelated; border: 2px solid #4F6475; border-radius: 3px; }
+  #paneCards .hb-card.heli .hb-heli { background: #CFE3F5; border: 2px solid #4F6475; border-radius: 3px; position: relative; }
+  #paneCards .hb-card.heli .hb-heli img { width: 100%; border: 0; }
+  #paneCards .hb-card.heli .hb-heli b { position: absolute; right: 4px; bottom: 2px; font-size: 16px; color: #fff; text-shadow: 1px 1px 0 #3B2C6E, -1px -1px 0 #3B2C6E; }
+  #paneCards .hb-card span { font-family: "DotGothic16", sans-serif; font-weight: 400; font-size: clamp(12px, 1.6vh, 17px); color: #4F6475; white-space: normal; }
+  #paneCards .hb-card small { font-size: clamp(9px, 1.25vh, 12px); line-height: 1.35; color: #5A4A40; text-align: left; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; }
+  #paneCards .hb-card.heli.off { opacity: .75; }
+  #paneCards .talklog { flex: 0 0 clamp(150px, 22%, 250px); }
+  #paneCards .talklog ul { font-size: 11px; }
+  #paneCards .hb-empty { align-self: center; }
+  /* 全体図の拡大：右下から左上へ約2倍に広げる */
+  .mini-zoom { margin-left: auto; flex: none; font: inherit; font-size: 11px; font-weight: 900; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--rule); background: #E3B341; color: #1A140C; cursor: pointer; }
+  .mini-h { align-items: center; }
+  #app.mini-big #paneMini { grid-area: auto; position: absolute; right: 6px; bottom: 6px; z-index: 19 !important; box-shadow: 0 10px 40px rgba(0,0,0,.6);
+    width: min(calc(2 * clamp(290px, 31vw, 470px)), calc(100% - 12px)); height: min(calc(2 * clamp(150px, 29vh, 270px)), calc(100% - 12px)); }
+  @media (max-width: 760px) and (orientation: portrait) {
+    #app.mini-big #paneMini { width: calc(100% - 8px); height: 55%; right: 4px; bottom: 4px; }
+    #paneCards .hb-card { height: auto; width: 88px; aspect-ratio: auto; }
+    #paneCards .talklog { flex: 1 1 auto; }
+  }
+  @media (max-height: 520px) and (orientation: landscape) { #app.mini-big #paneMini { height: calc(100% - 12px); } }
   @media (max-width: 760px) and (orientation: portrait) {
     #app.layout4 { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 46fr) minmax(0, 24fr) minmax(0, 30fr);
       grid-template-areas: "map map" "mini info" "cards info"; gap: 4px; padding: 4px; }
@@ -2125,7 +2153,7 @@
   // いちばん引いたときの倍率：横は地図の半分くらいが見え、縦は画面いっぱい
   function minScale() {
     const { w, h } = vpSize();
-    return Math.min(w / VIEW_W, h / VIEW_H);   // 刑事の視界（画面の範囲）がちょうど入る倍率
+    return Math.min(w / (VIEW_W * 1.45), h / (VIEW_H * 1.45));   // 視界（黄色い枠）のまわりも少し見える引いた倍率
   }
   function fitView(animate = true) {
     if (LOCK && A.G) return lockView(animate);
@@ -2849,12 +2877,19 @@
     talk.id = "talkLog"; talk.className = "talklog";
     talk.innerHTML = `<div class="tl-h">無線・コメント</div><ul></ul>`;
     cards.appendChild(talk);
-    mini.innerHTML = `<div class="mini-h">全体図<span>駅をタップ：遠い行き先・カードの対象を選ぶ</span></div>
+    mini.innerHTML = `<div class="mini-h">全体図<span>駅をタップ：遠い行き先・カードの対象を選ぶ</span><button class="mini-zoom" id="miniZoom" aria-pressed="false" aria-label="全体図を大きくする">拡大</button></div>
       <svg id="mini" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" aria-label="全体図">
         <rect x="0" y="0" width="${W}" height="${H}" fill="#C6C6C1"></rect>
         <use href="#worldIn"></use>
         <g id="miniMarks"></g>
       </svg>`;
+    // 全体図を大きく／もとに戻す
+    $("miniZoom").addEventListener("click", e => {
+      e.stopPropagation();
+      const big = app.classList.toggle("mini-big");
+      $("miniZoom").textContent = big ? "戻す" : "拡大";
+      $("miniZoom").setAttribute("aria-pressed", String(big));
+    });
     // 全体図のタップ：いちばん近い駅を選ぶ（自分の番の行き先・カードの対象）
     $("mini").addEventListener("click", e => {
       const svg = $("mini"), pt = svg.createSVGPoint();
@@ -3146,7 +3181,7 @@
     const why = !left ? "切符なし" : heliBanned(G) ? "封鎖中" : can ? "タップで飛ぶ" : "H駅で使える";
     return `<button class="hb-card heli ${can ? "go" : "off"}" ${can ? `data-act="heli"` : "disabled"} title="ヘリ：${why}">
       <span class="hb-heli"><img src="${pxScene("heli")}" alt=""><b>×${left}</b></span>
-      <span>${why}</span></button>`;
+      <span>ヘリ</span><small>${why}${left ? "（ヘリの絵の駅から、ほかのヘリポートのどこかへ）" : "（ヘリのカードを引くと使える）"}</small></button>`;
   }
   // ログ・シート・画面が開いたり閉じたりしたら手札欄の表示を合わせる
   queueMicrotask(() => {
@@ -3166,7 +3201,7 @@
     host.hidden = false;
     host.classList.toggle("ready", usable && hand.length > 0);
     host.innerHTML = `<div class="hb-head"><b>${side === "x" ? "怪盗Xの手札" : "刑事の手札"}</b><span>${left >= 0 ? `${CARD_LAST}手目まで` : "期限切れ"}${next ? `・次は${next}手目` : ""}</span></div>
-      <div class="hb-cards">${heliCard(G, side)}${hand.length ? hand.map((c, i) => `<button class="hb-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : `data-act="hand"`} title="${esc(CARD[c].desc)}"><img src="${pxHandArt(c)}" alt=""><span>${CARD[c].name}</span></button>`).join("") : `<span class="hb-empty">なし</span>`}</div>`;
+      <div class="hb-cards">${heliCard(G, side)}${hand.length ? hand.map((c, i) => `<button class="hb-card ${side}" ${usable ? `data-act="useCard" data-i="${i}"` : `data-act="hand"`} title="${esc(CARD[c].desc)}"><img src="${pxHandArt(c)}" alt=""><span>${CARD[c].name}</span><small>${esc(CARD[c].desc)}</small></button>`).join("") : `<span class="hb-empty">なし</span>`}</div>`;
   }
 
   function renderMap() {

@@ -17,12 +17,19 @@
     talk.id = "talkLog"; talk.className = "talklog";
     talk.innerHTML = `<div class="tl-h">無線・コメント</div><ul></ul>`;
     cards.appendChild(talk);
-    mini.innerHTML = `<div class="mini-h">全体図<span>駅をタップ：遠い行き先・カードの対象を選ぶ</span></div>
+    mini.innerHTML = `<div class="mini-h">全体図<span>駅をタップ：遠い行き先・カードの対象を選ぶ</span><button class="mini-zoom" id="miniZoom" aria-pressed="false" aria-label="全体図を大きくする">拡大</button></div>
       <svg id="mini" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" aria-label="全体図">
         <rect x="0" y="0" width="${W}" height="${H}" fill="#C6C6C1"></rect>
         <use href="#worldIn"></use>
         <g id="miniMarks"></g>
       </svg>`;
+    // 全体図を大きく／もとに戻す
+    $("miniZoom").addEventListener("click", e => {
+      e.stopPropagation();
+      const big = app.classList.toggle("mini-big");
+      $("miniZoom").textContent = big ? "戻す" : "拡大";
+      $("miniZoom").setAttribute("aria-pressed", String(big));
+    });
     // 全体図のタップ：いちばん近い駅を選ぶ（自分の番の行き先・カードの対象）
     $("mini").addEventListener("click", e => {
       const svg = $("mini"), pt = svg.createSVGPoint();
