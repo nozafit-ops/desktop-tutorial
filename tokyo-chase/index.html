@@ -89,6 +89,15 @@
   .view-shade { fill: rgba(20, 16, 30, .38); pointer-events: none; }
   .view-frame { fill: none; stroke: #F2C230; stroke-width: 4; stroke-dasharray: 16 10; pointer-events: none; }
   .heli-sprite { image-rendering: pixelated; }
+  @media (min-width: 761px) and (min-height: 521px) {
+    #app.layout4 { --colR: clamp(330px, 36vw, 580px); --rowB: clamp(170px, 32vh, 330px);
+      grid-template-columns: minmax(0, 1fr) var(--colR); grid-template-rows: minmax(0, 1fr) var(--rowB); }
+    #app.mini-big #paneMini { width: min(calc(2 * var(--colR)), calc(100% - 12px)) !important; height: min(calc(2 * var(--rowB)), calc(100% - 12px)) !important; }
+    #paneCards { transition: padding-right .3s ease; }
+    #app.mini-big #paneCards { padding-right: calc(min(2 * var(--colR), 100vw - 24px) - var(--colR) + 6px); }
+  }
+  .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-width: 14; }
+  .mini-dest.tgt { fill: rgba(229, 72, 77, .3); stroke: #E5484D; }
   /* 左下：手札を大きなカードで並べ、無線は右端に小さく */
   #paneCards .handbar { flex: 1 1 auto; display: flex; flex-direction: column; padding: 6px 8px; overflow: hidden; }
   #paneCards .hb-cards { flex: 1; min-height: 0; gap: 10px; align-items: stretch; overflow-x: auto; overflow-y: hidden; }
@@ -1103,6 +1112,7 @@
     const mateOut = !!G.mate && !!G.mate.out;   // 相棒を確保されたら、もう隠れられない
     let rev = REVEAL.includes(n) || inSight(G, to) || mateOut, vanished = false;
     if (rev && G.skipReveal > 0) { G.skipReveal--; rev = false; vanished = true; }   // 雲隠れ
+    if (rev && G.disguise >= n && !REVEAL.includes(n)) rev = false;   // 変装
     const wit = G.det.findIndex(d => inView(d, from) || inView(d, to));
     const known = type === "pass" || wit >= 0 || mateOut;
     G.xLog.push({ t: type, p: rev ? to : null, d: useDouble ? 1 : (G.doubling ? 2 : 0), v: vanished ? 1 : 0, k: known ? 1 : 0, w: wit });
@@ -1173,6 +1183,8 @@
     heliban:   { side: "d", name: "ヘリ封鎖", desc: "引いたその場で発動。すべてのヘリポートを5手のあいだ閉鎖し、誰もヘリで飛べない。" },
     dog:       { side: "d", name: "警察犬", desc: "怪盗Xの足跡をかぎ分ける。2手前と3手前にいた駅がわかり、今いそうな駅を絞り込む。警察犬の駒はその後3手のあいだ足跡を追い続ける。" },
     reinforce: { side: "d", name: "ヘリ出動", desc: "刑事全員にヘリの切符が1枚ずつ追加される。ヘリポートの駅から、ほかのヘリポートのどこかへ飛べる。" },
+    smoke:     { side: "x", name: "煙幕", desc: "煙幕をはる。刑事全員が1回休みになる。" },
+    disguise:  { side: "x", name: "変装", desc: "これから3手のあいだ、刑事の視界に入っても見つからない。" },
     xheli:     { side: "x", name: "ヘリ", desc: "ヘリの切符を1枚得る。ヘリポートの駅から、ほかのヘリポートのどこかへ飛べる。" },
     trap:      { side: "x", name: "罠", desc: "いまいる駅に罠を仕掛ける。踏んだ刑事は1回休み。刑事には見えない。" },
     vanish:    { side: "x", name: "雲隠れ", desc: "次に刑事の視界に入っても、1回だけ見つからない。" },
@@ -1181,7 +1193,7 @@
   };
   const DECK = {
     d: [["bridge", 22], ["checkpoint", 33], ["dash", 10], ["heliban", 18], ["rcheck", 17], ["dog", 16], ["reinforce", 22]],
-    x: [["trap", 34], ["vanish", 33], ["destroy", 33], ["xheli", 24]],
+    x: [["trap", 34], ["vanish", 33], ["destroy", 33], ["xheli", 24], ["smoke", 24], ["disguise", 24]],
   };
   // ヘリ封鎖は1ゲームに1回だけ（一度引いたら山札から外す）
   function drawCard(side, G = null) {
@@ -1252,6 +1264,8 @@
     } else if (card === "reinforce") G.det.forEach(d => { d.t.heli += 1; });
     else if (card === "trap") sec.trap = sec.pos;
     else if (card === "xheli") G.heli += 1;
+    else if (card === "smoke") { G.stun = { ...(G.stun || {}) }; G.det.forEach((_, k) => { G.stun[k] = Math.max(1, G.stun[k] || 0); }); }
+    else if (card === "disguise") G.disguise = n + 3;
     else if (card === "vanish") G.skipReveal = (G.skipReveal || 0) + 1;
     else if (card === "destroy") {
       G.ruin = [...(G.ruin || []), target];
@@ -1290,6 +1304,8 @@
       let use = last;
       if (side === "x") {
         if (c === "xheli") use = true;
+        if (c === "smoke") use = use || dmin <= 2;
+        if (c === "disguise") use = use || (dmin <= 3 && !(G.disguise > G.xLog.length));
         if (c === "trap") use = use || dmin <= 3;
         if (c === "vanish") use = use || (dmin <= 3 && !(G.skipReveal > 0));
         if (c === "destroy") use = use || dmin <= 2;
@@ -1348,7 +1364,7 @@
     if (sec && to === sec.pos) { finish(G, "d", "caught"); return to; }
     const dashing = G.dash === k;
     if (mateActive(G) && to === G.mate.pos) { G.mate.out = true; G.mate.by = k; }   // 相棒を確保
-    if (sec && (inSight(G, sec.pos) || (G.mate && G.mate.out))) {
+    if (sec && (inSight(G, sec.pos) || (G.mate && G.mate.out)) && !(G.disguise > G.xLog.length)) {
       if (G.skipReveal > 0) { G.skipReveal--; G.possible = G.possible.filter(p => p !== to); }
       else { G.possible = [sec.pos]; G.lastSeen = { pos: sec.pos, n: G.xLog.length }; }
     } else {
@@ -1961,12 +1977,19 @@
       return;
     }
     const mine = A.role === "x" || (A.role === "pass" && A.cover === "x-open");
+    if (card === "smoke") {
+      toast("煙幕！ 刑事全員が1回休み");
+      banner("煙幕！", "刑事全員が1回休み", "gray", 2);
+      pushFeed(G.xLog.length, "怪盗Xのカード「煙幕」：刑事全員が1回休み", true);
+      G.det.forEach((_, k) => say(k, "ゴホッ、前が見えない！", "sad", 2600));
+      return;
+    }
     if (card === "destroy") {
       toast(`怪盗Xが ${NAME(target)} を破壊！`);
       pushFeed(G.xLog.length, `怪盗Xのカード「駅破壊」：${NO(target)} ${NAME(target)} は壊れて最後まで誰も通れない`, true);
     } else if (mine) {
       toast(`カード「${c.name}」を使った`);
-      pushFeed(G.xLog.length, `怪盗Xのカード「${c.name}」${card === "trap" ? `：${NAME(A.sec.pos)} に罠を仕掛けた` : card === "vanish" ? "：次の目撃情報を消す" : "：何も起こらなかった"}`, card !== "miss");
+      pushFeed(G.xLog.length, `怪盗Xのカード「${c.name}」${card === "trap" ? `：${NAME(A.sec.pos)} に罠を仕掛けた` : card === "vanish" ? "：次の目撃情報を消す" : card === "disguise" ? "：3手のあいだ見つからない" : card === "xheli" ? "：ヘリの切符を1枚得た" : "：何も起こらなかった"}`, card !== "miss");
     } else {
       toast("怪盗Xがカードを使った…");
       pushFeed(G.xLog.length, "怪盗Xが何かのカードを使った（効果はわからない）", true);
@@ -2802,6 +2825,19 @@
       r(5, 10, 3, 2, "#A0703C"); r(4, 9, 2, 1, "#A0703C");       // しっぽ
       r(17, 11, 5, 1, "#2F5FB8"); r(18, 12, 3, 1, "#E3B341");     // 首輪（警察）
       r(33, 5, 8, 6, "#FBF7EA"); r(34, 6, 2, 1, "#2A2230"); r(37, 6, 3, 1, "#2A2230"); r(34, 8, 6, 1, "#2A2230"); r(35, 11, 1, 1, "#FBF7EA");
+    } else if (c === "smoke") {
+      r(0, 0, 48, 32, "#55585C"); town("#3E4046", "#6E7078", 22); r(0, 22, 48, 10, "#46484E");
+      for (const [x, y, w, h] of [[2, 10, 16, 10], [12, 6, 18, 14], [26, 9, 16, 11], [6, 16, 30, 10], [30, 17, 16, 9]]) { r(x, y, w, h, "#D4D4D8"); r(x + 1, y, w - 2, 1, "#F2F2F4"); }
+      for (const [x, y] of [[20, 3], [38, 5], [4, 5], [44, 14]]) r(x, y, 3, 3, "#B4B4BA");
+      r(22, 24, 5, 5, "#2A2230"); r(23, 23, 3, 1, "#E86F3A");   // 煙玉
+    } else if (c === "disguise") {
+      r(0, 0, 48, 32, "#E8D9B8");
+      r(14, 4, 20, 6, "#3A2A1A"); r(10, 9, 28, 2, "#3A2A1A");                  // 帽子
+      r(15, 11, 18, 13, "#F2C9A0");                                             // 顔
+      r(16, 14, 6, 3, "#2A2230"); r(26, 14, 6, 3, "#2A2230"); r(22, 15, 4, 1, "#2A2230");   // めがね
+      r(18, 20, 12, 2, "#5A3A20"); r(17, 19, 3, 1, "#5A3A20"); r(28, 19, 3, 1, "#5A3A20"); // ひげ
+      r(12, 24, 24, 8, "#4F6475"); r(22, 24, 4, 6, "#E8E8E4");                  // コート
+      r(38, 4, 6, 6, "#C3242F"); r(40, 5, 2, 4, "#FBF7EA");                    // ？の札
     } else {   // miss
       r(0, 0, 48, 32, "#8A8680");
       const q = ["0111", "1001", "0001", "0010", "0100", "0000", "0100"];
@@ -2919,12 +2955,24 @@
       const svg = $("mini"), pt = svg.createSVGPoint();
       pt.x = e.clientX; pt.y = e.clientY;
       const q = pt.matrixTransform(svg.getScreenCTM().inverse());
+      // 光っている行き先（カードの対象）を優先して、少し離れていても選べるようにする
       let best = -1, bd = 110;
-      STATIONS.forEach(([, x, y], i) => { const d = Math.hypot(x - q.x, y - q.y); if (d < bd) { bd = d; best = i; } });
+      const hot = miniTargets();
+      if (hot.length) { let hd = 320; for (const i of hot) { const d = Math.hypot(STATIONS[i][1] - q.x, STATIONS[i][2] - q.y); if (d < hd) { hd = d; best = i; } } }
+      if (best < 0) STATIONS.forEach(([, x, y], i) => { const d = Math.hypot(x - q.x, y - q.y); if (d < bd) { bd = d; best = i; } });
       if (best >= 0) onStationTap(best);
     });
   })();
 
+  // 全体図で光らせる駅：カードの対象、または自分の番の行き先
+  function miniTargets() {
+    const G = A.G;
+    if (!G || G.over) return [];
+    if (A.pendingCard && A.pendingCard.stage === "target") return A.pendingCard.opts.slice();
+    if (!humanTurn()) return [];
+    const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+    return [...new Set(moves.filter(m => m.to >= 0).map(m => m.to))];
+  }
   // 全体図の上の印：各刑事の視界（画面の範囲）と、自分の視界
   function renderMini() {
     const g = $("miniMarks"), G = A.G;
@@ -2936,6 +2984,8 @@
       const [x, y] = P(d.pos);
       el("rect", { x: x - VIEW_W / 2, y: y - VIEW_H / 2, width: VIEW_W, height: VIEW_H, class: "mini-view", stroke: DCOL[k] }, g);
     });
+    const tgt = A.pendingCard && A.pendingCard.stage === "target";
+    for (const i of miniTargets()) { const [x, y] = P(i); el("circle", { cx: x, cy: y, r: 75, class: "mini-dest" + (tgt ? " tgt" : "") }, g); }
     if (me !== null && me !== undefined) {
       const [x, y] = P(me);
       el("rect", { x: x - VIEW_W / 2, y: y - VIEW_H / 2, width: VIEW_W, height: VIEW_H, class: "mini-me" }, g);
@@ -3622,7 +3672,7 @@
         <li><b>切符</b>：刑事はタクシー・バス・地下鉄が使い放題（ヘリだけ${DET_TICKETS.heli}枚。水上バスには乗れません）。怪盗Xの切符（タクシー${X_TICKETS.taxi}・バス${X_TICKETS.bus}・地下鉄${X_TICKETS.tube}・黒チケット・2回移動${X_DOUBLE}・ヘリ${X_HELI}）も有限。切符が尽きた乗り物には乗れません。動けなくなると怪盗Xの負け、刑事が全員動けなくなると怪盗Xの勝ち。</li>
         <li><b>手札</b>：画面の左下にいつも表示されます。自分の番で使えるときは金色に光り、カードをタップするとそのまま使えます。カードを引く手は${CARD_TURNS.join("・")}手目。</li>
         <li>怪盗Xは <b>黒チケット</b> ${X_BLACK}枚（乗り物を隠す。水上バスにもこれで乗る）、<b>2回移動</b> ${X_DOUBLE}枚、<b>ヘリ</b> ${X_HELI}枚を持っています。</li>
-        <li><b>カード</b>：${CARD_TURNS.join("・")}手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引きます（ハズレはありません）。手札のカードは自分の番に左下の手札からタップして、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」「警察犬」。警察犬は怪盗Xの2手前・3手前の駅（足跡）を見つけ、いそうな駅を絞り込みます。ダッシュを使った刑事はその番に2回続けて動けます。ヘリ封鎖とランダム検問は引いたその場で発動します（ヘリ封鎖は1ゲームに1回だけ、ランダム検問はヘリポート以外のどこかの駅に検問所が敷かれます）。怪盗X側は「罠」「雲隠れ」「駅破壊」。刑事モードの手札はあなただけが使えます（仲間のCPUは使いません）。</li>
+        <li><b>カード</b>：（怪盗Xは「罠」「雲隠れ」「駅破壊」「ヘリ」「煙幕」「変装」）${CARD_TURNS.join("・")}手目に、怪盗Xと刑事チームがそれぞれ1枚カードを引きます（ハズレはありません）。手札のカードは自分の番に左下の手札からタップして、${CARD_LAST}手目までいつでも使えます（それを過ぎると失効）。刑事側は「橋封鎖」「検問」「ダッシュ」「ヘリ封鎖」「ランダム検問」「警察犬」。警察犬は怪盗Xの2手前・3手前の駅（足跡）を見つけ、いそうな駅を絞り込みます。ダッシュを使った刑事はその番に2回続けて動けます。ヘリ封鎖とランダム検問は引いたその場で発動します（ヘリ封鎖は1ゲームに1回だけ、ランダム検問はヘリポート以外のどこかの駅に検問所が敷かれます）。怪盗X側は「罠」「雲隠れ」「駅破壊」。刑事モードの手札はあなただけが使えます（仲間のCPUは使いません）。</li>
         <li><b>発見と足跡</b>：刑事が怪盗Xの居場所をつかむと、刑事の画面にも怪盗Xが姿を現し、見失うと煙とともに消えます。見つけた場所には足跡と手数が残り、ゲーム終了後は逃走経路の全体が足跡で表示されます。</li>
         <li><b>刑事の性格</b>：CPUの刑事にはそれぞれ性格があります。<b>追いかけ</b>は怪盗Xがいそうな駅・最後に見た駅へまっすぐ詰め、<b>先回り</b>は怪盗Xが逃げそうな先へ回り込み、<b>待ち伏せ</b>は地下鉄駅など乗り換えの多い駅を押さえて待ちます。候補が絞れてくると全員で包囲します。</li>
         <li><b>仲間への指示</b>：刑事モードでは、画面上部の仲間の刑事をタップして「行き先の駅」を指示できます。仲間はそこへ向かい、周辺を張り込みます。</li>

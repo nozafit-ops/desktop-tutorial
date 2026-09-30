@@ -929,6 +929,34 @@ sub("""  .det .tks { flex-wrap: wrap; justify-content: center; max-width: 92px; 
     .x-full { height: 64px; } .mate-full { display: none; } .det-full { height: 64px; }
   }""")
 
+# ---------------- 怪盗Xの強いカード（tools/strong_cards.py）と、カードの知らせ ----------------
+from strong_cards import patches as strong_patches
+for a_, b_ in strong_patches(24):
+    sub(a_, b_)
+sub("""    const mine = A.role === "x" || (A.role === "pass" && A.cover === "x-open");""", """    const mine = A.role === "x" || (A.role === "pass" && A.cover === "x-open");
+    if (card === "smoke") {
+      toast("煙幕！ 刑事全員が1回休み");
+      banner("煙幕！", "刑事全員が1回休み", "gray", 2);
+      pushFeed(G.xLog.length, "怪盗Xのカード「煙幕」：刑事全員が1回休み", true);
+      G.det.forEach((_, k) => say(k, "ゴホッ、前が見えない！", "sad", 2600));
+      return;
+    }""")
+sub("""card === "vanish" ? "：次の目撃情報を消す" : "：何も起こらなかった"}`""",
+    """card === "vanish" ? "：次の目撃情報を消す" : card === "disguise" ? "：3手のあいだ見つからない" : card === "xheli" ? "：ヘリの切符を1枚得た" : "：何も起こらなかった"}`""")
+sub("""<li><b>カード</b>：${CARD_TURNS.join("・")}手目に""", """<li><b>カード</b>：（怪盗Xは「罠」「雲隠れ」「駅破壊」「ヘリ」「煙幕」「変装」）${CARD_TURNS.join("・")}手目に""")
+
+# ---------------- 全体図を大きく・拡大時は無線をよける・全体図で行き先を光らせて選びやすく ----------------
+sub("""  .heli-sprite { image-rendering: pixelated; }""", """  .heli-sprite { image-rendering: pixelated; }
+  @media (min-width: 761px) and (min-height: 521px) {
+    #app.layout4 { --colR: clamp(330px, 36vw, 580px); --rowB: clamp(170px, 32vh, 330px);
+      grid-template-columns: minmax(0, 1fr) var(--colR); grid-template-rows: minmax(0, 1fr) var(--rowB); }
+    #app.mini-big #paneMini { width: min(calc(2 * var(--colR)), calc(100% - 12px)) !important; height: min(calc(2 * var(--rowB)), calc(100% - 12px)) !important; }
+    #paneCards { transition: padding-right .3s ease; }
+    #app.mini-big #paneCards { padding-right: calc(min(2 * var(--colR), 100vw - 24px) - var(--colR) + 6px); }
+  }
+  .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-width: 14; }
+  .mini-dest.tgt { fill: rgba(229, 72, 77, .3); stroke: #E5484D; }""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"

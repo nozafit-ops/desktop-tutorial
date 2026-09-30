@@ -35,12 +35,24 @@
       const svg = $("mini"), pt = svg.createSVGPoint();
       pt.x = e.clientX; pt.y = e.clientY;
       const q = pt.matrixTransform(svg.getScreenCTM().inverse());
+      // 光っている行き先（カードの対象）を優先して、少し離れていても選べるようにする
       let best = -1, bd = 110;
-      STATIONS.forEach(([, x, y], i) => { const d = Math.hypot(x - q.x, y - q.y); if (d < bd) { bd = d; best = i; } });
+      const hot = miniTargets();
+      if (hot.length) { let hd = 320; for (const i of hot) { const d = Math.hypot(STATIONS[i][1] - q.x, STATIONS[i][2] - q.y); if (d < hd) { hd = d; best = i; } } }
+      if (best < 0) STATIONS.forEach(([, x, y], i) => { const d = Math.hypot(x - q.x, y - q.y); if (d < bd) { bd = d; best = i; } });
       if (best >= 0) onStationTap(best);
     });
   })();
 
+  // 全体図で光らせる駅：カードの対象、または自分の番の行き先
+  function miniTargets() {
+    const G = A.G;
+    if (!G || G.over) return [];
+    if (A.pendingCard && A.pendingCard.stage === "target") return A.pendingCard.opts.slice();
+    if (!humanTurn()) return [];
+    const moves = G.turn === "x" ? xMoves(G, A.sec) : detMoves(G, G.turn);
+    return [...new Set(moves.filter(m => m.to >= 0).map(m => m.to))];
+  }
   // 全体図の上の印：各刑事の視界（画面の範囲）と、自分の視界
   function renderMini() {
     const g = $("miniMarks"), G = A.G;
@@ -52,6 +64,8 @@
       const [x, y] = P(d.pos);
       el("rect", { x: x - VIEW_W / 2, y: y - VIEW_H / 2, width: VIEW_W, height: VIEW_H, class: "mini-view", stroke: DCOL[k] }, g);
     });
+    const tgt = A.pendingCard && A.pendingCard.stage === "target";
+    for (const i of miniTargets()) { const [x, y] = P(i); el("circle", { cx: x, cy: y, r: 75, class: "mini-dest" + (tgt ? " tgt" : "") }, g); }
     if (me !== null && me !== undefined) {
       const [x, y] = P(me);
       el("rect", { x: x - VIEW_W / 2, y: y - VIEW_H / 2, width: VIEW_W, height: VIEW_H, class: "mini-me" }, g);

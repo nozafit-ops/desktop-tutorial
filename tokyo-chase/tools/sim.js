@@ -101,6 +101,11 @@ if (process.env.VIEW) {
   const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "view_rule.py"), vw, vh]).toString());
   for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("view patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
 }
+// 怪盗Xの強いカード（STRONG=重み。VIEW のあとに当てる）
+if (process.env.STRONG) {
+  const pairs = JSON.parse(require("child_process").execFileSync("python3", [path.join(__dirname, "strong_cards.py"), process.env.STRONG]).toString());
+  for (const [a, b] of pairs) { if (!core.includes(a)) throw new Error("strong patch not found: " + a.slice(0, 60)); core = core.replace(a, b); }
+}
 // 公開のタイミング：スコットランドヤード式（24手、3・8・13・18・24手目）
 if (process.env.SY_ROUNDS) {
   core = core.replace("const MAX_MOVES = 21;", "const MAX_MOVES = 24;");
