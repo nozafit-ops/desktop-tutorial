@@ -12,6 +12,8 @@ NAMES = """
 材木浜 渚公園 岬町 三つ茶屋 八方坂 福神町 広野 十番坂 水田町 天空アイル
 浜風通 学園台 川沿町 黒松台 五色田 南門 大井戸 夢見島 双子川 雲雀ヶ丘
 小鳥台 鴫田 貝塚浜 空港島
+新港埠頭 白波台 灯台岬 潮騒ヶ浜 海風ヶ丘 星見浜
 """.split()
-assert len(NAMES) == 104 and len(set(NAMES)) == 104, (len(NAMES), len(set(NAMES)))
+# 105〜110 は湾の南東に足した埋立地（新港島）の駅
+assert len(NAMES) == 110 and len(set(NAMES)) == 110, (len(NAMES), len(set(NAMES)))
 RIVER_NAME = "大川"

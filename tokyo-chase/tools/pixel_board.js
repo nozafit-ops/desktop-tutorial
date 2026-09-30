@@ -70,6 +70,15 @@
       g.fillStyle = "#C6C6C1"; g.beginPath(); g.ellipse(px(x), px(y) - 2, px(rx - 22), px(ry - 20), 0, 0, Math.PI * 2); g.fill();
       g.fillStyle = "#7DBB5E"; g.beginPath(); g.ellipse(px(x - rx * 0.45), px(y + ry * 0.3), px(rx * 0.3), px(ry * 0.3), 0, 0, Math.PI * 2); g.fill();
     });
+    // 埋立地（新港島）：岸の縁どり＋地面
+    for (const [x, y, rx, ry] of LANDS) {
+      g.fillStyle = "#E4DCC2"; g.beginPath(); g.ellipse(px(x), px(y), px(rx), px(ry), 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#C6C6C1"; g.beginPath(); g.ellipse(px(x), px(y) - 2, px(rx - 24), px(ry - 22), 0, 0, Math.PI * 2); g.fill();
+      for (let yy = Math.round(px(y - ry + 30)); yy < px(y + ry - 30); yy += 6) for (let xx = Math.round(px(x - rx + 40)) + (yy / 6) % 2 * 3; xx < px(x + rx - 40); xx += 6) {
+        const dx = (xx - px(x)) / px(rx - 30), dy = (yy - px(y)) / px(ry - 28);
+        if (dx * dx + dy * dy < 1) { g.fillStyle = "#CDCDC8"; g.fillRect(xx, yy, 3, 3); }
+      }
+    }
     if (PLAIN_BG) { img.setAttribute("href", c.toDataURL("image/png")); return; }
     // 道・線路の通り道（ビルを置かない）
     const segs = [];

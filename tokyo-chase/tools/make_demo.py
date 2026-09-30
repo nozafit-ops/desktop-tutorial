@@ -66,6 +66,7 @@ data = f'''const W = {B["W"]}, H = {B["H"]};
   const BRIDGE_ST = {json.dumps(B["bridges"])};
   const ISLAND_LIST = {json.dumps(B["islands"])};
   const ISLAND_SIZE = {json.dumps(B["islandSize"])};
+  const LANDS = {json.dumps(B.get("lands", []))};
   '''
 a = out.index("const W = 3000, H = 1900;"); b = out.index("const N = STATIONS.length;")
 out = out[:a] + data + out[b:]

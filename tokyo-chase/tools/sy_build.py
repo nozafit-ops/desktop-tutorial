@@ -366,6 +366,27 @@ _drop_taxi |= {tuple(sorted(p)) for p in [(0, 12), (83, 98)]}
 TAXI = [e for e in TAXI if tuple(sorted(e)) not in _drop_taxi]
 
 # ======================================================================
+# 新港島：湾の南東に足した埋立地（駅番号 105〜110。既存の駅番号は変えない）
+#  - 島の中はタクシーの環と十字、北側にバス
+#  - 空港島からモノレールが延びる（空港島 → 星見浜 → 海風ヶ丘）
+#  - 夢見島からバスの橋、岬町から水上バス、灯台岬にヘリポート
+# ======================================================================
+LANDS = [[3790, 1530, 560, 215]]   # 埋立地の楕円（中心 x, y, 半径 x, y）
+NEW_ST = [("新港埠頭", 3380, 1520), ("白波台", 3640, 1415), ("灯台岬", 3940, 1430),
+          ("潮騒ヶ浜", 4190, 1545), ("海風ヶ丘", 3910, 1645), ("星見浜", 3620, 1650)]
+n0 = N
+for name, x, y in NEW_ST:
+    ST.append([name, x, y, "n"]); P.append((x, y)); KIND.append("n")
+N = len(ST)
+A_, B_, C_, D_, E_, F_ = range(n0, n0 + 6)
+TAXI = sorted(set(TAXI) | {tuple(sorted(e)) for e in [(A_, B_), (B_, C_), (C_, D_), (D_, E_), (E_, F_), (F_, A_), (B_, F_), (C_, E_)]})
+BUS_E += [tuple(sorted(e)) for e in [(A_, B_), (B_, C_), (C_, D_), (97, A_)]]   # 夢見島からバスの橋
+MONO_LINES[1] = MONO_LINES[1] + [F_, E_]                                        # 夢見島 – 空港島 – 星見浜 – 海風ヶ丘
+MONO_E = [tuple(sorted((l[k], l[k + 1]))) for l in MONO_LINES for k in range(len(l) - 1)]
+BOAT_E.append(tuple(sorted((82, D_)))); BOAT_PATHS.append([list(P[min(82, D_)]), list(P[max(82, D_)])])   # 岬町 – 潮騒ヶ浜
+HELI.append(C_)                                                                 # 灯台岬のヘリポート
+
+# ======================================================================
 # 検証と書き出し
 # ======================================================================
 edges = {}
@@ -395,7 +416,7 @@ board = {
     "stations": [[s[0], s[1], s[2]] for s in ST],
     "taxi": [list(e) for e in TAXI], "busEdges": [list(e) for e in BUS_E], "subwayEdges": [list(e) for e in SUB_E],
     "boatEdges": [list(e) for e in BOAT_E], "monoEdges": [list(e) for e in MONO_E], "monoLines": MONO_LINES, "boatPaths": BOAT_PATHS,
-    "heli": HELI, "islands": isl, "islandSize": [ISLAND_SIZE[i] for i in isl], "bridges": bridges, "river": RIVER, "coast": COAST,
+    "heli": HELI, "lands": LANDS, "islands": isl, "islandSize": [ISLAND_SIZE[i] for i in isl], "bridges": bridges, "river": RIVER, "coast": COAST,
 }
 json.dump(board, open(os.path.join(HERE, "board_sy.json"), "w"), ensure_ascii=False)
 
