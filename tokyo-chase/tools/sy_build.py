@@ -353,8 +353,12 @@ ISLAND_SIZE = {odaiba: [230, 150], haneda: [124, 84]}
 # モノレール：湾岸を走る高架の路線。島（夢見島・空港島）にも刑事が行ける。1駅ずつ停まる
 #  広野 – 浜風通 – 夢見島 – 潮月町 – 汐風台 – 材木浜 – 岬町、夢見島 – 空港島（番号は盤面の駅番号−1）
 # ======================================================================
-MONO_LINES = [[86, 90, 97, 76, 79, 80, 82], [97, 103]]
+MONO_LINES = [[99, 100, 93, 86, 90, 97, 76, 79, 80, 82], [97, 103]]   # 雲雀ヶ丘 – 小鳥台 – 黒松台 – 広野 – …
 MONO_E = [tuple(sorted((l[k], l[k + 1]))) for l in MONO_LINES for k in range(len(l) - 1)]
+# モノレールと同じ区間を走るバスはなくす（重なって見分けにくいので）
+_mono = set(MONO_E)
+BUS_DROPPED = [e for e in BUS_E if tuple(sorted(e)) in _mono]
+BUS_E = [e for e in BUS_E if tuple(sorted(e)) not in _mono]
 
 # ======================================================================
 # 検証と書き出し
@@ -375,6 +379,7 @@ report = {
     "subway": [ST[i][0] for i in SUB_ST],
     "boat piers": [ST[i][0] for i in sorted({v for e in BOAT_E for v in e})],
     "heli": [ST[i][0] for i in HELI],
+    "bus dropped (monorail)": [(a + 1, b + 1) for a, b in BUS_DROPPED],
     "odaiba bus": [ST[j][0] for e in ODAIBA_BUS for j in e if j != odaiba],
 }
 for k, v in report.items(): print(f"{k}: {v}")
