@@ -982,6 +982,61 @@ sub("""        <li><b>水上バス</b>（青い破線）""", """        <li><b>�
 sub("""ただしヘリの切符は最初は0枚で、<b>ヘリのカードを引いたときだけ</b>使えます（怪盗Xは「ヘリ」、刑事は「ヘリ出動」）。""", """<b>怪盗Xはいつでも</b>ヘリで飛べます。刑事はカード「ヘリ出動」を引いたときだけ使えます。""")
 sub("""（怪盗Xは「罠」「雲隠れ」「駅破壊」「ヘリ」「煙幕」「変装」）""", """（怪盗Xは「罠」「雲隠れ」「駅破壊」「煙幕」「変装」）""")
 
+# ---------------- 携帯モード：地図を広く、人物・カード・アイコンは小さく、履歴は出さない ----------------
+sub("""  .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-width: 14; }""", """  .mini-dest { fill: rgba(242, 194, 48, .35); stroke: #F2C230; stroke-width: 14; }
+  /* 携帯（縦）：上に地図（横いっぱい）、その下に情報の帯、いちばん下に全体図と手札 */
+  @media (max-width: 760px) and (orientation: portrait) {
+    #app.layout4 { gap: 3px !important; padding: 3px !important; grid-template-columns: 1fr 1fr !important;
+      grid-template-rows: auto auto minmax(0, 1fr) auto !important; grid-template-areas: "map map" "info info" "mini mini" "cards cards" !important; }
+    #app.layout4 #map { border-radius: 6px; }
+    #paneInfo { padding: 3px !important; gap: 3px !important; }
+    #paneInfo .drawer, #paneCards .talklog { display: none !important; }
+    #paneInfo .hud.top { zoom: 1 !important; }
+    #paneInfo .toprow.first { flex-wrap: wrap !important; gap: 3px; align-items: stretch; }
+    #paneInfo .toprow.first > .iconbtn { width: 34px; min-width: 34px; padding: 0; }
+    #paneInfo .toprow.first .iconbtn svg { width: 18px; height: 18px; }
+    #paneInfo .xcard { flex: 1 1 0 !important; padding: 2px 4px !important; gap: 4px !important; }
+    #paneInfo .xcard .who b { font-size: 12px; }
+    #paneInfo .xcard .expo { font-size: 9px; padding: 1px 6px; }
+    #paneInfo .toprow.first .prompt { flex: 0 1 auto !important; order: 0 !important; max-width: 34% !important; padding: 2px 4px !important; }
+    #paneInfo .prompt .t1 { font-size: 11px; } #paneInfo .prompt .t2 { font-size: 9px; }
+    #paneInfo .prompt .btn { min-height: 28px; padding: 0 8px; font-size: 11px; }
+    #paneInfo .toprow.first .dets { flex: 1 1 100% !important; order: 4 !important; zoom: 1 !important; padding: 2px !important; gap: 1px !important; justify-content: space-around; }
+    #paneInfo .xcard { min-width: 55% !important; }
+    #paneInfo .det { flex: none !important; min-width: 0 !important; padding: 1px !important; gap: 1px !important; }
+    .x-full { height: 44px !important; } .det-full { height: 36px !important; } .mate-full { display: none !important; }
+    .tk { font-size: 8px !important; padding: 0 2px !important; line-height: 1.4; }
+    .me-tag { font-size: 7px !important; padding: 0 3px !important; }
+    .chipsx { gap: 1px !important; }
+    .mini-h { padding: 2px 6px 0 !important; font-size: 11px; } .mini-h span { display: none; }
+    .mini-zoom { padding: 1px 8px !important; font-size: 10px !important; }
+    #paneCards { padding: 3px !important; }
+    #paneCards .handbar { padding: 3px 4px !important; }
+    #paneCards .hb-head { font-size: 10px; margin-bottom: 2px; } #paneCards .hb-head span { display: none; }
+    #paneCards .hb-cards { gap: 4px !important; align-items: flex-start !important; }
+    #paneCards .hb-card { width: 56px !important; height: auto !important; aspect-ratio: auto !important; padding: 3px !important; gap: 1px !important; border-width: 2px !important; }
+    #paneCards .hb-card span { font-size: 10px !important; } #paneCards .hb-card small { display: none !important; }
+    #app.mini-big #paneMini { width: calc(100% - 6px) !important; height: 60% !important; right: 3px !important; bottom: 3px !important; }
+    .edge-arrow { transform-origin: center; }
+  }
+  /* 携帯（横）：左に地図（縦いっぱい）、右の細い列に情報・全体図・手札 */
+  @media (max-height: 520px) and (orientation: landscape) {
+    #app.layout4 { gap: 3px !important; padding: 3px !important; grid-template-columns: minmax(0, 1fr) clamp(200px, 30vw, 280px) !important;
+      grid-template-rows: auto minmax(0, 1fr) auto !important; grid-template-areas: "map info" "map mini" "map cards" !important; }
+    #paneInfo .drawer, #paneCards .talklog { display: none !important; }
+    #paneInfo { padding: 2px !important; gap: 2px !important; }
+    #paneInfo .hud.top { zoom: .62 !important; }
+    .x-full { height: 50px !important; } .det-full { height: 44px !important; } .mate-full { display: none !important; }
+    .mini-h span { display: none; }
+    #paneCards { padding: 2px !important; }
+    #paneCards .handbar { zoom: 1 !important; padding: 2px 4px !important; }
+    #paneCards .hb-head { font-size: 10px; margin-bottom: 2px; } #paneCards .hb-head span { display: none; }
+    #paneCards .hb-cards { align-items: flex-start !important; }
+    #paneCards .hb-card { width: 50px !important; height: auto !important; aspect-ratio: auto !important; padding: 2px !important; gap: 1px !important; border-width: 2px !important; }
+    #paneCards .hb-card span { font-size: 9px !important; } #paneCards .hb-card small { display: none !important; }
+    #app.mini-big #paneMini { width: calc(100% - 6px) !important; height: calc(100% - 6px) !important; }
+  }""")
+
 # ---------------- 残っていないかの確認 ----------------
 for word in ["テムズ", "ロンドン", "london-map", "霧の"]:
     assert word not in out, f"leftover: {word}"
